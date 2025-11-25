@@ -108,7 +108,6 @@ MediStream OCMS is a mobile/web application designed to streamline patient data 
 ### Other
 - **AI/ML**: OpenAI/Groq (Chatbot), TensorFlow.js (EHR analysis), Azure Speech/OCR (Data Entry)
 - **DevOps**: Docker/K8s (containerization), GitHub Actions (CI/CD), AWS (deployment)
-- **Testing**: Jest (unit/integration), Cypress (E2E)
 - **i18n**: Middleware for /en/*, /ar/*; JSON locales
 
 ---
@@ -162,7 +161,6 @@ medistream-ocms/
 - **Offline Access**: Local storage for history/schedules
 - **Scalability**: Up to 50 clinics; future sharding
 - **Cloud-Native**: Microservices, Docker, CI/CD (GitHub Actions), DevOps/MLOps
-- **Testing**: Unit/integration/E2E (Jest/Cypress)
 - **Security**: AES-256 encryption, global privacy standards
 
 ---
