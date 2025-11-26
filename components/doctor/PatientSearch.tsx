@@ -35,6 +35,7 @@ interface PatientSearchProps {
 
 export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps) {
   const t = useTranslations('doctor');
+  const tPatient = useTranslations('patient');
   const [searchQuery, setSearchQuery] = useState('');
   const [period, setPeriod] = useState<SearchFilters['period']>('today');
   const [selectedClinicId, setSelectedClinicId] = useState<string>('all');
@@ -138,27 +139,27 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
             onClick={() => onSelectPatient(patient.id)}
           >
             <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-lg">{patient.name}</CardTitle>
-                  <CardDescription>
-                    {t('nationalId')}: {patient.national_id}
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex-1 min-w-0">
+                  <CardTitle className="text-lg truncate">{patient.name}</CardTitle>
+                  <CardDescription className="truncate">
+                    {tPatient('nationalId')}: {patient.national_id}
                   </CardDescription>
                 </div>
                 <div className="text-right text-sm">
                   <div className="font-medium">
-                    {calculateAge(patient.birthdate)} {t('years')}
+                    {calculateAge(patient.birthdate)} {tPatient('years')}
                   </div>
                   <div className="text-muted-foreground">
-                    {patient.gender === Gender.MALE ? t('male') : t('female')}
+                    {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
                   </div>
                 </div>
               </div>
             </CardHeader>
             {patient.phone_number && (
               <CardContent className="pt-0">
-                <p className="text-sm text-muted-foreground">
-                  {t('phone')}: {patient.phone_number}
+                <p className="text-sm text-muted-foreground truncate">
+                  {tPatient('phone')}: {patient.phone_number}
                 </p>
               </CardContent>
             )}

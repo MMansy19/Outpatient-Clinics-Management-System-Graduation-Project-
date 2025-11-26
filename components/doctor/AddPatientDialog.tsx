@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/select';
 
 import { useCreatePatient } from '@/lib/api/queries/usePatients';
-import { patientSchema, type PatientFormInput } from '@/lib/schemas/patientSchema';
+import { patientFormSchema, type PatientFormInput } from '@/lib/schemas/patientSchema';
 import { Gender } from '@/types/entities/Patient';
 
 interface AddPatientDialogProps {
@@ -49,7 +49,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<PatientFormInput>({
-    resolver: zodResolver(patientSchema),
+    resolver: zodResolver(patientFormSchema),
     defaultValues: {
       name: '',
       national_id: '',
@@ -61,7 +61,12 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
   });
 
   const onSubmit = (data: PatientFormInput) => {
-    const transformedData = patientSchema.parse(data);
+    // Transform the form data to match API requirements
+    const transformedData = {
+      ...data,
+      national_id: parseInt(data.national_id, 10),
+      birthdate: new Date(data.birthdate),
+    };
     createPatient(transformedData, {
       onSuccess: (patient) => {
         toast.success(tPatient('patientCreated'));

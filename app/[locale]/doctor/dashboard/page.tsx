@@ -135,7 +135,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 <CardTitle>{t('recentVisits')}</CardTitle>
                 <CardDescription>{t('recentVisitsDescription')}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="max-h-[500px] overflow-y-auto">
                 {isLoading ? (
                   <div className="space-y-2">
                     <div className="skeleton h-16 w-full" />
@@ -146,16 +146,16 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {recentVisits.map((visit) => (
                       <div
                         key={visit.id}
-                        className="flex items-center justify-between p-3 rounded-lg border hover:bg-accent cursor-pointer"
+                        className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent cursor-pointer"
                         onClick={() => handleSelectPatient(visit.patient_id)}
                       >
-                        <div>
-                          <p className="font-medium">{visit.patient.name}</p>
-                          <p className="text-sm text-muted-foreground">{visit.chief_complaint}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{visit.patient.name}</p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">{visit.chief_complaint}</p>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">{formatDate(visit.created_at)}</p>
-                          <p className="text-xs text-muted-foreground">{visit.diagnosis}</p>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-medium whitespace-nowrap">{formatDate(visit.created_at)}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 max-w-[180px]">{visit.diagnosis}</p>
                         </div>
                       </div>
                     ))}
