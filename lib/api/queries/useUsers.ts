@@ -57,6 +57,9 @@ export const useDeleteDoctor = (): UseMutationResult<void, Error, number> => {
 
   return useMutation({
     mutationFn: async (id: number) => {
+      if (USE_MOCK_DATA) {
+        return await mockDoctorsAPI.deleteDoctor(id);
+      }
       await apiClient.delete(`/admin/doctors/${id}`);
     },
     onSuccess: () => {
@@ -87,6 +90,9 @@ export const useDeletePatient = (): UseMutationResult<void, Error, number> => {
 
   return useMutation({
     mutationFn: async (id: number) => {
+      if (USE_MOCK_DATA) {
+        return await mockPatientsAPI.deletePatient(id);
+      }
       await apiClient.delete(`/admin/patients/${id}`);
     },
     onSuccess: () => {

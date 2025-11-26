@@ -1,7 +1,7 @@
 // Mock Data Service for Development Without Backend
-import type { AuthResponse } from '@/types/api';
+import type { AuthResponse, RegisterRequest, CreatePatientRequest } from '@/types/api';
 import type { Clinic, ClinicWithStats } from '@/types/entities/Clinic';
-import type { DoctorWithClinic } from '@/types/entities/Doctor';
+import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
 import { Gender } from '@/types/entities/Patient';
 import type { Visit, VisitWithRelations } from '@/types/entities/Visit';
@@ -338,9 +338,38 @@ const initMedications = (): Medication[] => [
   },
 ];
 
-// Initialize all mock data
+// Initialize all mock data (only if not already initialized)
 export const initMockData = () => {
-  // Force refresh to update with new doctors and clinics
+  if (typeof window === 'undefined') return;
+  
+  // Only initialize if data doesn't exist
+  if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+    setStorageData(STORAGE_KEYS.USERS, initUsers());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.PATIENTS)) {
+    setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.CLINICS)) {
+    setStorageData(STORAGE_KEYS.CLINICS, initClinics());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.VISITS)) {
+    setStorageData(STORAGE_KEYS.VISITS, initVisits());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.LABS)) {
+    setStorageData(STORAGE_KEYS.LABS, initLabs());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.SCANS)) {
+    setStorageData(STORAGE_KEYS.SCANS, initScans());
+  }
+  if (!localStorage.getItem(STORAGE_KEYS.MEDICATIONS)) {
+    setStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
+  }
+};
+
+// Reset all mock data (for testing/development)
+export const resetMockData = () => {
+  if (typeof window === 'undefined') return;
+  
   setStorageData(STORAGE_KEYS.USERS, initUsers());
   setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
   setStorageData(STORAGE_KEYS.CLINICS, initClinics());
@@ -358,7 +387,7 @@ export const mockAuthAPI = {
   async login(email: string, password: string): Promise<AuthResponse> {
     await delay();
     const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
-    const user = users.find((u: any) => u.email === email && u.password === password);
+    const user = users.find((u) => u.email === email && u.password === password);
     
     if (!user) {
       throw new Error('Invalid email or password');
@@ -377,22 +406,31 @@ export const mockAuthAPI = {
     };
   },
 
-  async register(data: any): Promise<AuthResponse> {
+  async register(data: RegisterRequest): Promise<AuthResponse> {
     await delay();
     const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
     
     // Check if email exists
-    if (users.find((u: any) => u.email === data.email)) {
+    if (users.find((u) => u.email === data.email)) {
       throw new Error('Email already exists');
     }
 
     const newUser = {
       id: users.length + 1,
       global_id: `${data.role === UserRole.DOCTOR ? 'DOC' : 'ADM'}${String(users.length + 1).padStart(3, '0')}`,
-      ...data,
+      username: data.username,
+      email: data.email,
+      password: data.password,
+      role: data.role as UserRole,
+      ...(data.role === UserRole.DOCTOR ? {
+        specialization: data.specialization,
+        license_number: data.license_number,
+        phone_number: data.phone_number,
+        clinic_id: data.clinic_id,
+      } : {}),
     };
 
-    users.push(newUser);
+    users.push(newUser as typeof users[0]);
     setStorageData(STORAGE_KEYS.USERS, users);
 
     return {
@@ -423,17 +461,18 @@ export const mockClinicsAPI = {
 
     return clinics.map((clinic: Clinic) => ({
       ...clinic,
-      doctor_count: users.filter((u: any) => u.clinic_id === clinic.id).length,
+      doctor_count: users.filter((u) => 'clinic_id' in u && u.clinic_id === clinic.id).length,
       patient_count: Math.floor(Math.random() * 50) + 10,
       today_visits: Math.floor(Math.random() * 20) + 5,
     }));
   },
 
-  async createClinic(data: any): Promise<Clinic> {
+  async createClinic(data: Omit<Clinic, 'id' | 'global_id' | 'is_deleted' | 'created_at' | 'updated_at'>): Promise<Clinic> {
     await delay();
     const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
-    const newClinic = {
+    const newClinic: Clinic = {
       id: clinics.length + 1,
+      global_id: `CLI${String(clinics.length + 1).padStart(3, '0')}`,
       ...data,
       is_deleted: false,
       created_at: new Date(),
@@ -444,7 +483,7 @@ export const mockClinicsAPI = {
     return newClinic;
   },
 
-  async updateClinic(id: number, data: any): Promise<Clinic> {
+  async updateClinic(id: number, data: Partial<Clinic>): Promise<Clinic> {
     await delay();
     const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
     const index = clinics.findIndex((c: Clinic) => c.id === id);
@@ -489,13 +528,19 @@ export const mockPatientsAPI = {
     return patient;
   },
 
-  async createPatient(data: any): Promise<Patient> {
+  async createPatient(data: CreatePatientRequest): Promise<Patient> {
     await delay();
     const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const newPatient = {
+    const newPatient: Patient = {
       id: patients.length + 1,
       global_id: `PAT${String(patients.length + 1).padStart(3, '0')}`,
-      ...data,
+      national_id: data.national_id,
+      name: data.name,
+      birthdate: data.birthdate,
+      gender: data.gender === 'male' ? Gender.MALE : Gender.FEMALE,
+      phone_number: data.phone_number,
+      email: data.email,
+      address: data.address,
       is_deleted: false,
       created_at: new Date(),
       updated_at: new Date(),
@@ -505,7 +550,7 @@ export const mockPatientsAPI = {
     return newPatient;
   },
 
-  async updatePatient(id: number, data: any): Promise<Patient> {
+  async updatePatient(id: number, data: Partial<Patient>): Promise<Patient> {
     await delay();
     const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
     const index = patients.findIndex((p: Patient) => p.id === id);
@@ -514,6 +559,13 @@ export const mockPatientsAPI = {
     patients[index] = { ...patients[index], ...data, updated_at: new Date() };
     setStorageData(STORAGE_KEYS.PATIENTS, patients);
     return patients[index];
+  },
+
+  async deletePatient(id: number): Promise<void> {
+    await delay();
+    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+    const filtered = patients.filter((p: Patient) => p.id !== id);
+    setStorageData(STORAGE_KEYS.PATIENTS, filtered);
   },
 };
 
@@ -524,9 +576,9 @@ export const mockDoctorsAPI = {
     const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
     const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
     
-    const doctors = users.filter((u: any) => u.role === UserRole.DOCTOR);
+    const doctors = users.filter((u) => u.role === UserRole.DOCTOR);
     
-    return doctors.map((doc: any) => {
+    return doctors.map((doc): DoctorWithClinic => {
       const clinic = clinics.find((c: Clinic) => c.id === doc.clinic_id);
       return {
         id: doc.id,
@@ -534,13 +586,14 @@ export const mockDoctorsAPI = {
         username: doc.username,
         email: doc.email,
         role: doc.role,
-        specialization: doc.specialization,
-        license_number: doc.license_number,
-        clinic_id: doc.clinic_id,
-        phone_number: doc.phone_number,
+        specialization: doc.specialization || 'General Medicine',
+        license_number: doc.license_number || 'N/A',
+        clinic_id: doc.clinic_id || 0,
+        phone_number: doc.phone_number || '',
         is_deleted: false,
         created_at: new Date(),
         updated_at: new Date(),
+        years_of_experience: 'years_of_experience' in doc ? doc.years_of_experience as number : undefined,
         clinic: clinic ? {
           id: clinic.id,
           name: clinic.name,
@@ -548,6 +601,13 @@ export const mockDoctorsAPI = {
         } : { id: 0, name: 'Unknown', department: 'Unknown' },
       };
     });
+  },
+
+  async deleteDoctor(id: number): Promise<void> {
+    await delay();
+    const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
+    const filtered = users.filter((u) => u.id !== id);
+    setStorageData(STORAGE_KEYS.USERS, filtered);
   },
 };
 
@@ -564,7 +624,7 @@ export const mockVisitsAPI = {
     const patient = patients.find((p: Patient) => p.id === patientId);
     
     return patientVisits.map((visit: Visit) => {
-      const doctor = users.find((u: any) => u.id === visit.doctor_id);
+      const doctor = users.find((u) => u.id === visit.doctor_id);
       const clinic = clinics.find((c: Clinic) => c.id === visit.clinic_id);
       
       return {
@@ -583,7 +643,7 @@ export const mockVisitsAPI = {
           is_deleted: false,
           created_at: new Date(),
           updated_at: new Date(),
-        } : undefined as any,
+        } as Doctor : {} as Doctor,
         clinic: clinic ? {
           id: clinic.id,
           name: clinic.name,
@@ -593,11 +653,12 @@ export const mockVisitsAPI = {
     });
   },
 
-  async createVisit(data: any): Promise<Visit> {
+  async createVisit(data: Omit<Visit, 'id' | 'global_id' | 'is_deleted' | 'created_at' | 'updated_at'>): Promise<Visit> {
     await delay();
     const visits = getStorageData(STORAGE_KEYS.VISITS, initVisits());
-    const newVisit = {
+    const newVisit: Visit = {
       id: visits.length + 1,
+      global_id: `VIS${String(visits.length + 1).padStart(3, '0')}`,
       ...data,
       is_deleted: false,
       created_at: new Date(),
@@ -619,6 +680,49 @@ export const mockVisitsAPI = {
         visitDate.getMonth() === today.getMonth() &&
         visitDate.getFullYear() === today.getFullYear()
       );
+    });
+  },
+
+  async getRecentVisits(limit: number = 10): Promise<VisitWithRelations[]> {
+    await delay();
+    const visits = getStorageData(STORAGE_KEYS.VISITS, initVisits());
+    const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
+    const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
+    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+    
+    // Sort by created_at descending and take limit
+    const recentVisits = [...visits]
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .slice(0, limit);
+    
+    return recentVisits.map((visit: Visit) => {
+      const doctor = users.find((u) => u.id === visit.doctor_id);
+      const clinic = clinics.find((c: Clinic) => c.id === visit.clinic_id);
+      const patient = patients.find((p: Patient) => p.id === visit.patient_id);
+      
+      return {
+        ...visit,
+        patient: patient!,
+        doctor: doctor ? {
+          id: doctor.id,
+          global_id: doctor.global_id,
+          username: doctor.username,
+          email: doctor.email,
+          role: doctor.role,
+          specialization: doctor.specialization,
+          license_number: doctor.license_number,
+          clinic_id: doctor.clinic_id,
+          phone_number: doctor.phone_number,
+          is_deleted: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as Doctor : {} as Doctor,
+        clinic: clinic ? {
+          id: clinic.id,
+          name: clinic.name,
+          department: clinic.department,
+        } : { id: 0, name: 'Unknown', department: 'Unknown' },
+      };
     });
   },
 };

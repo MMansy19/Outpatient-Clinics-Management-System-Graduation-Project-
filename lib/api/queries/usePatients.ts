@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResul
 import { apiClient } from '@/lib/api/client';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
+import type { CreatePatientRequest } from '@/types/api';
 import { mockPatientsAPI } from '@/lib/api/mockData';
 
 const USE_MOCK_DATA = true;
@@ -50,11 +51,11 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
   });
 };
 
-export const useCreatePatient = (): UseMutationResult<Patient, Error, Partial<Patient>> => {
+export const useCreatePatient = (): UseMutationResult<Patient, Error, CreatePatientRequest> => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (data: Partial<Patient>) => {
+    mutationFn: async (data: CreatePatientRequest) => {
       if (USE_MOCK_DATA) {
         return await mockPatientsAPI.createPatient(data);
       }

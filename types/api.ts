@@ -31,3 +31,13 @@ export interface ApiError {
   statusCode: number;
   error?: string;
 }
+
+export interface CreatePatientRequest {
+  national_id: number;
+  name: string;
+  gender: 'male' | 'female';
+  birthdate: Date;
+  phone_number?: string;
+  email?: string;
+  address?: string;
+}

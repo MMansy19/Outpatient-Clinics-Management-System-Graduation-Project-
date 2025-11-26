@@ -22,6 +22,24 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
 import { mockClinicsAPI, mockDoctorsAPI } from '@/lib/api/mockData';
+import type { Clinic } from '@/types/entities/Clinic';
+import type { DoctorWithClinic } from '@/types/entities/Doctor';
+import type { LucideIcon } from 'lucide-react';
+
+// Display types for landing page
+interface ClinicDisplay extends Clinic {
+  icon: LucideIcon;
+  color: string;
+  patients: string;
+}
+
+interface DoctorDisplay extends DoctorWithClinic {
+  name: string;
+  specialty: string;
+  experience: string;
+  patients: string;
+  image: string;
+}
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -37,8 +55,8 @@ export default function HomePage({ params }: HomePageProps) {
   const t = useTranslations('landing');
   
   // State for clinics and doctors from database
-  const [clinics, setClinics] = useState<any[]>([]);
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const [clinics, setClinics] = useState<ClinicDisplay[]>([]);
+  const [doctors, setDoctors] = useState<DoctorDisplay[]>([]);
   
   // Refs for GSAP animations
   const heroRef = useRef<HTMLDivElement>(null);
@@ -56,44 +74,33 @@ export default function HomePage({ params }: HomePageProps) {
       try {
         // Load clinics
         const allClinics = await mockClinicsAPI.getClinics();
-        const topClinics = allClinics.slice(0, 5).map((clinic, index) => {
-          const icons = [Heart, Activity, Stethoscope, Shield, Building2];
-          const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-red-500', 'bg-purple-500', 'bg-teal-500'];
-          return {
-            id: clinic.id,
-            name: clinic.name,
-            description: clinic.department,
-            icon: icons[index % icons.length],
-            patients: '2,500+',
-            color: colors[index % colors.length],
-            location: clinic.location,
-            phone: clinic.phone_number,
-          };
-        });
+        const icons = [Heart, Activity, Stethoscope, Shield, Building2];
+        const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-red-500', 'bg-purple-500', 'bg-teal-500'];
+        const topClinics: ClinicDisplay[] = allClinics.slice(0, 5).map((clinic, index) => ({
+          ...clinic,
+          icon: icons[index % icons.length],
+          patients: '2,500+',
+          color: colors[index % colors.length],
+        }));
         setClinics(topClinics);
 
         // Load doctors
         const allDoctors = await mockDoctorsAPI.getDoctors();
-        const topDoctors = allDoctors.slice(0, 5).map((doctor, index) => {
-          const images = [
-            'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
-            'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
-          ];
-          return {
-            id: doctor.id,
-            name: doctor.username.replace('dr_', 'Dr. ').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-            specialty: doctor.specialization || 'General Medicine',
-            experience: '10+ years',
-            patients: '2,500+',
-            image: images[index % images.length],
-            email: doctor.email,
-            phone: doctor.phone_number,
-            clinic: doctor.clinic?.name || 'Kasr Al Ainy Hospital',
-          };
-        });
+        const images = [
+          'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
+        ];
+        const topDoctors: DoctorDisplay[] = allDoctors.slice(0, 5).map((doctor, index) => ({
+          ...doctor,
+          name: doctor.username.replace('dr_', 'Dr. ').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+          specialty: doctor.specialization,
+          experience: doctor.years_of_experience ? `${doctor.years_of_experience}+ years` : '10+ years',
+          patients: '2,500+',
+          image: images[index % images.length],
+        }));
         setDoctors(topDoctors);
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -580,7 +587,7 @@ export default function HomePage({ params }: HomePageProps) {
                       <Icon className="w-7 h-7 text-white" />
                     </div>
                     <CardTitle className="text-xl">{clinic.name}</CardTitle>
-                    <CardDescription>{clinic.description}</CardDescription>
+                    <CardDescription>{clinic.department}</CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-4">

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResul
 import { apiClient } from '@/lib/api/client';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
 import { mockVisitsAPI } from '@/lib/api/mockData';
+import { useAuthStore } from '@/stores/authStore';
 
 const USE_MOCK_DATA = true;
 const VISITS_KEY = ['visits'];
@@ -34,11 +35,18 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
 
 export const useCreateVisit = (): UseMutationResult<Visit, Error, VisitFormData> => {
   const queryClient = useQueryClient();
+  const user = useAuthStore((state) => state.user);
 
   return useMutation({
     mutationFn: async (data: VisitFormData) => {
       if (USE_MOCK_DATA) {
-        return await mockVisitsAPI.createVisit(data);
+        // Add doctor_id and clinic_id from auth store
+        const visitData = {
+          ...data,
+          doctor_id: user?.id || 0,
+          clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
+        };
+        return await mockVisitsAPI.createVisit(visitData);
       }
       const response = await apiClient.post<Visit>('/doctor/visits', data);
       return response.data;
@@ -70,6 +78,9 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
   return useQuery({
     queryKey: [...VISITS_KEY, 'recent', limit],
     queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        return await mockVisitsAPI.getRecentVisits(limit);
+      }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/visits/recent?limit=${limit}`);
       return response.data;
     },
