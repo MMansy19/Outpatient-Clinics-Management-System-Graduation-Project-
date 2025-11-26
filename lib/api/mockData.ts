@@ -41,9 +41,9 @@ const initClinics = (): Clinic[] => [
   {
     id: 1,
     global_id: 'CLI001',
-    name: 'Kasr Al Ainy Main Clinic',
-    department: 'General Medicine',
-    location: 'Cairo, Egypt',
+    name: 'Internal Medicine Clinic',
+    department: 'Internal Medicine',
+    location: 'Building A, Floor 2, Kasr Al Ainy Hospital',
     phone_number: '+20 2 23654321',
     is_deleted: false,
     created_at: new Date('2024-01-01'),
@@ -52,9 +52,9 @@ const initClinics = (): Clinic[] => [
   {
     id: 2,
     global_id: 'CLI002',
-    name: 'Emergency Department',
-    department: 'Emergency',
-    location: 'Cairo University Hospital',
+    name: 'Orthopedics Clinic',
+    department: 'Orthopedics',
+    location: 'Building B, Floor 1, Cairo University Hospital',
     phone_number: '+20 2 23654322',
     is_deleted: false,
     created_at: new Date('2024-01-01'),
@@ -65,8 +65,30 @@ const initClinics = (): Clinic[] => [
     global_id: 'CLI003',
     name: 'Cardiology Clinic',
     department: 'Cardiology',
-    location: 'Specialized Medical Center',
+    location: 'Building C, Floor 3, Specialized Medical Center',
     phone_number: '+20 2 23654323',
+    is_deleted: false,
+    created_at: new Date('2024-01-01'),
+    updated_at: new Date('2024-01-01'),
+  },
+  {
+    id: 4,
+    global_id: 'CLI004',
+    name: 'Neurology Clinic',
+    department: 'Neurology',
+    location: 'Building A, Floor 4, Kasr Al Ainy Hospital',
+    phone_number: '+20 2 23654324',
+    is_deleted: false,
+    created_at: new Date('2024-01-01'),
+    updated_at: new Date('2024-01-01'),
+  },
+  {
+    id: 5,
+    global_id: 'CLI005',
+    name: 'Emergency Department',
+    department: 'Emergency Medicine',
+    location: 'Ground Floor, Main Building, Cairo University Hospital',
+    phone_number: '+20 2 23654325',
     is_deleted: false,
     created_at: new Date('2024-01-01'),
     updated_at: new Date('2024-01-01'),
@@ -85,7 +107,7 @@ const initUsers = () => [
     specialization: 'Cardiology',
     license_number: 'LIC001',
     phone_number: '+20 100 1234567',
-    clinic_id: 1,
+    clinic_id: 3,
   },
   {
     id: 2,
@@ -94,6 +116,54 @@ const initUsers = () => [
     email: 'admin@kasralainy.edu.eg',
     password: 'admin123',
     role: UserRole.ADMIN,
+  },
+  {
+    id: 3,
+    global_id: 'DOC002',
+    username: 'dr_sarah',
+    email: 'sarah@kasralainy.edu.eg',
+    password: 'password123',
+    role: UserRole.DOCTOR,
+    specialization: 'Internal Medicine',
+    license_number: 'LIC002',
+    phone_number: '+20 100 2345678',
+    clinic_id: 1,
+  },
+  {
+    id: 4,
+    global_id: 'DOC003',
+    username: 'dr_omar',
+    email: 'omar@kasralainy.edu.eg',
+    password: 'password123',
+    role: UserRole.DOCTOR,
+    specialization: 'Orthopedics',
+    license_number: 'LIC003',
+    phone_number: '+20 100 3456789',
+    clinic_id: 2,
+  },
+  {
+    id: 5,
+    global_id: 'DOC004',
+    username: 'dr_fatima',
+    email: 'fatima@kasralainy.edu.eg',
+    password: 'password123',
+    role: UserRole.DOCTOR,
+    specialization: 'Neurology',
+    license_number: 'LIC004',
+    phone_number: '+20 100 4567890',
+    clinic_id: 4,
+  },
+  {
+    id: 6,
+    global_id: 'DOC005',
+    username: 'dr_mohamed',
+    email: 'mohamed@kasralainy.edu.eg',
+    password: 'password123',
+    role: UserRole.DOCTOR,
+    specialization: 'Emergency Medicine',
+    license_number: 'LIC005',
+    phone_number: '+20 100 5678901',
+    clinic_id: 5,
   },
 ];
 
@@ -270,27 +340,14 @@ const initMedications = (): Medication[] => [
 
 // Initialize all mock data
 export const initMockData = () => {
-  if (!getStorageData(STORAGE_KEYS.USERS, null)) {
-    setStorageData(STORAGE_KEYS.USERS, initUsers());
-  }
-  if (!getStorageData(STORAGE_KEYS.PATIENTS, null)) {
-    setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-  }
-  if (!getStorageData(STORAGE_KEYS.CLINICS, null)) {
-    setStorageData(STORAGE_KEYS.CLINICS, initClinics());
-  }
-  if (!getStorageData(STORAGE_KEYS.VISITS, null)) {
-    setStorageData(STORAGE_KEYS.VISITS, initVisits());
-  }
-  if (!getStorageData(STORAGE_KEYS.LABS, null)) {
-    setStorageData(STORAGE_KEYS.LABS, initLabs());
-  }
-  if (!getStorageData(STORAGE_KEYS.SCANS, null)) {
-    setStorageData(STORAGE_KEYS.SCANS, initScans());
-  }
-  if (!getStorageData(STORAGE_KEYS.MEDICATIONS, null)) {
-    setStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
-  }
+  // Force refresh to update with new doctors and clinics
+  setStorageData(STORAGE_KEYS.USERS, initUsers());
+  setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+  setStorageData(STORAGE_KEYS.CLINICS, initClinics());
+  setStorageData(STORAGE_KEYS.VISITS, initVisits());
+  setStorageData(STORAGE_KEYS.LABS, initLabs());
+  setStorageData(STORAGE_KEYS.SCANS, initScans());
+  setStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
 };
 
 // Mock API delay

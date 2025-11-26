@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useRef } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar } from '@/components/landing/Navbar';
 import { Footer } from '@/components/landing/Footer';
+import { mockClinicsAPI, mockDoctorsAPI } from '@/lib/api/mockData';
 
 // Register GSAP plugins
 if (typeof window !== 'undefined') {
@@ -35,6 +36,10 @@ export default function HomePage({ params }: HomePageProps) {
   const { locale } = use(params);
   const t = useTranslations('landing');
   
+  // State for clinics and doctors from database
+  const [clinics, setClinics] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  
   // Refs for GSAP animations
   const heroRef = useRef<HTMLDivElement>(null);
   const heroImageRef = useRef<HTMLDivElement>(null);
@@ -44,6 +49,61 @@ export default function HomePage({ params }: HomePageProps) {
   const doctorsRef = useRef<HTMLDivElement>(null);
   const partnersRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
+
+  // Load clinics and doctors from database
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Load clinics
+        const allClinics = await mockClinicsAPI.getClinics();
+        const topClinics = allClinics.slice(0, 5).map((clinic, index) => {
+          const icons = [Heart, Activity, Stethoscope, Shield, Building2];
+          const colors = ['bg-emerald-500', 'bg-blue-500', 'bg-red-500', 'bg-purple-500', 'bg-teal-500'];
+          return {
+            id: clinic.id,
+            name: clinic.name,
+            description: clinic.department,
+            icon: icons[index % icons.length],
+            patients: '2,500+',
+            color: colors[index % colors.length],
+            location: clinic.location,
+            phone: clinic.phone_number,
+          };
+        });
+        setClinics(topClinics);
+
+        // Load doctors
+        const allDoctors = await mockDoctorsAPI.getDoctors();
+        const topDoctors = allDoctors.slice(0, 5).map((doctor, index) => {
+          const images = [
+            'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
+            'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
+          ];
+          return {
+            id: doctor.id,
+            name: doctor.username.replace('dr_', 'Dr. ').split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+            specialty: doctor.specialization || 'General Medicine',
+            experience: '10+ years',
+            patients: '2,500+',
+            image: images[index % images.length],
+            email: doctor.email,
+            phone: doctor.phone_number,
+            clinic: doctor.clinic?.name || 'Kasr Al Ainy Hospital',
+          };
+        });
+        setDoctors(topDoctors);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setClinics([]);
+        setDoctors([]);
+      }
+    };
+    
+    loadData();
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -150,73 +210,10 @@ export default function HomePage({ params }: HomePageProps) {
     return () => ctx.revert();
   }, [locale]);
 
-  // Mock data
-  const clinics = [
-    {
-      id: 1,
-      name: t('clinics.internal.name'),
-      description: t('clinics.internal.description'),
-      icon: Heart,
-      patients: '2,500+',
-      color: 'bg-emerald-500',
-    },
-    {
-      id: 2,
-      name: t('clinics.orthopedics.name'),
-      description: t('clinics.orthopedics.description'),
-      icon: Activity,
-      patients: '1,800+',
-      color: 'bg-blue-500',
-    },
-    {
-      id: 3,
-      name: t('clinics.cardiology.name'),
-      description: t('clinics.cardiology.description'),
-      icon: Stethoscope,
-      patients: '2,200+',
-      color: 'bg-red-500',
-    },
-    {
-      id: 4,
-      name: t('clinics.neurology.name'),
-      description: t('clinics.neurology.description'),
-      icon: Shield,
-      patients: '1,500+',
-      color: 'bg-purple-500',
-    },
-  ];
-
-  const doctors = [
-    {
-      id: 1,
-      name: 'Dr. Ahmed Hassan',
-      specialty: t('doctors.specialties.cardiology'),
-      experience: '15+ years',
-      patients: '3,000+',
-      image: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
-    },
-    {
-      id: 2,
-      name: 'Dr. Sarah Mohamed',
-      specialty: t('doctors.specialties.internal'),
-      experience: '12+ years',
-      patients: '2,500+',
-      image: 'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop',
-    },
-    {
-      id: 3,
-      name: 'Dr. Omar Khalil',
-      specialty: t('doctors.specialties.orthopedics'),
-      experience: '10+ years',
-      patients: '2,000+',
-      image: 'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop',
-    },
-  ];
-
   const partners = [
-    { name: 'Cairo University', logo: '/logo-gemini.png' },
+    { name: 'Cairo University', logo: '/logo-chatgpt.png' },
     { name: 'Kasr Al Ainy Hospital', logo: '/logo-chatgpt.png' },
-    { name: 'Ministry of Health', logo: '/logo-gemini.png' },
+    { name: 'Ministry of Health', logo: '/logo-chatgpt.png' },
     { name: 'WHO Egypt', logo: '/logo-chatgpt.png' },
   ];
 
@@ -227,9 +224,77 @@ export default function HomePage({ params }: HomePageProps) {
     { icon: Calendar, value: '50,000+', label: t('stats.visits') },
   ];
 
+  // Structured Data for SEO
+  const structuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'MedicalOrganization',
+    name: 'CodeBlue',
+    alternateName: locale === 'ar' ? 'كود بلو' : 'CodeBlue',
+    description: t('hero.subtitle'),
+    url: `https://codeblue.eg/${locale}`,
+    logo: 'https://codeblue.eg/logo-chatgpt.png',
+    image: 'https://codeblue.eg/logo-chatgpt.png',
+    telephone: '+20223648603',
+    email: 'info@codeblue.eg',
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: 'Kasr Al Ainy Street',
+      addressLocality: 'El-Manial',
+      addressRegion: 'Cairo',
+      postalCode: '11562',
+      addressCountry: 'EG',
+    },
+    parentOrganization: {
+      '@type': 'EducationalOrganization',
+      name: 'Cairo University',
+      url: 'https://cu.edu.eg',
+    },
+    medicalSpecialty: [
+      'Internal Medicine',
+      'Cardiology',
+      'Orthopedics',
+      'Neurology',
+    ],
+    aggregateRating: {
+      '@type': 'AggregateRating',
+      ratingValue: '4.8',
+      reviewCount: '10000',
+    },
+    sameAs: [
+      'https://facebook.com/CodeBlueEG',
+      'https://twitter.com/CodeBlueEG',
+      'https://linkedin.com/company/codeblue-eg',
+      'https://instagram.com/CodeBlueEG',
+    ],
+  };
+
+  const breadcrumbData = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: `https://codeblue.eg/${locale}`,
+      },
+    ],
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <Navbar locale={locale} />
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbData) }}
+      />
+      
+      <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <Navbar locale={locale} />
 
       {/* Hero Section */}
       <section 
@@ -242,7 +307,7 @@ export default function HomePage({ params }: HomePageProps) {
           className="absolute inset-0 z-0"
         >
           <Image
-            src="https://www.koruux.com/_next/image/?url=%2Fassets%2F50-examples-healthcare%2Fnew-hero-compress.webp&w=3840&q=80"
+            src="/new-hero-compress.png"
             alt="Healthcare Hero"
             fill
             className="object-cover"
@@ -274,7 +339,7 @@ export default function HomePage({ params }: HomePageProps) {
                 <Button 
                   size="lg" 
                   variant="outline"
-                  className="w-full sm:w-auto border-2 border-white text-white hover:bg-white hover:text-emerald-900 px-8 py-6 text-lg"
+                  className="w-full sm:w-auto border-2 border-white dark:text-white hover:bg-white hover:text-emerald-900 dark:hover:text-emerald-900 px-8 py-6 text-lg"
                 >
                   {t('hero.ctaPatient')}
                 </Button>
@@ -311,6 +376,92 @@ export default function HomePage({ params }: HomePageProps) {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* Services Section - What We Do */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-white dark:from-gray-900 dark:to-gray-800">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+              {t('services.title')}
+            </h2>
+            <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+              {t('services.subtitle')}
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 items-center max-w-6xl mx-auto">
+            {/* Image */}
+            <div className="relative h-[400px] md:h-[500px] rounded-2xl overflow-hidden shadow-2xl">
+              <Image
+                src="/banner_1.png"
+                alt="Healthcare Services"
+                fill
+                className="object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-emerald-100/30 to-transparent dark:from-emerald-900/50 dark:to-transparent" />
+            </div>
+
+            {/* Services List */}
+            <div className="space-y-6">
+              <div className="flex items-start space-x-4 group">
+                <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Stethoscope className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {t('services.feature1.title')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('services.feature1.description')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4 group">
+                <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Activity className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {t('services.feature2.title')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('services.feature2.description')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4 group">
+                <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Shield className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {t('services.feature3.title')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('services.feature3.description')}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-4 group">
+                <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <Heart className="w-6 h-6 text-red-600 dark:text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {t('services.feature4.title')}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {t('services.feature4.description')}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -415,7 +566,7 @@ export default function HomePage({ params }: HomePageProps) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-6">
             {clinics.map((clinic) => {
               const Icon = clinic.icon;
               return (
@@ -462,10 +613,10 @@ export default function HomePage({ params }: HomePageProps) {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
             {doctors.map((doctor) => (
               <Card key={doctor.id} className="doctor-card overflow-hidden hover:shadow-xl transition-shadow duration-300">
-                <div className="relative h-64 bg-gradient-to-br from-emerald-400 to-blue-500">
+                <div className="relative h-48 bg-gradient-to-br from-emerald-400 to-blue-500">
                   <Image
                     src={doctor.image}
                     alt={doctor.name}
@@ -473,22 +624,22 @@ export default function HomePage({ params }: HomePageProps) {
                     className="object-cover"
                   />
                 </div>
-                <CardHeader>
-                  <CardTitle className="text-xl">{doctor.name}</CardTitle>
-                  <CardDescription className="text-base">{doctor.specialty}</CardDescription>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">{doctor.name}</CardTitle>
+                  <CardDescription className="text-sm">{doctor.specialty}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2 mb-4">
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <Award className="w-4 h-4 mr-2 text-emerald-500" />
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                      <Award className="w-3 h-3 mr-2 text-emerald-500" />
                       {doctor.experience}
                     </div>
-                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
-                      <Users className="w-4 h-4 mr-2 text-emerald-500" />
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                      <Users className="w-3 h-3 mr-2 text-emerald-500" />
                       {doctor.patients} {t('doctors.patients')}
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full text-sm">
                     {t('doctors.viewProfile')}
                   </Button>
                 </CardContent>
@@ -549,6 +700,7 @@ export default function HomePage({ params }: HomePageProps) {
       </section>
 
       <Footer locale={locale} />
-    </div>
+      </div>
+    </>
   );
 }

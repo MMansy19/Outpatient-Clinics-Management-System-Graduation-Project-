@@ -14,7 +14,7 @@ export default async function RegisterPage(props: RegisterPageProps) {
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
         <Image
-          src="/bg-chatgpt.png"
+          src="/bg-gemini.png"
           alt="Medical Background"
           fill
           className="object-cover"

@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
@@ -14,12 +13,6 @@ import {
   MapPin,
   Heart,
 } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 interface FooterProps {
   locale: string;
@@ -27,22 +20,6 @@ interface FooterProps {
 
 export function Footer({ locale }: FooterProps) {
   const t = useTranslations('footer');
-  const footerRef = useRef<HTMLElement>(null);
-
-  useEffect(() => {
-    if (footerRef.current) {
-      gsap.from(footerRef.current, {
-        opacity: 0,
-        y: 50,
-        duration: 1,
-        ease: 'power2.out',
-        scrollTrigger: {
-          trigger: footerRef.current,
-          start: 'top 90%',
-        },
-      });
-    }
-  }, []);
 
   const quickLinks = [
     { href: `/${locale}`, label: t('links.home') },
@@ -60,7 +37,6 @@ export function Footer({ locale }: FooterProps) {
 
   return (
     <footer 
-      ref={footerRef} 
       className="bg-gray-900 dark:bg-gray-950 text-gray-300 pt-16 pb-8"
     >
       <div className="container mx-auto px-4">
@@ -68,7 +44,7 @@ export function Footer({ locale }: FooterProps) {
           {/* Brand Section */}
           <div className="space-y-4">
             <Link href={`/${locale}`} className="flex items-center space-x-3">
-              <div className="relative w-10 h-10">
+              <div className="relative w-20 h-20">
                 <Image
                   src="/logo-chatgpt.png"
                   alt="CodeBlue Logo"

@@ -33,6 +33,26 @@
       "clinics": "Specialized Clinics",
       "visits": "Clinical Visits"
     },
+    "services": {
+      "title": "What We Do",
+      "subtitle": "Comprehensive healthcare solutions powered by cutting-edge technology",
+      "feature1": {
+        "title": "Patient Management",
+        "description": "Streamlined patient registration, medical history tracking, and comprehensive health records management"
+      },
+      "feature2": {
+        "title": "Clinical Decision Support",
+        "description": "AI-powered diagnostic assistance and treatment recommendations based on latest medical research"
+      },
+      "feature3": {
+        "title": "Data Security & Privacy",
+        "description": "HIPAA-compliant secure data storage with advanced encryption and access control"
+      },
+      "feature4": {
+        "title": "Continuous Care",
+        "description": "Seamless care coordination across departments with real-time updates and notifications"
+      }
+    },
     "register": {
       "title": "Join CodeBlue Today",
       "subtitle": "Choose your role and experience the future of healthcare management",
