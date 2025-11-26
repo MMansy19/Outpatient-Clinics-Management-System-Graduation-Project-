@@ -260,6 +260,7 @@
     "physicalExamination": "Physical Examination",
     "physicalExaminationPlaceholder": "Document examination findings (e.g., cardiovascular, respiratory, abdominal)...",
     "vitals": "Vitals",
+    "vitalsDescription": "Record patient's vital signs",
     "weight": "Weight",
     "weightKg": "Weight (kg)",
     "height": "Height",

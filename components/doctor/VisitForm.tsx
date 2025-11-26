@@ -41,7 +41,8 @@ interface VisitFormProps {
 }
 
 export function VisitForm({ patientId, onSuccess, onCancel }: VisitFormProps) {
-  const t = useTranslations('doctor');
+  const t = useTranslations('visit');
+  const tCommon = useTranslations('common');
   const { mutate: createVisit, isPending } = useCreateVisit();
 
   const form = useForm<VisitFormData>({
@@ -487,7 +488,7 @@ export function VisitForm({ patientId, onSuccess, onCancel }: VisitFormProps) {
         <div className="flex justify-end gap-4">
           {onCancel && (
             <Button type="button" variant="outline" onClick={onCancel} disabled={isPending}>
-              {t('cancel')}
+              {tCommon('cancel')}
             </Button>
           )}
           <Button

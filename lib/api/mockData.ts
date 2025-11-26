@@ -607,6 +607,20 @@ export const mockVisitsAPI = {
     setStorageData(STORAGE_KEYS.VISITS, visits);
     return newVisit;
   },
+
+  async getTodayVisits(): Promise<Visit[]> {
+    await delay();
+    const visits = getStorageData(STORAGE_KEYS.VISITS, initVisits());
+    const today = new Date();
+    return visits.filter((v: Visit) => {
+      const visitDate = new Date(v.created_at);
+      return (
+        visitDate.getDate() === today.getDate() &&
+        visitDate.getMonth() === today.getMonth() &&
+        visitDate.getFullYear() === today.getFullYear()
+      );
+    });
+  },
 };
 
 // Mock Medical History API

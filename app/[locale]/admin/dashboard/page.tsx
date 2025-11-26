@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Users, Building2, Calendar, QrCode } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
@@ -12,6 +12,7 @@ import { ClinicTable } from '@/components/admin/ClinicTable';
 import { DoctorTable } from '@/components/admin/DoctorTable';
 import { PatientTable } from '@/components/admin/PatientTable';
 import { QRCodeGenerator } from '@/components/admin/QRCodeGenerator';
+import { mockClinicsAPI, mockDoctorsAPI, mockPatientsAPI, mockVisitsAPI } from '@/lib/api/mockData';
 
 interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
@@ -21,6 +22,36 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('admin');
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalClinics: 0,
+    totalDoctors: 0,
+    totalPatients: 0,
+    todayVisits: 0,
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const [clinics, doctors, patientsData, visits] = await Promise.all([
+          mockClinicsAPI.getClinics(),
+          mockDoctorsAPI.getDoctors(),
+          mockPatientsAPI.searchPatients(),
+          mockVisitsAPI.getTodayVisits(),
+        ]);
+
+        setStats({
+          totalClinics: clinics.length,
+          totalDoctors: doctors.length,
+          totalPatients: patientsData.total,
+          todayVisits: visits.length,
+        });
+      } catch (error) {
+        console.error('Failed to load stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   return (
     <AuthGuard allowedRoles={[UserRole.ADMIN]} locale={locale}>
@@ -39,7 +70,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">{t('totalClinics')}</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.totalClinics}</p>
               </div>
               <Building2 className="h-8 w-8 text-medical-primary" />
             </div>
@@ -49,7 +80,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">{t('totalDoctors')}</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.totalDoctors}</p>
               </div>
               <Users className="h-8 w-8 text-medical-secondary" />
             </div>
@@ -59,7 +90,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">{t('totalPatients')}</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.totalPatients}</p>
               </div>
               <Users className="h-8 w-8 text-medical-info" />
             </div>
@@ -69,7 +100,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <p className="text-sm text-muted-foreground">{t('todayVisits')}</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats.todayVisits}</p>
               </div>
               <Calendar className="h-8 w-8 text-medical-success" />
             </div>

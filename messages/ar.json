@@ -260,6 +260,7 @@
     "physicalExamination": "الفحص السريري",
     "physicalExaminationPlaceholder": "توثيق نتائج الفحص (القلب والأوعية، الجهاز التنفسي، البطن)...",
     "vitals": "العلامات الحيوية",
+    "vitalsDescription": "تسجيل العلامات الحيوية للمريض",
     "weight": "الوزن",
     "weightKg": "الوزن (كجم)",
     "height": "الطول",

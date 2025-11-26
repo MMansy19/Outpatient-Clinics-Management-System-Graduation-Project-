@@ -71,7 +71,7 @@ export function LoginForm({ locale }: LoginFormProps) {
   };
 
   return (
-    <div className="medical-card w-full max-w-md space-y-6 dark:bg-black/40 bg-white/80 backdrop-blur-md shadow-2xl">
+    <div className="medical-card w-full w-[320px] max-w-md space-y-6 dark:bg-black/40 bg-white/80 backdrop-blur-md shadow-2xl">
       <div className="space-y-4 text-center">
         {/* Logo */}
         <div className="flex justify-center">

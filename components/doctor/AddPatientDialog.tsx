@@ -44,6 +44,8 @@ interface AddPatientDialogProps {
 
 export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDialogProps) {
   const t = useTranslations('doctor');
+  const tPatient = useTranslations('patient');
+  const tCommon = useTranslations('common');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<PatientFormInput>({
@@ -62,13 +64,13 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
     const transformedData = patientSchema.parse(data);
     createPatient(transformedData, {
       onSuccess: (patient) => {
-        toast.success(t('patientCreated'));
+        toast.success(tPatient('patientCreated'));
         form.reset();
         onOpenChange(false);
         onSuccess?.(patient.id);
       },
       onError: () => {
-        toast.error(t('patientCreateError'));
+        toast.error(tPatient('patientCreateError'));
       },
     });
   };
@@ -78,7 +80,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('addNewPatient')}</DialogTitle>
-          <DialogDescription>{t('addPatientDescription')}</DialogDescription>
+          <DialogDescription>{t('searchSubtitle')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -89,7 +91,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('patientName')}</FormLabel>
+                    <FormLabel>{tPatient('name')}</FormLabel>
                     <FormControl>
                       <Input placeholder={t('namePlaceholder')} disabled={isPending} {...field} />
                     </FormControl>
@@ -103,7 +105,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="national_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('nationalId')}</FormLabel>
+                    <FormLabel>{tPatient('nationalId')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="12345678901234"
@@ -122,7 +124,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('gender')}</FormLabel>
+                    <FormLabel>{tPatient('gender')}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
                       <FormControl>
                         <SelectTrigger>
@@ -130,8 +132,8 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={Gender.MALE}>{t('male')}</SelectItem>
-                        <SelectItem value={Gender.FEMALE}>{t('female')}</SelectItem>
+                        <SelectItem value={Gender.MALE}>{tPatient('male')}</SelectItem>
+                        <SelectItem value={Gender.FEMALE}>{tPatient('female')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -144,7 +146,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="birthdate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('birthdate')}</FormLabel>
+                    <FormLabel>{tPatient('birthdate')}</FormLabel>
                     <FormControl>
                       <Input type="date" disabled={isPending} {...field} />
                     </FormControl>
@@ -158,7 +160,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="phone_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('phoneNumber')}</FormLabel>
+                    <FormLabel>{tPatient('phone')}</FormLabel>
                     <FormControl>
                       <Input
                         type="tel"
@@ -177,7 +179,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('email')}</FormLabel>
+                    <FormLabel>{tPatient('email')}</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
@@ -199,7 +201,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
-                {t('cancel')}
+                {tCommon('cancel')}
               </Button>
               <Button
                 type="submit"
@@ -209,10 +211,10 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('creating')}
+                    {tPatient('registering')}
                   </>
                 ) : (
-                  t('create')
+                  tPatient('registerPatient')
                 )}
               </Button>
             </DialogFooter>

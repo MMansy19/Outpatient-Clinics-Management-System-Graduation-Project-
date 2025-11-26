@@ -28,6 +28,9 @@ interface PatientProfileProps {
 
 export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfileProps) {
   const t = useTranslations('doctor');
+  const tPatient = useTranslations('patient');
+  const tVisit = useTranslations('visit');
+  const tCommon = useTranslations('common');
   const { data: patient, isLoading: loadingPatient } = useGetPatient(patientId);
   const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(patientId);
 
@@ -66,9 +69,9 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
               <div>
                 <CardTitle className="text-2xl">{patient.name}</CardTitle>
                 <CardDescription className="flex items-center gap-4 mt-1">
-                  <span>{t('nationalId')}: {patient.national_id}</span>
+                  <span>{tPatient('nationalId')}: {patient.national_id}</span>
                   <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'}>
-                    {patient.gender === Gender.MALE ? t('male') : t('female')}
+                    {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
                   </Badge>
                 </CardDescription>
               </div>
@@ -77,7 +80,7 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
               {onEdit && (
                 <Button variant="outline" size="sm" onClick={onEdit}>
                   <Edit className="mr-2 h-4 w-4" />
-                  {t('edit')}
+                  {tCommon('edit')}
                 </Button>
               )}
               {onNewVisit && (
@@ -94,15 +97,15 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <div>
-                <p className="text-sm text-muted-foreground">{t('age')}</p>
-                <p className="font-medium">{calculateAge(patient.birthdate)} {t('years')}</p>
+                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
+                <p className="font-medium">{calculateAge(patient.birthdate)} {tPatient('years')}</p>
               </div>
             </div>
             {patient.phone_number && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('phone')}</p>
+                  <p className="text-sm text-muted-foreground">{tPatient('phone')}</p>
                   <p className="font-medium">{patient.phone_number}</p>
                 </div>
               </div>
@@ -111,7 +114,7 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <div>
-                  <p className="text-sm text-muted-foreground">{t('email')}</p>
+                  <p className="text-sm text-muted-foreground">{tPatient('email')}</p>
                   <p className="font-medium">{patient.email}</p>
                 </div>
               </div>
@@ -132,18 +135,18 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
           <CardContent>
             <div className="grid gap-4 md:grid-cols-4">
               <div className="medical-card">
-                <p className="text-sm text-muted-foreground">{t('weight')}</p>
+                <p className="text-sm text-muted-foreground">{tVisit('weight')}</p>
                 <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} kg</p>
               </div>
               {latestVitals.height && (
                 <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{t('height')}</p>
+                  <p className="text-sm text-muted-foreground">{tVisit('height')}</p>
                   <p className="text-2xl font-bold">{latestVitals.height} cm</p>
                 </div>
               )}
               {latestVitals.blood_pressure_systolic && latestVitals.blood_pressure_diastolic && (
                 <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{t('bloodPressure')}</p>
+                  <p className="text-sm text-muted-foreground">{tVisit('bloodPressure')}</p>
                   <p className="text-2xl font-bold">
                     {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
                   </p>
@@ -151,7 +154,7 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
               )}
               {latestVitals.heart_rate && (
                 <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{t('heartRate')}</p>
+                  <p className="text-sm text-muted-foreground">{tVisit('heartRate')}</p>
                   <p className="text-2xl font-bold">{latestVitals.heart_rate} bpm</p>
                 </div>
               )}
@@ -169,7 +172,7 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
           </TabsTrigger>
           <TabsTrigger value="timeline">
             <Clock className="mr-2 h-4 w-4" />
-            {t('medicalHistory')}
+            {tPatient('medicalHistory')}
           </TabsTrigger>
         </TabsList>
 
@@ -178,7 +181,7 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
             <CardHeader>
               <CardTitle>{t('recentVisits')}</CardTitle>
               <CardDescription>
-                {visits ? `${visits.length} ${t('totalVisits')}` : t('loading')}
+                {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
               </CardDescription>
             </CardHeader>
             <CardContent>
