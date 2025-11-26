@@ -12,6 +12,113 @@
     "filter": "Filter",
     "required": "Required"
   },
+  "nav": {
+    "home": "Home",
+    "clinics": "Clinics",
+    "doctors": "Doctors",
+    "partners": "Partners",
+    "login": "Login",
+    "register": "Register"
+  },
+  "landing": {
+    "hero": {
+      "title": "Transform Healthcare with Smart Clinical Solutions",
+      "subtitle": "Empowering Kasr Al Ainy Hospital with AI-driven patient management, seamless medical records, and instant clinical decisions",
+      "ctaDoctor": "Register as Doctor",
+      "ctaPatient": "Register as Patient"
+    },
+    "stats": {
+      "patients": "Patients Served",
+      "doctors": "Expert Doctors",
+      "clinics": "Specialized Clinics",
+      "visits": "Clinical Visits"
+    },
+    "register": {
+      "title": "Join CodeBlue Today",
+      "subtitle": "Choose your role and experience the future of healthcare management",
+      "doctor": {
+        "title": "For Healthcare Professionals",
+        "description": "Advanced tools for comprehensive patient care",
+        "feature1": "Real-time patient records access",
+        "feature2": "AI-powered clinical decision support",
+        "feature3": "Seamless visit documentation",
+        "cta": "Register as Doctor"
+      },
+      "patient": {
+        "title": "For Patients",
+        "description": "Your complete health journey in one place",
+        "feature1": "Access your medical history anytime",
+        "feature2": "Book appointments with ease",
+        "feature3": "Track your health progress",
+        "cta": "Register as Patient"
+      }
+    },
+    "clinics": {
+      "title": "Our Specialized Clinics",
+      "subtitle": "Comprehensive care across multiple medical specialties",
+      "learnMore": "Learn More",
+      "internal": {
+        "name": "Internal Medicine",
+        "description": "Comprehensive diagnosis and treatment of adult diseases"
+      },
+      "orthopedics": {
+        "name": "Orthopedics",
+        "description": "Expert care for bones, joints, and musculoskeletal system"
+      },
+      "cardiology": {
+        "name": "Cardiology",
+        "description": "Advanced heart and cardiovascular disease management"
+      },
+      "neurology": {
+        "name": "Neurology",
+        "description": "Specialized care for nervous system disorders"
+      }
+    },
+    "doctors": {
+      "title": "Meet Our Expert Doctors",
+      "subtitle": "World-class physicians dedicated to your health",
+      "patients": "Patients",
+      "viewProfile": "View Profile",
+      "specialties": {
+        "cardiology": "Cardiology Specialist",
+        "internal": "Internal Medicine",
+        "orthopedics": "Orthopedic Surgeon"
+      }
+    },
+    "partners": {
+      "title": "Our Trusted Partners",
+      "subtitle": "Collaborating with leading healthcare institutions"
+    },
+    "cta": {
+      "title": "Ready to Transform Healthcare?",
+      "subtitle": "Join thousands of healthcare professionals and patients using CodeBlue",
+      "button": "Get Started Now"
+    }
+  },
+  "footer": {
+    "description": "Smart Clinical Companion for Kasr Al Ainy Hospital - Revolutionizing healthcare delivery through technology",
+    "quickLinks": "Quick Links",
+    "links": {
+      "home": "Home",
+      "clinics": "Clinics",
+      "doctors": "Doctors",
+      "register": "Register"
+    },
+    "contact": {
+      "title": "Contact Us",
+      "address": "Kasr Al Ainy Hospital, Cairo University, El-Manial, Cairo, Egypt"
+    },
+    "team": {
+      "title": "Development Team",
+      "subtitle": "Built by Computer Engineering students at Cairo University"
+    },
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "hipaa": "HIPAA Compliance",
+    "secured": "Secured by",
+    "copyright": "CodeBlue Team - Cairo University",
+    "allRights": "All rights reserved. Built for educational purposes."
+  },
   "auth": {
     "login": "Login",
     "register": "Register",

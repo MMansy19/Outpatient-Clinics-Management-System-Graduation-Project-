@@ -22,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { useLogin } from '@/lib/api/queries/useAuth';
 import { loginSchema, type LoginFormData } from '@/lib/schemas/authSchema';
 import { UserRole } from '@/types/entities/User';
-import { useAuthStore } from '@/stores/authStore';
 
 interface LoginFormProps {
   locale: string;

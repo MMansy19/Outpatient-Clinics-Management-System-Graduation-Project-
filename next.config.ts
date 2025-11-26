@@ -14,6 +14,14 @@ const nextConfig: NextConfig = {
         hostname: 'api.codeblue.com',
         pathname: '/uploads/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.koruux.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
   },
 
