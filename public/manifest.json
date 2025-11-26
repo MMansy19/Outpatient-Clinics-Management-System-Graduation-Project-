@@ -1,0 +1,22 @@
+{
+  "name": "CodeBlue",
+  "short_name": "CodeBlue",
+  "description": "Kasr Al Ainy Hospital - Outpatient Clinic Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#10B981",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
