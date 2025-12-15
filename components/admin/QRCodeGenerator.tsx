@@ -111,7 +111,6 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
           {qrCodeUrl && (
             <div className="flex flex-col items-center space-y-4">
               <div className="rounded-lg border-2 border-medical-primary/20 p-4 bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={qrCodeUrl} alt="QR Code" className="h-[300px] w-[300px]" />
               </div>
 
