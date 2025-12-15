@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, toastMessages } from '@/lib/utils/toast';
 
 import {
   Dialog,
@@ -89,7 +89,11 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
     createPatient(data, {
       onSuccess: (response) => {
         console.log('✅ Patient created successfully:', response);
-        toast.success(`Patient created successfully! ID: ${response.id}`);
+        const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
+        toast.success(
+          toastMessages.patient.createSuccess,
+          toastMessages.patient.createSuccessDescription(fullName)
+        );
         form.reset();
         onOpenChange(false);
         
@@ -108,7 +112,10 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
           
           // Check if it's a "User already exists" error
           if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
-            toast.error('A patient with this National ID already exists');
+            toast.error(
+              toastMessages.patient.alreadyExists,
+              toastMessages.patient.alreadyExistsDescription
+            );
             return;
           }
           
@@ -117,10 +124,16 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
             ? response.data 
             : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
                 ? response.data.message 
-                : 'Failed to create patient');
-          toast.error(message);
+                : 'Please check the form and try again.');
+          toast.error(
+            toastMessages.patient.createError,
+            message
+          );
         } else {
-          toast.error('Network error. Please check your connection and try again.');
+          toast.error(
+            toastMessages.network.error,
+            toastMessages.network.errorDescription
+          );
         }
       },
     });

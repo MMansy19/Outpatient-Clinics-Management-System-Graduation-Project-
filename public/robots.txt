@@ -1,0 +1,26 @@
+# MediStream OCMS - Robots.txt
+# Allow all crawlers to index the site
+
+User-agent: *
+Allow: /
+
+# Disallow authentication pages
+Disallow: /api/
+Disallow: /*/login
+Disallow: /*/register
+
+# Sitemap location
+Sitemap: https://medistream-ocms.vercel.app/sitemap.xml
+
+# Crawl delay (optional, helps prevent server overload)
+Crawl-delay: 1
+
+# Specific bot rules
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Slurp
+Allow: /

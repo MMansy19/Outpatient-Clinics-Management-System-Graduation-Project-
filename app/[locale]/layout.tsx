@@ -14,29 +14,33 @@ export async function generateMetadata({ params }: LocaleLayoutProps): Promise<M
   const { locale } = await params;
   
   const isArabic = locale === 'ar';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://medistream-ocms.vercel.app';
   
   return {
     title: isArabic 
-      ? 'كود بلو - الرفيق السريري الذكي لمستشفى قصر العيني'
-      : 'CodeBlue - Smart Clinical Companion for Kasr Al Ainy Hospital',
+      ? 'ميدي ستريم OCMS - الرفيق السريري الذكي لمستشفى قصر العيني'
+      : 'MediStream OCMS - Smart Clinical Companion for Kasr Al Ainy Hospital',
     description: isArabic
-      ? 'حوّل الرعاية الصحية مع كود بلو - إدارة المرضى المدعومة بالذكاء الاصطناعي، والسجلات الطبية السلسة، والقرارات السريرية الفورية. الرفيق السريري الذكي لمستشفى قصر العيني، جامعة القاهرة.'
-      : 'Transform healthcare with CodeBlue - AI-powered patient management, seamless medical records, and instant clinical decisions. Smart Clinical Companion for Kasr Al Ainy Hospital, Cairo University.',
+      ? 'حوّل الرعاية الصحية مع ميدي ستريم OCMS - إدارة المرضى المدعومة بالذكاء الاصطناعي، والسجلات الطبية السلسة، والقرارات السريرية الفورية. نظام إدارة العيادات الخارجية الذكي لمستشفى قصر العيني، جامعة القاهرة.'
+      : 'Transform healthcare with MediStream OCMS - AI-powered patient management, seamless medical records, and instant clinical decisions. Smart Outpatient Clinic Management System for Kasr Al Ainy Hospital, Cairo University.',
     alternates: {
-      canonical: `/${locale}`,
+      canonical: `${siteUrl}/${locale}`,
       languages: {
-        en: '/en',
-        ar: '/ar',
+        'en-US': `${siteUrl}/en`,
+        'ar-EG': `${siteUrl}/ar`,
       },
     },
     openGraph: {
       locale: isArabic ? 'ar_EG' : 'en_US',
+      url: `${siteUrl}/${locale}`,
       title: isArabic 
-        ? 'كود بلو - الرفيق السريري الذكي'
-        : 'CodeBlue - Smart Clinical Companion',
+        ? 'ميدي ستريم OCMS - الرفيق السريري الذكي'
+        : 'MediStream OCMS - Smart Clinical Companion',
       description: isArabic
         ? 'حوّل الرعاية الصحية بالذكاء الاصطناعي وإدارة المرضى'
         : 'Transform healthcare with AI-powered patient management',
+      type: 'website',
+      siteName: 'MediStream OCMS',
     },
   };
 }

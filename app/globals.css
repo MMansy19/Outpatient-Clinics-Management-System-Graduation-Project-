@@ -90,3 +90,52 @@
 .skeleton {
   @apply animate-pulse rounded-md bg-muted;
 }
+
+/* Toast Animations */
+@keyframes toast-slide-in-right {
+  from {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(calc(100% + 1rem));
+    opacity: 0;
+  }
+}
+
+[data-sonner-toast] {
+  animation: toast-slide-in-right 0.2s cubic-bezier(0.21, 1.02, 0.73, 1) forwards;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toast-slide-out-right 0.2s ease-out forwards;
+}
+
+[data-sonner-toast][data-expanded="false"] {
+  @apply shadow-lg;
+}
+
+[data-sonner-toast][data-expanded="true"] {
+  @apply shadow-xl;
+}
+
+/* Professional Toast Styling */
+[data-sonner-toast] {
+  @apply backdrop-blur-sm;
+}
+
+[data-sonner-toast]:hover {
+  @apply scale-[1.02] transition-transform duration-200;
+}
+

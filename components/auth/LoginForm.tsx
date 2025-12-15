@@ -7,7 +7,7 @@ import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast, toastMessages } from '@/lib/utils/toast';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -52,7 +52,10 @@ export function LoginForm({ locale }: LoginFormProps) {
           language: response.language
         });
         
-        toast.success(t('loginSuccess'));
+        toast.success(
+          toastMessages.auth.loginSuccess,
+          `${toastMessages.auth.loginSuccessDescription} Welcome, ${response.name}!`
+        );
         
         // Redirect based on user role
         const redirectParam = searchParams.get('redirect');
@@ -82,8 +85,11 @@ export function LoginForm({ locale }: LoginFormProps) {
       },
       onError: (error: unknown) => {
         console.error('❌ Login Error:', error);
-        const message = (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data && typeof error.response.data.message === 'string') ? error.response.data.message : t('loginError') || 'Login failed';
-        toast.error(message);
+        const message = (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data && typeof error.response.data.message === 'string') ? error.response.data.message : toastMessages.auth.loginErrorDescription;
+        toast.error(
+          toastMessages.auth.loginError,
+          message
+        );
       },
     });
   };
