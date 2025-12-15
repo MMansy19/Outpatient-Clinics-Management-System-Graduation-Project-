@@ -48,13 +48,13 @@ export function ToastDemo() {
   };
 
   const handlePromise = () => {
-    const fakeApiCall = new Promise((resolve) => {
+    const fakeApiCall = new Promise<{ name: string }>((resolve) => {
       setTimeout(() => resolve({ name: 'Dr. John Smith' }), 2000);
     });
 
     toast.promise(fakeApiCall, {
       loading: '⏳ Creating doctor...',
-      success: (data: any) => `✅ ${data.name} created successfully!`,
+      success: (data) => `✅ ${data.name} created successfully!`,
       error: '❌ Failed to create doctor',
     });
   };
