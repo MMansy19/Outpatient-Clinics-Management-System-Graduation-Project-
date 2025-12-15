@@ -33,9 +33,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { useCreatePatient } from '@/lib/api/queries/usePatients';
-import { patientFormSchema, type PatientFormInput } from '@/lib/schemas/patientSchema';
-import { Gender } from '@/types/entities/Patient';
+import { useCreatePatient } from '@/lib/api/hooks/useAuth';
+import { createPatientSchema, type CreatePatientFormData } from '@/lib/schemas/auth.schemas';
+import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
 import { extractGenderFromNationalId, extractBirthdateFromNationalId } from '@/lib/schemas/auth.schemas';
 
@@ -51,56 +51,77 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
   const tCommon = useTranslations('common');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
-  const form = useForm<PatientFormInput>({
-    resolver: zodResolver(patientFormSchema),
+  const form = useForm<CreatePatientFormData>({
+    resolver: zodResolver(createPatientSchema),
     defaultValues: {
-      name: '',
-      national_id: '',
-      gender: Gender.MALE,
-      birthdate: '',
-      phone_number: '',
-      email: '',
+      firstName: '',
+      lastName: '',
+      language: Language.ENGLISH,
+      socialSecurityNumber: '',
+      address: '',
+      job: '',
     },
   });
 
   // Watch the national ID field to show extracted info
-  const nationalId = form.watch('national_id');
+  const nationalId = form.watch('socialSecurityNumber');
 
   // Auto-populate gender and birthdate when valid National ID is entered
+  // Note: Backend extracts these from National ID, no need to send separately
   useEffect(() => {
     if (nationalId && nationalId.length === 14) {
       const gender = extractGenderFromNationalId(nationalId);
       const birthdate = extractBirthdateFromNationalId(nationalId);
       
+      // Just for validation and display - backend extracts from National ID
       if (gender && birthdate) {
-        // Set gender (convert to match Gender enum from Patient type)
-        form.setValue('gender', gender === 'MALE' ? Gender.MALE : Gender.FEMALE);
-        
-        // Set birthdate in YYYY-MM-DD format for date input
-        const year = birthdate.getFullYear();
-        const month = String(birthdate.getMonth() + 1).padStart(2, '0');
-        const day = String(birthdate.getDate()).padStart(2, '0');
-        form.setValue('birthdate', `${year}-${month}-${day}`);
+        console.log('📋 Extracted from National ID:', {
+          gender,
+          birthdate: birthdate.toLocaleDateString(),
+        });
       }
     }
-  }, [nationalId, form]);
+  }, [nationalId]);
 
-  const onSubmit = (data: PatientFormInput) => {
-    // Transform the form data to match API requirements
-    const transformedData = {
-      ...data,
-      national_id: parseInt(data.national_id, 10),
-      birthdate: new Date(data.birthdate),
-    };
-    createPatient(transformedData, {
-      onSuccess: (patient) => {
-        toast.success(tPatient('patientCreated'));
+  const onSubmit = (data: CreatePatientFormData) => {
+    console.log('📝 Creating patient with data:', data);
+    
+    createPatient(data, {
+      onSuccess: (response) => {
+        console.log('✅ Patient created successfully:', response);
+        toast.success(`Patient created successfully! ID: ${response.id}`);
         form.reset();
         onOpenChange(false);
-        onSuccess?.(patient.id);
+        
+        // Extract the numeric ID from globalId if needed
+        const numericId = parseInt(response.id) || 0;
+        onSuccess?.(numericId);
       },
-      onError: () => {
-        toast.error(tPatient('patientCreateError'));
+      onError: (error: unknown) => {
+        console.error('❌ Create patient error:', error);
+        
+        // Handle different error cases
+        if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
+          const response = error.response as { data?: unknown; status?: number };
+          console.error('Response data:', response.data);
+          console.error('Response status:', response.status);
+          
+          // Check if it's a "User already exists" error
+          if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
+            toast.error('A patient with this National ID already exists');
+            return;
+          }
+          
+          // Get error message from response
+          const message = typeof response.data === 'string' 
+            ? response.data 
+            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
+                ? response.data.message 
+                : 'Failed to create patient');
+          toast.error(message);
+        } else {
+          toast.error('Network error. Please check your connection and try again.');
+        }
       },
     });
   };
@@ -116,14 +137,15 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
+              {/* Name Fields */}
               <FormField
                 control={form.control}
-                name="name"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tPatient('name')}</FormLabel>
+                    <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder={t('namePlaceholder')} disabled={isPending} {...field} />
+                      <Input placeholder="John" disabled={isPending} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -132,13 +154,28 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
 
               <FormField
                 control={form.control}
-                name="national_id"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" disabled={isPending} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* National ID */}
+              <FormField
+                control={form.control}
+                name="socialSecurityNumber"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
                     <FormLabel>{tPatient('nationalId')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="12345678901234"
+                        placeholder="30202041234567"
                         maxLength={14}
                         disabled={isPending}
                         {...field}
@@ -152,75 +189,66 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 )}
               />
 
+              {/* Address */}
               <FormField
                 control={form.control}
-                name="gender"
+                name="address"
+                render={({ field }) => (
+                  <FormItem className="md:col-span-2">
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="123 Main Street, Cairo"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Job */}
+              <FormField
+                control={form.control}
+                name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tPatient('gender')}</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
+                    <FormLabel>Job/Occupation</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Engineer"
+                        disabled={isPending}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Language */}
+              <FormField
+                control={form.control}
+                name="language"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Preferred Language</FormLabel>
+                    <Select
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                      defaultValue={field.value?.toString()}
+                      disabled={isPending}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue />
+                          <SelectValue placeholder="Select language" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value={Gender.MALE}>{tPatient('male')}</SelectItem>
-                        <SelectItem value={Gender.FEMALE}>{tPatient('female')}</SelectItem>
+                        <SelectItem value="0">Arabic (العربية)</SelectItem>
+                        <SelectItem value="1">English</SelectItem>
                       </SelectContent>
                     </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="birthdate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{tPatient('birthdate')}</FormLabel>
-                    <FormControl>
-                      <Input type="date" disabled={isPending} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone_number"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{tPatient('phone')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        placeholder="01234567890"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{tPatient('email')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="email"
-                        placeholder="patient@example.com"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -236,11 +264,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
               >
                 {tCommon('cancel')}
               </Button>
-              <Button
-                type="submit"
-                disabled={isPending}
-                className="bg-medical-primary hover:bg-medical-primary/90"
-              >
+              <Button type="submit" disabled={isPending}>
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

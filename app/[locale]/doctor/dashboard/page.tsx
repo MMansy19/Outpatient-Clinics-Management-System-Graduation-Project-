@@ -34,6 +34,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const [patientsCreated, setPatientsCreated] = useState(0);
 
   const { data: recentVisits, isLoading } = useGetRecentVisits(5);
 
@@ -43,6 +44,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   };
 
   const handleNewPatientCreated = (patientId: number) => {
+    setPatientsCreated(prev => prev + 1);
     setSelectedPatientId(patientId);
     setCurrentView('profile');
   };
@@ -77,8 +79,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Users className="h-4 w-4 text-medical-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">{t('patientsSeenToday')}</p>
+                  <div className="text-2xl font-bold">{patientsCreated}</div>
+                  <p className="text-xs text-muted-foreground">Patients registered this session</p>
                 </CardContent>
               </Card>
 
@@ -88,7 +90,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Activity className="h-4 w-4 text-medical-secondary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{recentVisits?.length || 0}</div>
                   <p className="text-xs text-muted-foreground">{t('awaitingDocumentation')}</p>
                 </CardContent>
               </Card>
@@ -99,7 +101,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Calendar className="h-4 w-4 text-medical-info" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0</div>
+                  <div className="text-2xl font-bold">{recentVisits?.length || 0}</div>
                   <p className="text-xs text-muted-foreground">{t('totalThisWeek')}</p>
                 </CardContent>
               </Card>

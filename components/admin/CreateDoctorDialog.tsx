@@ -105,7 +105,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         
         // Handle different error cases
         if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
-          const response = error.response as any;
+          const response = error.response as { data?: unknown; status?: number };
           console.error('Response data:', response.data);
           console.error('Response status:', response.status);
           
@@ -118,7 +118,9 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
           // Get error message from response
           const message = typeof response.data === 'string' 
             ? response.data 
-            : (response.data?.message || 'Failed to create doctor');
+            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
+                ? response.data.message 
+                : 'Failed to create doctor');
           toast.error(message);
         } else {
           toast.error('Network error. Please check your connection and try again.');
