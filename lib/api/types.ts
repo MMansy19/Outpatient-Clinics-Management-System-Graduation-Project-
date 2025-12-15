@@ -1,0 +1,143 @@
+/**
+ * API Type Definitions
+ * 
+ * These types are derived from the OpenAPI schema (auth.json) and backend DTOs.
+ * They ensure type safety when communicating with the CodeBlue backend.
+ */
+
+// ============================================================================
+// Enums
+// ============================================================================
+
+export enum Language {
+  ARABIC = 0,
+  ENGLISH = 1,
+}
+
+export enum Role {
+  SUPER_ADMIN = 0,
+  ADMIN = 1,
+  PATIENT = 2,
+  DOCTOR = 3,
+}
+
+export enum Gender {
+  MALE = 'MALE',
+  FEMALE = 'FEMALE',
+}
+
+// ============================================================================
+// Authentication DTOs
+// ============================================================================
+
+export interface LoginDto {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  name: string;
+  language: Language;
+  role: Role;
+}
+
+// ============================================================================
+// User Creation DTOs
+// ============================================================================
+
+export interface CreateAdminDto {
+  firstName: string;
+  lastName: string;
+  language: Language;
+  socialSecurityNumber: string; // 14 digits
+  email: string;
+  phone: string;
+  password: string; // Minimum 8 characters
+}
+
+export interface CreateDoctorDto {
+  firstName: string;
+  lastName: string;
+  language: Language;
+  socialSecurityNumber: string; // 14 digits
+  email: string;
+  phone: string;
+  password: string; // Minimum 8 characters
+  speciality: string;
+}
+
+export interface CreatePatientDto {
+  firstName: string;
+  lastName: string;
+  language: Language;
+  socialSecurityNumber: string; // 14 digits
+  address: string;
+  job: string;
+}
+
+export interface CreateUserResponse {
+  message: string;
+  id: string; // globalId (UUID)
+}
+
+// ============================================================================
+// User Entities (from backend)
+// ============================================================================
+
+export interface User {
+  id: number;
+  globalId: string;
+  firstName: string;
+  lastName: string;
+  role: Role;
+  gender: Gender;
+  language: Language;
+  dateOfBirth: Date;
+  socialSecurityNumber: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt?: Date;
+  isDeleted: boolean;
+}
+
+export interface Admin extends User {
+  email: string;
+  phone: string;
+}
+
+export interface Doctor extends User {
+  email: string;
+  phone: string;
+  speciality: string;
+  isApproved: boolean;
+}
+
+export interface Patient extends User {
+  address?: string;
+  job?: string;
+}
+
+// ============================================================================
+// API Error Response
+// ============================================================================
+
+export interface ApiError {
+  message: string;
+  statusCode: number;
+  error?: string;
+}
+
+// ============================================================================
+// JWT Payload (for reference - not directly accessible in frontend)
+// ============================================================================
+
+export interface JwtPayload {
+  sub: number; // User ID
+  globalId: string;
+  socialSecurityNumber: string;
+  role: Role;
+  iat?: number; // Issued at
+  exp?: number; // Expiration
+  iss?: string; // Issuer
+  aud?: string; // Audience
+}

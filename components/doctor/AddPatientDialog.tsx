@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -35,6 +36,8 @@ import {
 import { useCreatePatient } from '@/lib/api/queries/usePatients';
 import { patientFormSchema, type PatientFormInput } from '@/lib/schemas/patientSchema';
 import { Gender } from '@/types/entities/Patient';
+import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
+import { extractGenderFromNationalId, extractBirthdateFromNationalId } from '@/lib/schemas/auth.schemas';
 
 interface AddPatientDialogProps {
   open: boolean;
@@ -59,6 +62,28 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
       email: '',
     },
   });
+
+  // Watch the national ID field to show extracted info
+  const nationalId = form.watch('national_id');
+
+  // Auto-populate gender and birthdate when valid National ID is entered
+  useEffect(() => {
+    if (nationalId && nationalId.length === 14) {
+      const gender = extractGenderFromNationalId(nationalId);
+      const birthdate = extractBirthdateFromNationalId(nationalId);
+      
+      if (gender && birthdate) {
+        // Set gender (convert to match Gender enum from Patient type)
+        form.setValue('gender', gender === 'MALE' ? Gender.MALE : Gender.FEMALE);
+        
+        // Set birthdate in YYYY-MM-DD format for date input
+        const year = birthdate.getFullYear();
+        const month = String(birthdate.getMonth() + 1).padStart(2, '0');
+        const day = String(birthdate.getDate()).padStart(2, '0');
+        form.setValue('birthdate', `${year}-${month}-${day}`);
+      }
+    }
+  }, [nationalId, form]);
 
   const onSubmit = (data: PatientFormInput) => {
     // Transform the form data to match API requirements
@@ -120,6 +145,9 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                       />
                     </FormControl>
                     <FormMessage />
+                    {nationalId && nationalId.length === 14 && (
+                      <NationalIdInfo nationalId={nationalId} locale="en" />
+                    )}
                   </FormItem>
                 )}
               />

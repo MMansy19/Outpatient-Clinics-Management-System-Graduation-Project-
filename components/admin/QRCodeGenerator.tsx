@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { QrCode, Download } from 'lucide-react';
 import QRCodeLib from 'qrcode';
+import Image from 'next/image';
 
 import {
   Dialog,
@@ -111,7 +112,7 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
           {qrCodeUrl && (
             <div className="flex flex-col items-center space-y-4">
               <div className="rounded-lg border-2 border-medical-primary/20 p-4 bg-white">
-                <img src={qrCodeUrl} alt="QR Code" className="h-[300px] w-[300px]" />
+                <Image src={qrCodeUrl} alt="QR Code" width={300} height={300} className="h-[300px] w-[300px]" unoptimized />
               </div>
 
               <div className="text-center space-y-1">

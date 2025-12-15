@@ -19,9 +19,9 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useLogin } from '@/lib/api/queries/useAuth';
-import { loginSchema, type LoginFormData } from '@/lib/schemas/authSchema';
-import { UserRole } from '@/types/entities/User';
+import { useLogin } from '@/lib/api/hooks/useAuth';
+import { loginSchema, type LoginFormData } from '@/lib/schemas/auth.schemas';
+import { Role } from '@/lib/api/types';
 
 interface LoginFormProps {
   locale: string;
@@ -45,6 +45,13 @@ export function LoginForm({ locale }: LoginFormProps) {
   const onSubmit = (data: LoginFormData) => {
     login(data, {
       onSuccess: (response) => {
+        console.log('✅ Login Response:', response);
+        console.log('📋 User Details:', {
+          name: response.name,
+          role: response.role,
+          language: response.language
+        });
+        
         toast.success(t('loginSuccess'));
         
         // Redirect based on user role
@@ -53,19 +60,30 @@ export function LoginForm({ locale }: LoginFormProps) {
         
         if (!redirectPath) {
           // Default redirects based on role
-          if (response.user.role === UserRole.ADMIN) {
-            redirectPath = `/${locale}/admin/dashboard`;
-          } else if (response.user.role === UserRole.DOCTOR) {
-            redirectPath = `/${locale}/doctor/dashboard`;
-          } else {
-            redirectPath = `/${locale}/`;
+          switch (response.role) {
+            case Role.SUPER_ADMIN:
+            case Role.ADMIN:
+              redirectPath = `/${locale}/admin/dashboard`;
+              console.log('🔄 Redirecting to Admin Dashboard:', redirectPath);
+              break;
+            case Role.DOCTOR:
+              redirectPath = `/${locale}/doctor/dashboard`;
+              console.log('🔄 Redirecting to Doctor Dashboard:', redirectPath);
+              break;
+            default:
+              redirectPath = `/${locale}/`;
+              console.log('🔄 Redirecting to Home:', redirectPath);
           }
+        } else {
+          console.log('🔄 Redirecting to:', redirectPath);
         }
         
         router.push(redirectPath);
       },
-      onError: (error) => {
-        toast.error(error.message || t('loginError'));
+      onError: (error: unknown) => {
+        console.error('❌ Login Error:', error);
+        const message = (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data && typeof error.response.data.message === 'string') ? error.response.data.message : t('loginError') || 'Login failed';
+        toast.error(message);
       },
     });
   };

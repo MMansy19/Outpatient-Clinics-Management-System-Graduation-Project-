@@ -4,7 +4,7 @@ import { use, useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Users, Building2, Calendar, QrCode } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
-import { UserRole } from '@/types/entities/User';
+import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,6 +12,7 @@ import { ClinicTable } from '@/components/admin/ClinicTable';
 import { DoctorTable } from '@/components/admin/DoctorTable';
 import { PatientTable } from '@/components/admin/PatientTable';
 import { QRCodeGenerator } from '@/components/admin/QRCodeGenerator';
+import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { mockClinicsAPI, mockDoctorsAPI, mockPatientsAPI, mockVisitsAPI } from '@/lib/api/mockData';
 
 interface AdminDashboardProps {
@@ -54,14 +55,17 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   }, []);
 
   return (
-    <AuthGuard allowedRoles={[UserRole.ADMIN]} locale={locale}>
+    <AuthGuard allowedRoles={[Role.SUPER_ADMIN, Role.ADMIN]} locale={locale}>
       <div className="container mx-auto space-y-8 p-6">
         <div className="flex items-center justify-between">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-medical-primary">{t('dashboard')}</h1>
             <p className="text-muted-foreground">{t('dashboardSubtitle')}</p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <CreateDoctorDialog />
+            <ThemeToggle />
+          </div>
         </div>
 
         {/* Stats Cards */}

@@ -1,7 +1,11 @@
 import { z } from 'zod';
 import { UserRole } from '@/types/entities/User';
 
-export const loginSchema = z.object({
+// Re-export from the new auth.schemas.ts for backward compatibility
+export { loginSchema } from './auth.schemas';
+
+// Keep the old schema for existing components that haven't been migrated yet
+export const loginSchemaOld = z.object({
   email: z
     .string()
     .min(1, 'Email is required')
@@ -51,5 +55,5 @@ export const registerSchema = z.object({
   path: ['specialization'],
 });
 
-export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export type { LoginFormData } from './auth.schemas';

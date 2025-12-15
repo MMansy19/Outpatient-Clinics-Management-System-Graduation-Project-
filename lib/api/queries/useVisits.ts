@@ -41,9 +41,10 @@ export const useCreateVisit = (): UseMutationResult<Visit, Error, VisitFormData>
     mutationFn: async (data: VisitFormData) => {
       if (USE_MOCK_DATA) {
         // Add doctor_id and clinic_id from auth store
+        // TODO: Update when backend integration is complete
         const visitData = {
           ...data,
-          doctor_id: user?.id || 0,
+          doctor_id: 1, // Mock value - will come from backend session
           clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
         };
         return await mockVisitsAPI.createVisit(visitData);

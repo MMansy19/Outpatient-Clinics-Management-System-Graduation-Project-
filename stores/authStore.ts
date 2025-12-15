@@ -1,36 +1,60 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { UserPublic } from '@/types/entities/User';
+import type { Role, Language } from '@/lib/api/types';
+
+/**
+ * Authentication Store
+ * 
+ * This store manages user authentication state.
+ * 
+ * CRITICAL CHANGE: The JWT token is NOT stored here anymore!
+ * The backend uses HTTP-only cookies for token storage, which:
+ * - Cannot be accessed by JavaScript (XSS protection)
+ * - Are automatically sent with every request
+ * - Are managed entirely by the browser
+ * 
+ * We only store user metadata (name, language, role) for UI purposes.
+ */
+
+interface User {
+  name: string;
+  language: Language;
+  role: Role;
+}
 
 interface AuthState {
-  user: UserPublic | null;
-  token: string | null;
+  user: User | null;
   isAuthenticated: boolean;
-  login: (user: UserPublic, token: string) => void;
+  
+  // Actions
+  login: (user: User) => void;
   logout: () => void;
-  updateUser: (user: Partial<UserPublic>) => void;
+  updateUser: (updatedFields: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      token: null,
       isAuthenticated: false,
 
-      login: (user, token) =>
+      login: (user) =>
         set({
           user,
-          token,
           isAuthenticated: true,
         }),
 
-      logout: () =>
+      logout: () => {
         set({
           user: null,
-          token: null,
           isAuthenticated: false,
-        }),
+        });
+        
+        // Note: The HTTP-only cookie will be cleared by:
+        // 1. Browser on expiration
+        // 2. Backend logout endpoint (when implemented)
+        // We cannot clear it from JavaScript (that's the security feature!)
+      },
 
       updateUser: (updatedFields) =>
         set((state) => ({
@@ -42,9 +66,34 @@ export const useAuthStore = create<AuthState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
+        // Note: token is NOT persisted - it's in HTTP-only cookie
       }),
     }
   )
 );
+
+/**
+ * Utility Hooks
+ */
+
+// Get current user
+export const useCurrentUser = () => useAuthStore((state) => state.user);
+
+// Get authentication status
+export const useIsAuthenticated = () => useAuthStore((state) => state.isAuthenticated);
+
+// Get user role
+export const useUserRole = () => useAuthStore((state) => state.user?.role);
+
+// Check if user has specific role
+export const useHasRole = (role: Role) => {
+  const userRole = useUserRole();
+  return userRole === role;
+};
+
+// Check if user has any of the specified roles
+export const useHasAnyRole = (roles: Role[]) => {
+  const userRole = useUserRole();
+  return userRole ? roles.includes(userRole) : false;
+};

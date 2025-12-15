@@ -4,7 +4,7 @@ import { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Users, Activity, Calendar, Search } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
-import { UserRole } from '@/types/entities/User';
+import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -56,7 +56,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   };
 
   return (
-    <AuthGuard allowedRoles={[UserRole.DOCTOR]} locale={locale}>
+    <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
       <div className="container mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">

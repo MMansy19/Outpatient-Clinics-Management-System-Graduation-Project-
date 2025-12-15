@@ -4,16 +4,18 @@ import { useAuthStore } from '@/stores/authStore';
 import type { LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
 import { mockAuthAPI } from '@/lib/api/mockData';
 
-// Set to true to use mock data (no backend required)
-const USE_MOCK_DATA = true;
+// Re-export new hooks for backward compatibility
+export * from '../hooks/useAuth';
 
-export const useLogin = (): UseMutationResult<
+// Set to true to use mock data (no backend required)
+const USE_MOCK_DATA = false;  // Changed to false - using real backend now
+
+// Legacy useLogin for components that haven't been migrated
+export const useLoginOld = (): UseMutationResult<
   AuthResponse,
   Error,
   LoginRequest
 > => {
-  const { login } = useAuthStore();
-
   return useMutation({
     mutationFn: async (data: LoginRequest) => {
       if (USE_MOCK_DATA) {
@@ -22,21 +24,7 @@ export const useLogin = (): UseMutationResult<
       const response = await apiClient.post<AuthResponse>('/auth/login', data);
       return response.data;
     },
-    onSuccess: (data) => {
-      login(
-        {
-          id: data.user.id,
-          global_id: data.user.global_id,
-          username: data.user.username,
-          email: data.user.email,
-          role: data.user.role as never,
-          is_deleted: false,
-          created_at: new Date(data.user.created_at),
-          updated_at: new Date(data.user.created_at),
-        },
-        data.token
-      );
-    },
+    // TODO: This is legacy mock-based hook. Use useLogin from hooks/useAuth.ts instead
   });
 };
 
@@ -45,8 +33,6 @@ export const useRegister = (): UseMutationResult<
   Error,
   RegisterRequest
 > => {
-  const { login } = useAuthStore();
-
   return useMutation({
     mutationFn: async (data: RegisterRequest) => {
       if (USE_MOCK_DATA) {
@@ -55,21 +41,7 @@ export const useRegister = (): UseMutationResult<
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
       return response.data;
     },
-    onSuccess: (data) => {
-      login(
-        {
-          id: data.user.id,
-          global_id: data.user.global_id,
-          username: data.user.username,
-          email: data.user.email,
-          role: data.user.role as never,
-          is_deleted: false,
-          created_at: new Date(data.user.created_at),
-          updated_at: new Date(data.user.created_at),
-        },
-        data.token
-      );
-    },
+    // TODO: This is legacy mock-based hook. Registration should go through admin panel
   });
 };
 

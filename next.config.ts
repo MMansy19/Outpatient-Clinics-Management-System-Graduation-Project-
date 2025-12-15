@@ -6,6 +6,16 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   
+  // API Proxy to avoid CORS issues in development
+  async rewrites() {
+    return [
+      {
+        source: '/api/proxy/:path*',
+        destination: 'https://api-gateway.yellowgrass-a3ce385a.westeurope.azurecontainerapps.io/api/v1/:path*',
+      },
+    ];
+  },
+  
   // Image optimization for medical scans/photos
   images: {
     remotePatterns: [
