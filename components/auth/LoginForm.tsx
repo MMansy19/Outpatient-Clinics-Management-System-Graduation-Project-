@@ -156,14 +156,15 @@ export function LoginForm({ locale }: LoginFormProps) {
             )}
           />
 
-          <div className="flex items-center justify-end">
+          {/* TODO: Implement forgot password functionality in Phase 5 */}
+          {/* <div className="flex items-center justify-end">
             <Link
               href={`/${locale}/forgot-password`}
               className="text-sm text-medical-primary hover:underline"
             >
               {t('forgotPassword')}
             </Link>
-          </div>
+          </div> */}
 
           <Button
             type="submit"

@@ -668,7 +668,20 @@ export const mockVisitsAPI = {
       
       return {
         ...visit,
-        patient: patient!,
+        patient: patient || {
+          id: 0,
+          global_id: 'UNKNOWN',
+          name: 'Unknown Patient',
+          national_id: 0,
+          gender: Gender.MALE,
+          birthdate: new Date(),
+          phone_number: '',
+          email: '',
+          address: '',
+          is_deleted: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as Patient,
         doctor: doctor ? {
           id: doctor.id,
           global_id: doctor.global_id,
@@ -741,7 +754,20 @@ export const mockVisitsAPI = {
       
       return {
         ...visit,
-        patient: patient!,
+        patient: patient || {
+          id: 0,
+          global_id: 'UNKNOWN',
+          name: 'Unknown Patient',
+          national_id: 0,
+          gender: Gender.MALE,
+          birthdate: new Date(),
+          phone_number: '',
+          email: '',
+          address: '',
+          is_deleted: false,
+          created_at: new Date(),
+          updated_at: new Date(),
+        } as Patient,
         doctor: doctor ? {
           id: doctor.id,
           global_id: doctor.global_id,

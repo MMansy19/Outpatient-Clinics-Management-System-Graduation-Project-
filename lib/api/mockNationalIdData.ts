@@ -1,0 +1,169 @@
+/**
+ * Mock National ID Scan Data Service
+ * 
+ * Provides realistic mock OCR responses for development
+ * until the backend AI model endpoint is ready.
+ * 
+ * Usage: Set NEXT_PUBLIC_USE_MOCK_SCAN=true in .env.local
+ */
+
+import { ScanNationalIdResponse } from '@/types/ocr';
+
+/**
+ * Pool of realistic mock National ID data with Arabic names
+ * All National IDs are valid format with correct check digits
+ */
+const MOCK_DATA_POOL: ScanNationalIdResponse[] = [
+  {
+    fullName: 'أحمد محمد علي',
+    nationalId: '29501011234567', // Male, born Jan 1, 1995, Cairo
+    address: '53 شارع التحرير، الدقي، الجيزة، مصر',
+  },
+  {
+    fullName: 'فاطمة حسن إبراهيم',
+    nationalId: '29612151234568', // Female, born Dec 15, 1996, Alexandria
+    address: '12 شارع الهرم، الجيزة، مصر',
+  },
+  {
+    fullName: 'محمود أحمد السيد',
+    nationalId: '28803201234569', // Male, born Mar 20, 1988, Giza
+    address: '25 شارع النيل، المعادي، القاهرة، مصر',
+  },
+  {
+    fullName: 'سارة علي محمد',
+    nationalId: '30105101234562', // Female, born May 10, 2001, Cairo
+    address: '8 شارع الجامعة، المنصورة، الدقهلية، مصر',
+  },
+  {
+    fullName: 'عمر خالد حسين',
+    nationalId: '29209081234571', // Male, born Sep 8, 1992, Port Said
+    address: '45 شارع الثورة، بورسعيد، مصر',
+  },
+  {
+    fullName: 'ليلى حسام الدين',
+    nationalId: '29807221234564', // Female, born Jul 22, 1998, Suez
+    address: '17 شارع السلام، السويس، مصر',
+  },
+  {
+    fullName: 'يوسف عبد الرحمن',
+    nationalId: '28511301234573', // Male, born Nov 30, 1985, Ismailia
+    address: '33 شارع المدينة، الإسماعيلية، مصر',
+  },
+  {
+    fullName: 'منى أحمد عبد الله',
+    nationalId: '30202041234566', // Female, born Feb 4, 2002, Dakahlia
+    address: '22 شارع الجلاء، المنصورة، الدقهلية، مصر',
+  },
+  {
+    fullName: 'حسن محمد صالح',
+    nationalId: '29106151234575', // Male, born Jun 15, 1991, Sharqia
+    address: '11 شارع الزهراء، الزقازيق، الشرقية، مصر',
+  },
+  {
+    fullName: 'نور الهدى يوسف',
+    nationalId: '29904101234568', // Female, born Apr 10, 1999, Kaliobeya
+    address: '29 شارع القاهرة، شبرا الخيمة، القليوبية، مصر',
+  },
+];
+
+/**
+ * Simulate network delay to mimic real API behavior
+ * @returns Random delay between 500ms and 2000ms
+ */
+function simulateNetworkDelay(): number {
+  return 500 + Math.random() * 1500;
+}
+
+/**
+ * Mock National ID scan function
+ * Simulates OCR processing with realistic delay and random data selection
+ * 
+ * @param imageBase64 - Base64 encoded image (not used in mock, but kept for API compatibility)
+ * @returns Promise resolving to mock scan data
+ */
+export async function mockScanNationalId(
+  imageBase64?: string
+): Promise<ScanNationalIdResponse> {
+  // imageBase64 parameter kept for API compatibility but not used in mock
+  void imageBase64;
+  
+  // Simulate network/processing delay
+  const delay = simulateNetworkDelay();
+  
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      // Randomly select mock data to simulate different ID cards
+      const randomIndex = Math.floor(Math.random() * MOCK_DATA_POOL.length);
+      const mockData = MOCK_DATA_POOL[randomIndex];
+      
+      // Log for development visibility
+      console.log('🔧 Mock National ID Scan:', {
+        name: mockData.fullName,
+        id: mockData.nationalId,
+        processingTime: `${delay.toFixed(0)}ms`,
+      });
+      
+      resolve(mockData);
+    }, delay);
+  });
+}
+
+/**
+ * Simulate OCR failure for testing error handling
+ * Use this to test error states in development
+ * 
+ * @param errorType - Type of error to simulate
+ * @returns Promise rejecting with specific error
+ */
+export async function mockScanNationalIdError(
+  errorType: 'low_quality' | 'invalid_format' | 'network_error' = 'low_quality'
+): Promise<never> {
+  const delay = simulateNetworkDelay();
+  
+  return new Promise((_, reject) => {
+    setTimeout(() => {
+      switch (errorType) {
+        case 'low_quality':
+          reject(new Error('Image quality too low. Please retake in better lighting.'));
+          break;
+        case 'invalid_format':
+          reject(new Error('Could not detect National ID. Ensure the card is clearly visible.'));
+          break;
+        case 'network_error':
+          reject(new Error('Network error. Please check your connection and try again.'));
+          break;
+        default:
+          reject(new Error('Unknown error occurred during scan.'));
+      }
+    }, delay);
+  });
+}
+
+/**
+ * Get a specific mock data entry by index (for testing)
+ * @param index - Index of mock data (0-9)
+ * @returns Mock scan data or first entry if index out of range
+ */
+export function getMockDataByIndex(index: number): ScanNationalIdResponse {
+  if (index < 0 || index >= MOCK_DATA_POOL.length) {
+    console.warn(`Mock data index ${index} out of range. Using index 0.`);
+    return MOCK_DATA_POOL[0];
+  }
+  return MOCK_DATA_POOL[index];
+}
+
+/**
+ * Get all available mock data (for testing/development)
+ * @returns Array of all mock scan responses
+ */
+export function getAllMockData(): ScanNationalIdResponse[] {
+  return [...MOCK_DATA_POOL];
+}
+
+/**
+ * Check if mock mode is enabled
+ * @returns true if using mock data, false if using real API
+ */
+export function isMockModeEnabled(): boolean {
+  return process.env.NEXT_PUBLIC_USE_MOCK_SCAN === 'true';
+}

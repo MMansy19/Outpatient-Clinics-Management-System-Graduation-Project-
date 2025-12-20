@@ -10,7 +10,9 @@
     "edit": "Edit",
     "search": "Search",
     "filter": "Filter",
-    "required": "Required"
+    "required": "Required",
+    "male": "Male",
+    "female": "Female"
   },
   "nav": {
     "home": "Home",
@@ -215,7 +217,47 @@
     "createFirstVisit": "Create First Visit",
     "newVisit": "New Visit",
     "editPatient": "Edit Patient",
-    "demographicInfo": "Demographic Information"
+    "demographicInfo": "Demographic Information",
+    "addPatient": {
+      "title": "Add New Patient",
+      "selectMethod": "Choose Registration Method",
+      "scanId": "Scan National ID",
+      "scanIdDescription": "Faster & More Accurate",
+      "manualEntry": "Enter Manually",
+      "manualEntryDescription": "Fill form yourself",
+      "scanner": {
+        "title": "Scan National ID",
+        "instruction": "Align the front of the ID card within the frame",
+        "captureButton": "Capture",
+        "retakeButton": "Retake Photo",
+        "processing": "Processing ID card...",
+        "help": "Tips for better scanning",
+        "helpText": "• Ensure good lighting\n• Keep ID card flat\n• Avoid glare and shadows"
+      },
+      "preview": {
+        "title": "Review Scanned Data",
+        "extractedInfo": "Extracted Information",
+        "useData": "Use This Data",
+        "retake": "Retake Photo",
+        "lowConfidence": "Scan quality is low. You can retake or edit manually."
+      },
+      "form": {
+        "autoFilled": "Auto-filled from ID scan",
+        "canEdit": "You can edit any field below"
+      },
+      "errors": {
+        "cameraPermission": "Camera access is required to scan ID cards",
+        "cameraPermissionAction": "Open Settings",
+        "ocrFailed": "Could not read ID card. Please try again or enter manually.",
+        "invalidIdFormat": "The scanned National ID appears invalid",
+        "lowQuality": "Image quality is too low. Please retake in better lighting.",
+        "cancelled": "Photo capture was cancelled"
+      },
+      "success": {
+        "scanComplete": "ID card scanned successfully",
+        "patientCreated": "Patient registered successfully"
+      }
+    }
   },
   "patient": {
     "nationalId": "National ID",
@@ -384,5 +426,56 @@
     "selectClinicToGenerate": "Select a clinic to generate QR code",
     "scanToRegister": "Scan to register as a patient at this clinic",
     "downloadQRCode": "Download QR Code"
+  },
+  "scan": {
+    "selectRegistrationMethod": "Select Registration Method",
+    "scanNationalId": "Scan National ID",
+    "scanDescription": "Use your camera to automatically capture patient details",
+    "recommended": "Recommended",
+    "manualEntry": "Manual Entry",
+    "manualDescription": "Fill in patient details manually",
+    "processing": "Processing ID...",
+    "processingId": "Processing ID Card...",
+    "captureId": "Capture ID Card",
+    "alignCard": "Align ID Card",
+    "alignIdInstruction": "Position the National ID card within the frame and tap the capture button",
+    "webCameraInstruction": "Click capture to take a photo of the National ID card using your device camera",
+    "openingCamera": "Opening Camera...",
+    "preparingCamera": "Preparing camera...",
+    "readyToScan": "Ready to Scan",
+    "captureHint": "Make sure the ID card is well-lit and all text is clearly visible",
+    "cameraPermissionDenied": "Camera permission denied. Please enable camera access in settings.",
+    "captureFailed": "Failed to capture image. Please try again.",
+    "scanFailed": "Failed to scan National ID. Please try again.",
+    "privacyNote": "Your data is encrypted and processed securely",
+    "mobileRecommended": "📱 For best results, use the mobile app",
+    "scanComplete": "Scan Complete",
+    "confidence": {
+      "high": "High Confidence",
+      "medium": "Medium Confidence",
+      "low": "Low Confidence",
+      "highDesc": "Data extracted with high accuracy",
+      "mediumDesc": "Please review the extracted data carefully",
+      "lowDesc": "Manual verification recommended"
+    },
+    "mockDataNotice": "📋 Using mock data for development",
+    "extractedData": "Extracted Data",
+    "fields": {
+      "fullName": "Full Name",
+      "nationalId": "National ID",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "address": "Address"
+    },
+    "capturedImage": "Captured Image",
+    "capturedIdImage": "Captured National ID",
+    "useThisData": "Use This Data",
+    "retake": "Retake Photo",
+    "reviewDataHint": "Please review the extracted data before proceeding",
+    "autoFilledFromScan": "Data auto-filled from National ID scan",
+    "mockData": "Mock Data",
+    "autoFilled": "Auto-filled",
+    "opening": "Opening camera...",
+    "pleaseWait": "Please wait..."
   }
 }

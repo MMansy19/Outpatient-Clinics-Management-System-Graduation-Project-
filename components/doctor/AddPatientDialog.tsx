@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { toast, toastMessages } from '@/lib/utils/toast';
 
 import {
@@ -32,28 +32,56 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
 
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
 import { createPatientSchema, type CreatePatientFormData } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
 import { extractGenderFromNationalId, extractBirthdateFromNationalId } from '@/lib/schemas/auth.schemas';
+import { EnrichedScanData } from '@/types/ocr';
 
 interface AddPatientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: (patientId: number) => void;
+  prefilledData?: EnrichedScanData | null;
+  dataSource?: 'scan' | 'manual';
 }
 
-export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDialogProps) {
+export function AddPatientDialog({ 
+  open, 
+  onOpenChange, 
+  onSuccess, 
+  prefilledData = null,
+  dataSource = 'manual',
+}: AddPatientDialogProps) {
   const t = useTranslations('doctor');
   const tPatient = useTranslations('patient');
   const tCommon = useTranslations('common');
+  const tScan = useTranslations('scan');
   const { mutate: createPatient, isPending } = useCreatePatient();
+
+  // Split full name into first and last name
+  const splitName = (fullName: string): { firstName: string; lastName: string } => {
+    const parts = fullName.trim().split(' ');
+    if (parts.length === 1) {
+      return { firstName: parts[0], lastName: '' };
+    }
+    const firstName = parts[0];
+    const lastName = parts.slice(1).join(' ');
+    return { firstName, lastName };
+  };
 
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
-    defaultValues: {
+    defaultValues: prefilledData ? {
+      ...splitName(prefilledData.fullName),
+      language: Language.ENGLISH,
+      socialSecurityNumber: prefilledData.nationalId,
+      address: prefilledData.address || '',
+      job: '',
+    } : {
       firstName: '',
       lastName: '',
       language: Language.ENGLISH,
@@ -65,6 +93,22 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
 
   // Watch the national ID field to show extracted info
   const nationalId = form.watch('socialSecurityNumber');
+
+  // Populate form with scanned data when available
+  useEffect(() => {
+    if (prefilledData && dataSource === 'scan') {
+      const { firstName, lastName } = splitName(prefilledData.fullName);
+      form.reset({
+        firstName,
+        lastName,
+        language: Language.ENGLISH,
+        socialSecurityNumber: prefilledData.nationalId,
+        address: prefilledData.address || '',
+        job: '',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefilledData, dataSource]);
 
   // Auto-populate gender and birthdate when valid National ID is entered
   // Note: Backend extracts these from National ID, no need to send separately
@@ -86,7 +130,10 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
   const onSubmit = (data: CreatePatientFormData) => {
     console.log('📝 Creating patient with data:', data);
     
-    createPatient(data, {
+    createPatient({
+      ...data,
+      job: data.job || '',
+    }, {
       onSuccess: (response) => {
         console.log('✅ Patient created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
@@ -143,9 +190,23 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t('addNewPatient')}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            {dataSource === 'scan' && <Sparkles className="h-5 w-5 text-medical-primary" />}
+            {t('addNewPatient')}
+          </DialogTitle>
           <DialogDescription>
-            {tPatient('fillPatientDetails') || 'Fill in the patient details below to register them in the system.'}
+            {dataSource === 'scan' ? (
+              <span className="flex items-center gap-2">
+                {tScan('autoFilledFromScan')}
+                {prefilledData?.isMockData && (
+                  <Badge variant="outline" className="text-xs">
+                    {tScan('mockData')}
+                  </Badge>
+                )}
+              </span>
+            ) : (
+              tPatient('fillPatientDetails') || 'Fill in the patient details below to register them in the system.'
+            )}
           </DialogDescription>
         </DialogHeader>
 
@@ -158,9 +219,21 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      First Name
+                      {dataSource === 'scan' && prefilledData && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tScan('autoFilled')}
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="John" disabled={isPending} {...field} />
+                      <Input 
+                        placeholder="John" 
+                        disabled={isPending} 
+                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -172,9 +245,21 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Last Name
+                      {dataSource === 'scan' && prefilledData && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tScan('autoFilled')}
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" disabled={isPending} {...field} />
+                      <Input 
+                        placeholder="Doe" 
+                        disabled={isPending} 
+                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        {...field} 
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -187,12 +272,20 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="socialSecurityNumber"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>{tPatient('nationalId')}</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      {tPatient('nationalId')}
+                      {dataSource === 'scan' && prefilledData && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tScan('autoFilled')}
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="30202041234567"
                         maxLength={14}
                         disabled={isPending}
+                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
                         {...field}
                       />
                     </FormControl>
@@ -210,11 +303,19 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="address"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel className="flex items-center gap-2">
+                      Address
+                      {dataSource === 'scan' && prefilledData?.address && (
+                        <Badge variant="secondary" className="text-xs">
+                          {tScan('autoFilled')}
+                        </Badge>
+                      )}
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder="123 Main Street, Cairo"
                         disabled={isPending}
+                        className={dataSource === 'scan' && prefilledData?.address ? 'border-medical-primary/50' : ''}
                         {...field}
                       />
                     </FormControl>
@@ -229,7 +330,7 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job/Occupation</FormLabel>
+                    <FormLabel>Job/Occupation (Optional)</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Engineer"

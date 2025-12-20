@@ -17,10 +17,14 @@ import { ThemeToggle } from '@/components/shared/ThemeToggle';
 
 import { PatientSearch } from '@/components/doctor/PatientSearch';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
+import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
+import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
+import { ScannedDataPreview } from '@/components/doctor/ScannedDataPreview';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
 import { useGetRecentVisits } from '@/lib/api/queries/useVisits';
 import { formatDate } from '@/lib/utils/formatDate';
+import { EnrichedScanData } from '@/types/ocr';
 
 interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
@@ -33,7 +37,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const t = useTranslations('doctor');
   const [currentView, setCurrentView] = useState<View>('dashboard');
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
+  const [registrationSource, setRegistrationSource] = useState<'scan' | 'manual'>('manual');
   const [patientsCreated, setPatientsCreated] = useState(0);
 
   const { data: recentVisits, isLoading } = useGetRecentVisits(5);
@@ -55,6 +64,37 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   const handleVisitCreated = () => {
     setCurrentView('profile');
+  };
+
+  // National ID Scanning Flow
+  const handleScanOption = () => {
+    setIsRegistrationSheetOpen(false);
+    setIsScannerOpen(true);
+  };
+
+  const handleManualOption = () => {
+    setIsRegistrationSheetOpen(false);
+    setRegistrationSource('manual');
+    setScannedData(null);
+    setIsAddPatientOpen(true);
+  };
+
+  const handleScanComplete = (data: EnrichedScanData) => {
+    setScannedData(data);
+    setIsScannerOpen(false);
+    setIsPreviewOpen(true);
+  };
+
+  const handleConfirmScannedData = (data: EnrichedScanData) => {
+    setScannedData(data);
+    setRegistrationSource('scan');
+    setIsPreviewOpen(false);
+    setIsAddPatientOpen(true);
+  };
+
+  const handleRetakeScan = () => {
+    setIsPreviewOpen(false);
+    setIsScannerOpen(true);
   };
 
   return (
@@ -121,7 +161,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   {t('searchPatients')}
                 </Button>
                 <Button
-                  onClick={() => setIsAddPatientOpen(true)}
+                  onClick={() => setIsRegistrationSheetOpen(true)}
                   variant="outline"
                   className="h-20 border-medical-primary text-medical-primary"
                 >
@@ -175,7 +215,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         {currentView === 'search' && (
           <PatientSearch
             onSelectPatient={handleSelectPatient}
-            onAddNew={() => setIsAddPatientOpen(true)}
+            onAddNew={() => setIsRegistrationSheetOpen(true)}
           />
         )}
 
@@ -208,7 +248,32 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           open={isAddPatientOpen}
           onOpenChange={setIsAddPatientOpen}
           onSuccess={handleNewPatientCreated}
+          prefilledData={scannedData}
+          dataSource={registrationSource}
         />
+
+        <PatientRegistrationSheet
+          open={isRegistrationSheetOpen}
+          onOpenChange={setIsRegistrationSheetOpen}
+          onSelectScanId={handleScanOption}
+          onSelectManualEntry={handleManualOption}
+        />
+
+        <NationalIdScanner
+          open={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScanComplete={handleScanComplete}
+        />
+
+        {scannedData && (
+          <ScannedDataPreview
+            open={isPreviewOpen}
+            onClose={() => setIsPreviewOpen(false)}
+            data={scannedData}
+            onConfirm={handleConfirmScannedData}
+            onRetake={handleRetakeScan}
+          />
+        )}
       </div>
     </AuthGuard>
   );

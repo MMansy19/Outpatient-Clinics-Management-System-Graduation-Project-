@@ -147,7 +147,9 @@ export const createPatientSchema = z.object({
   job: z
     .string()
     .min(2, 'Job must be at least 2 characters')
-    .max(128, 'Job must not exceed 128 characters'),
+    .max(128, 'Job must not exceed 128 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type CreatePatientFormData = z.infer<typeof createPatientSchema>;
