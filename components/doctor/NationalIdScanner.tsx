@@ -68,7 +68,7 @@ export function NationalIdScanner({
     try {
       // Use browser's getUserMedia API
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } } 
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1280 }, aspectRatio: { ideal: 1.5 } } 
       });
       setVideoStream(stream);
       setIsWebCameraActive(true);
@@ -190,14 +190,14 @@ export function NationalIdScanner({
           </div>
 
           {/* Camera Placeholder / Instructions */}
-          <div className="relative aspect-[3/2] rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 flex flex-col items-center justify-center p-8">
+          <div className="relative aspect-[3/2] rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 flex flex-col items-center justify-center overflow-hidden">
             {isWebCameraActive ? (
               <video
                 id="web-camera-video"
                 ref={videoRef}
                 autoPlay
                 playsInline
-                className="w-full h-full object-contain rounded-lg"
+                className="absolute inset-0 relative aspect-[3/2] w-full object-cover rounded-lg"
               />
             ) : isProcessing ? (
               <div className="text-center space-y-4">

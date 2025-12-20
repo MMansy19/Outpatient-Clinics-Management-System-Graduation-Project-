@@ -162,11 +162,11 @@ export function ScannedDataPreview({
           {data.imageBase64 && (
             <div className="space-y-2">
               <h3 className="text-sm font-medium">{t('capturedImage')}</h3>
-              <div className="relative aspect-[3/2] rounded-lg overflow-hidden border bg-muted">
+              <div className="relative aspect-[3/2] rounded-lg overflow-hidden border bg-muted border-muted-foreground/25">
                 <Image
                   src={`data:image/jpeg;base64,${data.imageBase64}`}
                   alt={t('capturedIdImage')}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain px-4"
                   fill
                   sizes="(max-width: 768px) 100vw, 600px"
                 />
