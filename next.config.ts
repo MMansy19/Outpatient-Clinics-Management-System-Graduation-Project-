@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/proxy/:path*',
-        destination: 'https://api-gateway.yellowgrass-a3ce385a.westeurope.azurecontainerapps.io/api/v1/:path*',
+        destination: 'https://api-gateway.salmoncoast-a5f57a4d.westus2.azurecontainerapps.io/api/v1/:path*',
       },
     ];
   },
