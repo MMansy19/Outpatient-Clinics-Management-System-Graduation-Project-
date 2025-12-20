@@ -166,7 +166,7 @@ export function ScannedDataPreview({
                 <Image
                   src={`data:image/jpeg;base64,${data.imageBase64}`}
                   alt={t('capturedIdImage')}
-                  className="w-full h-full object-contain px-4"
+                  className="w-full h-full object-cover"
                   fill
                   sizes="(max-width: 768px) 100vw, 600px"
                 />
