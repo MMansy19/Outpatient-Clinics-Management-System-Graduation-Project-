@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Search, Calendar, Plus, Filter } from 'lucide-react';
+import { Search, Calendar, Plus, Filter, X } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 import { useDebounce } from '@/lib/hooks/useDebounce';
 import { useSearchPatients } from '@/lib/api/queries/usePatients';
@@ -36,18 +37,54 @@ interface PatientSearchProps {
 export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps) {
   const t = useTranslations('doctor');
   const tPatient = useTranslations('patient');
+  
+  // Search states
   const [searchQuery, setSearchQuery] = useState('');
   const [period, setPeriod] = useState<SearchFilters['period']>('today');
   const [selectedClinicId, setSelectedClinicId] = useState<string>('all');
+  
+  // Advanced filter states
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [gender, setGender] = useState<string>('all');
+  const [minAge, setMinAge] = useState<string>('');
+  const [maxAge, setMaxAge] = useState<string>('');
+  const [nationalId, setNationalId] = useState('');
 
   const debouncedSearch = useDebounce(searchQuery, 500);
+  const debouncedNationalId = useDebounce(nationalId, 300);
 
-  const { data: clinics } = useGetClinics();
-  const { data: searchResults, isLoading } = useSearchPatients({
-    query: debouncedSearch,
+  // Build filters object
+  const filters: SearchFilters = {
+    query: debouncedSearch || undefined,
     period,
     clinicId: selectedClinicId === 'all' ? undefined : Number(selectedClinicId),
-  });
+    gender: gender === 'all' ? undefined : (gender as 'male' | 'female'),
+    minAge: minAge ? Number(minAge) : undefined,
+    maxAge: maxAge ? Number(maxAge) : undefined,
+    nationalId: debouncedNationalId || undefined,
+  };
+
+  const { data: clinics } = useGetClinics();
+  const { data: searchResults, isLoading } = useSearchPatients(filters);
+
+  const clearFilters = () => {
+    setSearchQuery('');
+    setNationalId('');
+    setGender('all');
+    setMinAge('');
+    setMaxAge('');
+    setPeriod('today');
+    setSelectedClinicId('all');
+  };
+
+  const activeFiltersCount = [
+    searchQuery,
+    nationalId,
+    gender !== 'all',
+    minAge,
+    maxAge,
+    selectedClinicId !== 'all',
+  ].filter(Boolean).length;
 
   return (
     <div className="space-y-4">
@@ -66,12 +103,12 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
         </Button>
       </div>
 
-      {/* Search Filters */}
+      {/* Primary Search */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={t('searchPlaceholder')}
+            placeholder={t('searchPlaceholder') || 'Search by name, national ID, email, or phone...'}
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -92,22 +129,160 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
             </SelectContent>
           </Select>
 
-          <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
-            <SelectTrigger className="w-[150px]">
-              <Filter className="mr-2 h-4 w-4" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('allClinics')}</SelectItem>
-              {clinics?.map((clinic: { id: number; name: string }) => (
-                <SelectItem key={clinic.id} value={clinic.id.toString()}>
-                  {clinic.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Button
+            variant={showAdvancedFilters ? 'default' : 'outline'}
+            onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+            className="relative"
+          >
+            <Filter className="h-4 w-4" />
+            {activeFiltersCount > 0 && (
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
         </div>
       </div>
+
+      {/* Advanced Filters Panel */}
+      {showAdvancedFilters && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Advanced Filters</CardTitle>
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="mr-2 h-4 w-4" />
+                Clear All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              {/* National ID Filter */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">National ID</label>
+                <Input
+                  type="text"
+                  placeholder="Enter national ID"
+                  value={nationalId}
+                  onChange={(e) => setNationalId(e.target.value)}
+                />
+              </div>
+
+              {/* Gender Filter */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Gender</label>
+                <Select value={gender} onValueChange={setGender}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="male">{tPatient('male')}</SelectItem>
+                    <SelectItem value="female">{tPatient('female')}</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Min Age */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Min Age</label>
+                <Input
+                  type="number"
+                  placeholder="From"
+                  value={minAge}
+                  onChange={(e) => setMinAge(e.target.value)}
+                  min="0"
+                  max="150"
+                />
+              </div>
+
+              {/* Max Age */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Max Age</label>
+                <Input
+                  type="number"
+                  placeholder="To"
+                  value={maxAge}
+                  onChange={(e) => setMaxAge(e.target.value)}
+                  min="0"
+                  max="150"
+                />
+              </div>
+            </div>
+
+            {/* Clinic Filter */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Clinic</label>
+              <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
+                <SelectTrigger className="w-full">
+                  <Filter className="mr-2 h-4 w-4" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t('allClinics')}</SelectItem>
+                  {clinics?.map((clinic: { id: number; name: string }) => (
+                    <SelectItem key={clinic.id} value={clinic.id.toString()}>
+                      {clinic.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Active Filters Display */}
+      {activeFiltersCount > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {searchQuery && (
+            <Badge variant="secondary">
+              Search: {searchQuery}
+              <X
+                className="ml-2 h-3 w-3 cursor-pointer"
+                onClick={() => setSearchQuery('')}
+              />
+            </Badge>
+          )}
+          {nationalId && (
+            <Badge variant="secondary">
+              National ID: {nationalId}
+              <X
+                className="ml-2 h-3 w-3 cursor-pointer"
+                onClick={() => setNationalId('')}
+              />
+            </Badge>
+          )}
+          {gender !== 'all' && (
+            <Badge variant="secondary">
+              Gender: {gender}
+              <X
+                className="ml-2 h-3 w-3 cursor-pointer"
+                onClick={() => setGender('all')}
+              />
+            </Badge>
+          )}
+          {minAge && (
+            <Badge variant="secondary">
+              Min Age: {minAge}
+              <X
+                className="ml-2 h-3 w-3 cursor-pointer"
+                onClick={() => setMinAge('')}
+              />
+            </Badge>
+          )}
+          {maxAge && (
+            <Badge variant="secondary">
+              Max Age: {maxAge}
+              <X
+                className="ml-2 h-3 w-3 cursor-pointer"
+                onClick={() => setMaxAge('')}
+              />
+            </Badge>
+          )}
+        </div>
+      )}
 
       {/* Results */}
       <div className="space-y-3">

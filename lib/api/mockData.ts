@@ -11,7 +11,7 @@ import { ScanType } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
 import { MedicationFrequency } from '@/types/entities/Medication';
 import { UserRole } from '@/types/entities/User';
-
+import type { SearchFilters } from '@/types/entities/Visit';
 // Storage keys
 const STORAGE_KEYS = {
   USERS: 'mock_users',
@@ -504,17 +504,56 @@ export const mockClinicsAPI = {
 
 // Mock Patients API
 export const mockPatientsAPI = {
-  async searchPatients(query?: string): Promise<{ patients: Patient[]; total: number }> {
+  async searchPatients(filters?: SearchFilters): Promise<{ patients: Patient[]; total: number }> {
     await delay();
     let patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
     
-    if (query) {
-      const lowerQuery = query.toLowerCase();
-      patients = patients.filter((p: Patient) =>
-        p.name.toLowerCase().includes(lowerQuery) ||
-        p.global_id.toLowerCase().includes(lowerQuery) ||
-        p.email?.toLowerCase().includes(lowerQuery)
-      );
+    // Apply filters
+    if (filters) {
+      // General query search (name, national_id, email, phone)
+      if (filters.query) {
+        const lowerQuery = filters.query.toLowerCase();
+        patients = patients.filter((p: Patient) =>
+          p.name.toLowerCase().includes(lowerQuery) ||
+          p.national_id.toString().includes(lowerQuery) ||
+          p.email?.toLowerCase().includes(lowerQuery) ||
+          p.phone_number?.toLowerCase().includes(lowerQuery)
+        );
+      }
+
+      // Specific national ID search (exact match)
+      if (filters.nationalId) {
+        patients = patients.filter((p: Patient) =>
+          p.national_id.toString() === filters.nationalId
+        );
+      }
+
+      // Gender filter
+      if (filters.gender) {
+        patients = patients.filter((p: Patient) =>
+          p.gender === filters.gender
+        );
+      }
+
+      // Age range filter
+      if (filters.minAge !== undefined || filters.maxAge !== undefined) {
+        patients = patients.filter((p: Patient) => {
+          const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
+          const meetsMin = filters.minAge === undefined || age >= filters.minAge;
+          const meetsMax = filters.maxAge === undefined || age <= filters.maxAge;
+          return meetsMin && meetsMax;
+        });
+      }
+
+      // Date range filter (patient creation date)
+      if (filters.startDate || filters.endDate) {
+        patients = patients.filter((p: Patient) => {
+          const createdDate = new Date(p.created_at);
+          const afterStart = !filters.startDate || createdDate >= filters.startDate;
+          const beforeEnd = !filters.endDate || createdDate <= filters.endDate;
+          return afterStart && beforeEnd;
+        });
+      }
     }
 
     return { patients, total: patients.length };

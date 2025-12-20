@@ -237,6 +237,7 @@
     "selectGender": "اختر الجنس",
     "registerPatient": "تسجيل المريض",
     "registering": "جاري التسجيل...",
+    "fillPatientDetails": "املأ بيانات المريض أدناه لتسجيله في النظام",
     "medicalHistory": "السجل الطبي",
     "timeline": "الجدول الزمني",
     "filterByType": "تصفية حسب النوع",

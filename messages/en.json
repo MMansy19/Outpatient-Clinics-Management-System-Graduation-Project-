@@ -237,6 +237,7 @@
     "selectGender": "Select gender",
     "registerPatient": "Register Patient",
     "registering": "Registering...",
+    "fillPatientDetails": "Fill in the patient details below to register them in the system",
     "medicalHistory": "Medical History",
     "timeline": "Timeline",
     "filterByType": "Filter by Type",

@@ -54,9 +54,14 @@ export interface VisitFormData {
 }
 
 export interface SearchFilters {
-  query?: string;
+  query?: string; // Searches name, national_id, email, phone
   period?: 'today' | 'week' | 'month' | 'custom';
   startDate?: Date;
   endDate?: Date;
   clinicId?: number;
+  // Advanced filters
+  gender?: 'male' | 'female';
+  minAge?: number;
+  maxAge?: number;
+  nationalId?: string; // Specific national ID search
 }

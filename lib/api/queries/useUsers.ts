@@ -74,7 +74,7 @@ export const useGetPatients = (searchQuery?: string): UseQueryResult<Patient[], 
     queryKey: searchQuery ? [...PATIENTS_KEY, { searchQuery }] : PATIENTS_KEY,
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        const result = await mockPatientsAPI.searchPatients(searchQuery);
+        const result = await mockPatientsAPI.searchPatients(searchQuery ? { query: searchQuery } : undefined);
         return result.patients;
       }
       const url = searchQuery ? `/admin/patients?search=${searchQuery}` : '/admin/patients';

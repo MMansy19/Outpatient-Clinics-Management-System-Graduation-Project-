@@ -144,7 +144,9 @@ export function AddPatientDialog({ open, onOpenChange, onSuccess }: AddPatientDi
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t('addNewPatient')}</DialogTitle>
-          <DialogDescription>{t('searchSubtitle')}</DialogDescription>
+          <DialogDescription>
+            {tPatient('fillPatientDetails') || 'Fill in the patient details below to register them in the system.'}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>

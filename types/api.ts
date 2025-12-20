@@ -1,3 +1,15 @@
+export interface SearchFilters {
+  query?: string; // Searches name, national_id, email, phone
+  period?: 'today' | 'week' | 'month' | 'custom';
+  startDate?: Date;
+  endDate?: Date;
+  clinicId?: number;
+  gender?: 'male' | 'female';
+  minAge?: number;
+  maxAge?: number;
+  nationalId?: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
