@@ -69,11 +69,31 @@ export function VisitForm({ patientId, onSuccess, onCancel }: VisitFormProps) {
   });
 
   const onSubmit = (data: VisitFormData) => {
-    createVisit(data, {
+    // Transform form data to CreateVisitDto format
+    const visitData = {
+      patientId: patientId.toString(), // Convert to string UUID format (backend expects UUID)
+      diagnoses: [
+        `Chief Complaint: ${data.chief_complaint}`,
+        data.history_present_illness ? `History: ${data.history_present_illness}` : '',
+        data.physical_examination ? `Examination: ${data.physical_examination}` : '',
+        `Diagnosis: ${data.diagnosis}`,
+        data.treatment_plan ? `Treatment: ${data.treatment_plan}` : '',
+        data.notes ? `Notes: ${data.notes}` : '',
+        `Vitals: Weight ${data.vitals.weight}kg` + 
+          (data.vitals.height ? `, Height ${data.vitals.height}cm` : '') +
+          (data.vitals.blood_pressure_systolic ? `, BP ${data.vitals.blood_pressure_systolic}/${data.vitals.blood_pressure_diastolic}` : '') +
+          (data.vitals.heart_rate ? `, HR ${data.vitals.heart_rate}bpm` : '') +
+          (data.vitals.temperature ? `, Temp ${data.vitals.temperature}°C` : '') +
+          (data.vitals.respiratory_rate ? `, RR ${data.vitals.respiratory_rate}/min` : '') +
+          (data.vitals.oxygen_saturation ? `, SpO2 ${data.vitals.oxygen_saturation}%` : ''),
+      ].filter(Boolean).join('\\n'),
+    };
+
+    createVisit(visitData, {
       onSuccess: (visit) => {
         toast.success(t('visitCreated'));
         form.reset();
-        onSuccess?.(visit.id);
+        onSuccess?.(parseInt(visit.id, 10));
       },
       onError: () => {
         toast.error(t('visitCreateError'));

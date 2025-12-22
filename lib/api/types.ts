@@ -128,6 +128,41 @@ export interface ApiError {
 }
 
 // ============================================================================
+// Doctor API DTOs
+// ============================================================================
+
+/**
+ * Create Visit DTO
+ * @see {@link docs/API/doctor.json} - OpenAPI specification
+ */
+export interface CreateVisitDto {
+  diagnoses: string;
+  patientId: string; // UUID format
+}
+
+export interface CreateVisitResponse {
+  message: string;
+  id: string; // Visit globalId (UUID)
+}
+
+/**
+ * Create Medication DTO
+ * @see {@link docs/API/doctor.json} - OpenAPI specification
+ */
+export interface CreateMedicationDto {
+  name: string;
+  dosage: number; // Dosage amount per administration
+  period: number; // Treatment period in days
+  comments?: string; // Optional medication instructions
+  patientId: string; // UUID format
+}
+
+export interface CreateMedicationResponse {
+  message: string;
+  id: string; // Medication globalId (UUID)
+}
+
+// ============================================================================
 // JWT Payload (for reference - not directly accessible in frontend)
 // ============================================================================
 

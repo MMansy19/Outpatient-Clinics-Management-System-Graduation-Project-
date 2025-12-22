@@ -7,8 +7,9 @@ import { mockPatientsAPI } from '@/lib/api/mockData';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
 
 // TODO: Set to false once backend endpoint is confirmed working
+// Can be controlled via environment variable
 // See SEARCH_REVIEW_FINDINGS.md for verification checklist
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const PATIENTS_KEY = ['patients'];
 
 interface PatientsResponse {

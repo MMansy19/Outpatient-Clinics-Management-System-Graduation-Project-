@@ -11,8 +11,8 @@ const nextConfig: NextConfig = {
     const backendUrl = process.env.BACKEND_API_URL;
     return [
       {
-      source: '/api/proxy/:path*',
-      destination: `${backendUrl}/:path*`,
+        source: '/api/proxy/:path*',
+        destination: `${backendUrl}/:path*`,
       },
     ];
   },

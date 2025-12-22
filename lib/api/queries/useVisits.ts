@@ -1,10 +1,20 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
+import { doctorApi } from '@/lib/api/doctor.service';
+import type { CreateVisitDto, CreateVisitResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
 import { mockVisitsAPI } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
 
-const USE_MOCK_DATA = true;
+/**
+ * Toggle between mock data and real backend API
+ * 
+ * Set to false when ready to integrate with real backend.
+ * Can be controlled via environment variable.
+ * See docs/integration/PROFESSIONAL_BE_INTEGRATION_GUIDE.md for migration steps.
+ */
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
 const VISITS_KEY = ['visits'];
 
 export const useGetPatientVisits = (patientId: number): UseQueryResult<VisitWithRelations[], Error> => {
@@ -33,28 +43,81 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
   });
 };
 
-export const useCreateVisit = (): UseMutationResult<Visit, Error, VisitFormData> => {
+/**
+ * Create Visit Hook
+ * 
+ * Professional implementation with backend integration support.
+ * 
+ * **Backend API:** POST /api/v1/doctor/visit/create
+ * **Required Role:** DOCTOR
+ * 
+ * @returns {UseMutationResult} Mutation object with loading states
+ * 
+ * @example
+ * ```typescript
+ * const { mutate: createVisit, isPending } = useCreateVisit();
+ * 
+ * createVisit({
+ *   diagnoses: "Common cold, 3 Days rest, Panadol 500 mg",
+ *   patientId: "patient-uuid"
+ * }, {
+ *   onSuccess: (response) => {
+ *     toast.success('Visit created successfully');
+ *     console.log('Visit ID:', response.id);
+ *   },
+ *   onError: (error) => {
+ *     toast.error('Failed to create visit');
+ *   }
+ * });
+ * ```
+ */
+export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto> => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
   return useMutation({
-    mutationFn: async (data: VisitFormData) => {
+    mutationFn: async (data: CreateVisitDto) => {
       if (USE_MOCK_DATA) {
-        // Add doctor_id and clinic_id from auth store
-        // TODO: Update when backend integration is complete
+        // Mock implementation - transform to match mock API signature
         const visitData = {
           ...data,
-          doctor_id: 1, // Mock value - will come from backend session
+          // Mock data expects different field names
+          patient_id: 1, // In mock, we use numeric ID
+          doctor_id: 1,
           clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
+          chief_complaint: '', // Mock requires this
+          diagnosis: data.diagnoses, // Map to mock field name
+          vitals: { weight: 0 }, // Mock requires this
         };
-        return await mockVisitsAPI.createVisit(visitData);
+        const mockResult = await mockVisitsAPI.createVisit(visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } });
+        
+        // Transform mock response to match backend API response
+        return {
+          message: 'Visit Created Successfully',
+          id: mockResult.global_id,
+        };
       }
-      const response = await apiClient.post<Visit>('/doctor/visits', data);
-      return response.data;
+      
+      // Real backend implementation
+      return await doctorApi.createVisit(data);
     },
-    onSuccess: (data) => {
+    onSuccess: (_response, variables) => {
+      // Invalidate all visits queries
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-      queryClient.invalidateQueries({ queryKey: ['patients', data.patient_id] });
+      
+      // Invalidate patient-specific visits
+      queryClient.invalidateQueries({ 
+        queryKey: [...VISITS_KEY, 'patient', variables.patientId] 
+      });
+      
+      // Invalidate patient details (may include visit count)
+      queryClient.invalidateQueries({ 
+        queryKey: ['patients', variables.patientId] 
+      });
+    },
+    onError: (error) => {
+      console.error('[useCreateVisit] Error:', error);
+      // Centralized error handling could go here
     },
   });
 };
