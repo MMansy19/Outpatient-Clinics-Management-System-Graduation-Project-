@@ -8,10 +8,11 @@ const nextConfig: NextConfig = {
   
   // API Proxy to avoid CORS issues in development
   async rewrites() {
+    const backendUrl = process.env.BACKEND_API_URL;
     return [
       {
-        source: '/api/proxy/:path*',
-        destination: 'https://api-gateway.salmoncoast-a5f57a4d.westus2.azurecontainerapps.io/api/v1/:path*',
+      source: '/api/proxy/:path*',
+      destination: `${backendUrl}/:path*`,
       },
     ];
   },
