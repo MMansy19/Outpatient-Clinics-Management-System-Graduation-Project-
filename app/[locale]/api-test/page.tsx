@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { Navbar } from '@/components/landing/Navbar';
 
 // Import API services
 import { authApi } from '@/lib/api/auth.service';
@@ -23,6 +25,9 @@ import { apiClient } from '@/lib/api/client';
  */
 
 export default function ApiTestPage() {
+  const params = useParams();
+  const locale = (params?.locale as string) || 'en';
+  
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<unknown>(null);
   const [error, setError] = useState<string | null>(null);
@@ -116,22 +121,25 @@ export default function ApiTestPage() {
   );
 
   return (
-    <div className="container mx-auto py-8 max-w-6xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">API Integration Testing</h1>
-        <p className="text-muted-foreground">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <Navbar locale={locale} />
+      
+      <div className="container mx-auto px-4 max-w-6xl pt-20">{/* pt-24 adds spacing below fixed navbar */}
+        <div className="mb-6 sm:mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">API Integration Testing</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">
           Test backend endpoints to verify integration. Open DevTools (F12) to see network requests.
         </p>
-        <div className="mt-4 flex gap-2">
-          <div className="text-sm">
+        <div className="mt-4 flex flex-col sm:flex-row gap-2">
+          <div className="text-xs sm:text-sm break-all">
             <span className="font-semibold">API URL:</span>{' '}
-            <code className="bg-muted px-2 py-1 rounded">
+            <code className="bg-muted px-2 py-1 rounded text-xs">
               {process.env.NEXT_PUBLIC_API_BASE_URL || '/api/proxy'}
             </code>
           </div>
-          <div className="text-sm">
+          <div className="text-xs sm:text-sm break-all">
             <span className="font-semibold">Mock Data:</span>{' '}
-            <code className="bg-muted px-2 py-1 rounded">
+            <code className="bg-muted px-2 py-1 rounded text-xs">
               {process.env.NEXT_PUBLIC_USE_MOCK_DATA || 'false'}
             </code>
           </div>
@@ -139,7 +147,7 @@ export default function ApiTestPage() {
       </div>
 
       <Tabs defaultValue="gateway" className="space-y-4">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full gap-1">
           <TabsTrigger value="gateway">Gateway</TabsTrigger>
           <TabsTrigger value="auth">Auth</TabsTrigger>
           <TabsTrigger value="patient">Patient</TabsTrigger>
@@ -157,11 +165,11 @@ export default function ApiTestPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex gap-2">
-                <Button onClick={testGatewayStatus} disabled={loading}>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <Button onClick={testGatewayStatus} disabled={loading} className="w-full sm:w-auto">
                   Test Gateway (GET /api/v1)
                 </Button>
-                <Button onClick={testAuthStatus} disabled={loading} variant="outline">
+                <Button onClick={testAuthStatus} disabled={loading} variant="outline" className="w-full sm:w-auto">
                   Test Auth Service (GET /api/v1/auth)
                 </Button>
               </div>
@@ -199,7 +207,7 @@ export default function ApiTestPage() {
                   />
                 </div>
               </div>
-              <Button onClick={testLogin} disabled={loading}>
+              <Button onClick={testLogin} disabled={loading} className="w-full sm:w-auto">
                 {loading ? 'Testing...' : 'Test Login'}
               </Button>
             </CardContent>
@@ -214,7 +222,7 @@ export default function ApiTestPage() {
               <CardDescription>POST /api/v1/auth/patient/create</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="firstName">First Name</Label>
                   <Input
@@ -248,7 +256,7 @@ export default function ApiTestPage() {
                     onChange={(e) => setPatientJob(e.target.value)}
                   />
                 </div>
-                <div className="col-span-2">
+                <div className="sm:col-span-2">
                   <Label htmlFor="address">Address</Label>
                   <Input
                     id="address"
@@ -257,7 +265,7 @@ export default function ApiTestPage() {
                   />
                 </div>
               </div>
-              <Button onClick={testCreatePatient} disabled={loading}>
+              <Button onClick={testCreatePatient} disabled={loading} className="w-full sm:w-auto">
                 {loading ? 'Creating...' : 'Test Create Patient'}
               </Button>
               <Alert>
@@ -296,7 +304,7 @@ export default function ApiTestPage() {
                   placeholder="Common cold, Rest for 3 days, Panadol 500mg"
                 />
               </div>
-              <Button onClick={testCreateVisit} disabled={loading || !visitPatientId}>
+              <Button onClick={testCreateVisit} disabled={loading || !visitPatientId} className="w-full sm:w-auto">
                 {loading ? 'Creating...' : 'Test Create Visit'}
               </Button>
               {!visitPatientId && (
@@ -327,7 +335,7 @@ export default function ApiTestPage() {
                   placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="medName">Medication Name</Label>
                   <Input
@@ -363,7 +371,7 @@ export default function ApiTestPage() {
                   />
                 </div>
               </div>
-              <Button onClick={testCreateMedication} disabled={loading || !medicationPatientId}>
+              <Button onClick={testCreateMedication} disabled={loading || !medicationPatientId} className="w-full sm:w-auto">
                 {loading ? 'Creating...' : 'Test Create Medication'}
               </Button>
               {!medicationPatientId && (
@@ -385,7 +393,7 @@ export default function ApiTestPage() {
             <CardTitle>{error ? '❌ Error Response' : '✅ Success Response'}</CardTitle>
           </CardHeader>
           <CardContent>
-            <pre className="bg-muted p-4 rounded-lg overflow-auto max-h-96">
+            <pre className="bg-muted p-2 sm:p-4 rounded-lg overflow-auto max-h-64 sm:max-h-96 text-xs sm:text-sm">
               {JSON.stringify(error || result, null, 2)}
             </pre>
           </CardContent>
@@ -421,6 +429,7 @@ export default function ApiTestPage() {
           </Alert>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
