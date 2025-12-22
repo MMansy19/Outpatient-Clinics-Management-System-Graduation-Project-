@@ -147,13 +147,15 @@ export default function ApiTestPage() {
       </div>
 
       <Tabs defaultValue="gateway" className="space-y-4">
-        <TabsList className="grid grid-cols-2 sm:grid-cols-5 w-full gap-1">
-          <TabsTrigger value="gateway">Gateway</TabsTrigger>
-          <TabsTrigger value="auth">Auth</TabsTrigger>
-          <TabsTrigger value="patient">Patient</TabsTrigger>
-          <TabsTrigger value="visit">Visit</TabsTrigger>
-          <TabsTrigger value="medication">Medication</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto">
+            <TabsList className="inline-flex md:space-x-2 space-x-1">
+            <TabsTrigger value="gateway" className="flex-shrink-0">Gateway</TabsTrigger>
+            <TabsTrigger value="auth" className="flex-shrink-0">Auth</TabsTrigger>
+            <TabsTrigger value="patient" className="flex-shrink-0">Patient</TabsTrigger>
+            <TabsTrigger value="visit" className="flex-shrink-0">Visit</TabsTrigger>
+            <TabsTrigger value="medication" className="flex-shrink-0">Medication</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Gateway Tests */}
         <TabsContent value="gateway">
