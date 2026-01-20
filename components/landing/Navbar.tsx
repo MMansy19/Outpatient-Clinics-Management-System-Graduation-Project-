@@ -31,7 +31,6 @@ export function Navbar({ locale }: NavbarProps) {
     { href: `/${locale}#doctors`, label: t('doctors') },
     { href: `/${locale}#partners`, label: t('partners') },
     { href: `/${locale}/api-test`, label: t('apiTest') },
-    { href: `/${locale}/simple`, label: t('simpleVersion') },
   ];
 
   return (
