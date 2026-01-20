@@ -263,3 +263,20 @@ export interface PaginatedVisitsResponse {
   totalItems: number;
   totalPages: number;
 }
+
+/**
+ * Update Patient DTO
+ */
+export interface UpdatePatientDto {
+  firstName?: string;
+  lastName?: string;
+  job?: string;
+  address?: string;
+}
+
+/**
+ * Update Patient Response
+ */
+export interface UpdatePatientResponse {
+  message: string;
+}

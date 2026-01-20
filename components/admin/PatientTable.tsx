@@ -12,10 +12,11 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { adminApi } from '@/lib/api/admin.service';
 import type { PatientResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
+import { EditPatientDialog } from './EditPatientDialog';
 
 export function PatientTable() {
   const t = useTranslations('admin');
@@ -24,24 +25,11 @@ export function PatientTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [editingPatient, setEditingPatient] = useState<PatientResponse | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const limit = 10;
 
   useEffect(() => {
-    const loadPatients = async () => {
-      try {
-        setLoading(true);
-        const data = await adminApi.getPatients({ page, limit });
-        setPatients(data.items);
-        setTotalPages(data.totalPages);
-        setTotalItems(data.totalItems);
-      } catch (error) {
-        console.error('Failed to load patients:', error);
-        toast.error('Failed to load patients');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadPatients();
   }, [page]);
 
@@ -54,6 +42,31 @@ export function PatientTable() {
   const handleNextPage = () => {
     if (page < totalPages) {
       setPage(page + 1);
+    }
+  };
+
+  const handleEditPatient = (patient: PatientResponse) => {
+    setEditingPatient(patient);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditSuccess = () => {
+    // Reload patients after successful edit
+    loadPatients();
+  };
+
+  const loadPatients = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getPatients({ page, limit });
+      setPatients(data.items);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.totalItems);
+    } catch (error) {
+      console.error('Failed to load patients:', error);
+      toast.error('Failed to load patients');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,13 +98,14 @@ export function PatientTable() {
               <TableHead>{t('gender')}</TableHead>
               <TableHead>{t('job')}</TableHead>
               <TableHead>{t('address')}</TableHead>
+              <TableHead className="text-right">{t('actions')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {patients.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={6}
+                  colSpan={7}
                   className="text-center text-muted-foreground"
                 >
                   {t('noPatients')}
@@ -111,6 +125,16 @@ export function PatientTable() {
                   <TableCell>{patient.job}</TableCell>
                   <TableCell className="max-w-[200px] truncate">
                     {patient.address}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleEditPatient(patient)}
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      {t('edit')}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -150,6 +174,13 @@ export function PatientTable() {
           </Button>
         </div>
       </div>
+      
+      <EditPatientDialog
+        patient={editingPatient}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={handleEditSuccess}
+      />
     </div>
   );
 }

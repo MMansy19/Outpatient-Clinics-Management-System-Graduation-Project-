@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClinicTable } from '@/components/admin/ClinicTable';
 import { DoctorTable } from '@/components/admin/DoctorTable';
 import { PatientTable } from '@/components/admin/PatientTable';
+import { VisitTable } from '@/components/admin/VisitTable';
 import { QRCodeGenerator } from '@/components/admin/QRCodeGenerator';
 import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { mockClinicsAPI, mockDoctorsAPI, mockPatientsAPI, mockVisitsAPI } from '@/lib/api/mockData';
@@ -126,10 +127,11 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
           </div>
 
           <Tabs defaultValue="clinics" className="space-y-4">
-            <TabsList className="grid w-full grid-cols-3 lg:w-[400px]">
+            <TabsList className="grid w-full grid-cols-4 lg:w-[550px]">
               <TabsTrigger value="clinics">{t('clinics')}</TabsTrigger>
               <TabsTrigger value="doctors">{t('doctors')}</TabsTrigger>
               <TabsTrigger value="patients">{t('patients')}</TabsTrigger>
+              <TabsTrigger value="visits">{t('visits')}</TabsTrigger>
             </TabsList>
 
             <TabsContent value="clinics" className="space-y-4">
@@ -142,6 +144,10 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
 
             <TabsContent value="patients" className="space-y-4">
               <PatientTable />
+            </TabsContent>
+
+            <TabsContent value="visits" className="space-y-4">
+              <VisitTable />
             </TabsContent>
           </Tabs>
         </div>

@@ -68,6 +68,18 @@ export const adminApi = {
     });
     return response.data;
   },
+
+  /**
+   * Update patient information
+   * 
+   * @param id - Patient ID (UUID)
+   * @param data - Updated patient data
+   * @returns Success message
+   */
+  updatePatient: async (id: string, data: { firstName?: string; lastName?: string; job?: string; address?: string }): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/admin/patient/${id}`, data);
+    return response.data;
+  },
 };
 
 /**

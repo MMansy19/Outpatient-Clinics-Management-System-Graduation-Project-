@@ -58,6 +58,13 @@ export default function ApiTestPage() {
   const [adminPage, setAdminPage] = useState(1);
   const [adminLimit, setAdminLimit] = useState(10);
 
+  // Update patient
+  const [updatePatientId, setUpdatePatientId] = useState('');
+  const [updateFirstName, setUpdateFirstName] = useState('Mahmoud');
+  const [updateLastName, setUpdateLastName] = useState('Abdelfatah');
+  const [updateJob, setUpdateJob] = useState('Frontend Engineer');
+  const [updateAddress, setUpdateAddress] = useState('Cairo, Egypt');
+
   const handleApiCall = async (
     apiFunction: () => Promise<unknown>,
     testName: string
@@ -158,6 +165,18 @@ export default function ApiTestPage() {
       'Get All Visits'
     );
 
+  const testUpdatePatient = () =>
+    handleApiCall(
+      () =>
+        adminApi.updatePatient(updatePatientId, {
+          firstName: updateFirstName,
+          lastName: updateLastName,
+          job: updateJob,
+          address: updateAddress,
+        }),
+      'Update Patient'
+    );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Navbar locale={locale} />
@@ -201,6 +220,9 @@ export default function ApiTestPage() {
               </TabsTrigger>
               <TabsTrigger value="medication" className="flex-shrink-0">
                 Medication
+              </TabsTrigger>
+              <TabsTrigger value="update-patient" className="flex-shrink-0">
+                Update Patient
               </TabsTrigger>
             </TabsList>
           </div>
@@ -530,6 +552,86 @@ export default function ApiTestPage() {
                 >
                   {loading ? 'Creating...' : 'Test Create Medication'}
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Update Patient Tests */}
+          <TabsContent value="update-patient">
+            <Card>
+              <CardHeader>
+                <CardTitle>Update Patient Test</CardTitle>
+                <CardDescription>
+                  PATCH /api/v1/admin/patient/{'{id}'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Alert>
+                  <AlertDescription>
+                    🔐 This endpoint requires admin authentication. Login first in
+                    the Auth tab.
+                  </AlertDescription>
+                </Alert>
+
+                <div>
+                  <Label htmlFor="updatePatientId">Patient UUID</Label>
+                  <Input
+                    id="updatePatientId"
+                    value={updatePatientId}
+                    onChange={(e) => setUpdatePatientId(e.target.value)}
+                    placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="updateFirstName">First Name</Label>
+                    <Input
+                      id="updateFirstName"
+                      value={updateFirstName}
+                      onChange={(e) => setUpdateFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="updateLastName">Last Name</Label>
+                    <Input
+                      id="updateLastName"
+                      value={updateLastName}
+                      onChange={(e) => setUpdateLastName(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="updateJob">Job</Label>
+                    <Input
+                      id="updateJob"
+                      value={updateJob}
+                      onChange={(e) => setUpdateJob(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="updateAddress">Address</Label>
+                    <Input
+                      id="updateAddress"
+                      value={updateAddress}
+                      onChange={(e) => setUpdateAddress(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <Button
+                  onClick={testUpdatePatient}
+                  disabled={loading || !updatePatientId}
+                  className="w-full sm:w-auto"
+                >
+                  {loading ? 'Updating...' : 'Test Update Patient'}
+                </Button>
+
+                <Alert>
+                  <AlertDescription>
+                    💡 Get a patient ID from the Admin tab by clicking "GET
+                    /api/v1/admin/patients"
+                  </AlertDescription>
+                </Alert>
               </CardContent>
             </Card>
           </TabsContent>
