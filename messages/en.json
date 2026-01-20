@@ -23,7 +23,8 @@
     "partners": "Partners",
     "apiTest": "API Test",
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "simpleVersion": "Simple Version"
   },
   "landing": {
     "hero": {
@@ -369,6 +370,20 @@
     "invalidEmail": "Invalid email format"
   },
   "admin": {
+    "name": "Name",
+    "phone": "Phone",
+    "speciality": "Speciality",
+    "status": "Status",
+    "approved": "Approved",
+    "pending": "Pending",    
+    "dateOfBirth": "Date of Birth",
+    "job": "Job",
+    "address": "Address",
+    "showing": "Showing",
+    "of": "of",
+    "page": "Page",
+    "previous": "Previous",
+    "next": "Next",
     "dashboard": "Admin Dashboard",
     "dashboardSubtitle": "Manage clinics, users, and system monitoring",
     "clinicManagement": "Clinic Management",

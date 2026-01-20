@@ -23,7 +23,8 @@
     "partners": "الشركاء",
     "apiTest": "اختبار API",
     "login": "تسجيل الدخول",
-    "register": "إنشاء حساب"
+    "register": "إنشاء حساب",
+    "simpleVersion": "النسخة المبسطة"
   },
   "landing": {
     "hero": {
@@ -369,6 +370,20 @@
     "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة"
   },
   "admin": {
+        "name": "الاسم",
+    "phone": "الهاتف",
+    "speciality": "التخصص",
+    "status": "الحالة",
+    "approved": "مُعتمد",
+    "pending": "قيد الانتظار",  
+    "dateOfBirth": "تاريخ الميلاد",
+    "job": "الوظيفة",
+    "address": "العنوان",    
+    "showing": "عرض",
+    "of": "من",
+    "page": "صفحة",
+    "previous": "السابق",
+    "next": "التالي",
     "dashboard": "لوحة تحكم المسؤول",
     "dashboardSubtitle": "إدارة العيادات والمستخدمين ومراقبة النظام",
     "clinicManagement": "إدارة العيادات",

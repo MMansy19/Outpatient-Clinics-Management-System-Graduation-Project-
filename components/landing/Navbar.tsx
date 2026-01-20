@@ -31,6 +31,7 @@ export function Navbar({ locale }: NavbarProps) {
     { href: `/${locale}#doctors`, label: t('doctors') },
     { href: `/${locale}#partners`, label: t('partners') },
     { href: `/${locale}/api-test`, label: t('apiTest') },
+    { href: `/${locale}/simple`, label: t('simpleVersion') },
   ];
 
   return (
@@ -139,9 +140,9 @@ export function Navbar({ locale }: NavbarProps) {
                 </Button>
 
                 <Link href={`/${locale}/login`} className="block">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="w-full"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -150,8 +151,8 @@ export function Navbar({ locale }: NavbarProps) {
                 </Link>
 
                 <Link href={`/${locale}/register`} className="block">
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="w-full bg-emerald-500 hover:bg-emerald-600"
                     onClick={() => setMobileMenuOpen(false)}
                   >

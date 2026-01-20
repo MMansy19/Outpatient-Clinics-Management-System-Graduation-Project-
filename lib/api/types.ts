@@ -176,3 +176,90 @@ export interface JwtPayload {
   iss?: string; // Issuer
   aud?: string; // Audience
 }
+
+/**
+ * Pagination Parameters
+ */
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+
+
+/**
+ * Doctor Response (from admin endpoint)
+ */
+export interface DoctorResponse {
+  id: string;
+  phone: string;
+  email: string;
+  speciality: string;
+  isApproved: boolean;
+  user: {
+    id: string;
+    socialSecurityNumber: string;
+    gender: Gender;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string; // ISO date string
+  };
+}
+
+/**
+ * Patient Response (from admin endpoint)
+ */
+export interface PatientResponse {
+  id: string;
+  address: string;
+  job: string;
+  user: {
+    id: string;
+    socialSecurityNumber: string;
+    gender: Gender;
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string; // ISO date string
+  };
+}
+
+/**
+ * Visit Response (from admin endpoint)
+ */
+export interface VisitResponse {
+  id: string;
+  diagnoses: string;
+  patientId: string;
+  doctorId: string;
+  createdAt: string; // ISO date string
+}
+
+/**
+ * Paginated Doctors Response
+ */
+export interface PaginatedDoctorsResponse {
+  page: number;
+  items: DoctorResponse[];
+  totalItems: number;
+  totalPages: number;
+}
+
+/**
+ * Paginated Patients Response
+ */
+export interface PaginatedPatientsResponse {
+  page: number;
+  items: PatientResponse[];
+  totalItems: number;
+  totalPages: number;
+}
+
+/**
+ * Paginated Visits Response
+ */
+export interface PaginatedVisitsResponse {
+  page: number;
+  items: VisitResponse[];
+  totalItems: number;
+  totalPages: number;
+}

@@ -1,10 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Trash2, MoreHorizontal, Search } from 'lucide-react';
-import { toast } from 'sonner';
-
 import {
   Table,
   TableBody,
@@ -13,128 +10,107 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
-import { useGetPatients, useDeletePatient } from '@/lib/api/queries/useUsers';
-import { calculateAge } from '@/lib/utils/formatDate';
-import { Gender } from '@/types/entities/Patient';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { adminApi } from '@/lib/api/admin.service';
+import type { PatientResponse } from '@/lib/api/types';
+import { toast } from 'sonner';
 
 export function PatientTable() {
   const t = useTranslations('admin');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [deletingPatientId, setDeletingPatientId] = useState<number | null>(null);
+  const [patients, setPatients] = useState<PatientResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const limit = 10;
 
-  const { data: patients, isLoading } = useGetPatients(searchQuery || undefined);
-  const { mutate: deletePatient, isPending: isDeleting } = useDeletePatient();
+  useEffect(() => {
+    const loadPatients = async () => {
+      try {
+        setLoading(true);
+        const data = await adminApi.getPatients({ page, limit });
+        setPatients(data.items);
+        setTotalPages(data.totalPages);
+        setTotalItems(data.totalItems);
+      } catch (error) {
+        console.error('Failed to load patients:', error);
+        toast.error('Failed to load patients');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleDelete = (id: number) => {
-    deletePatient(id, {
-      onSuccess: () => {
-        toast.success(t('patientDeleted'));
-        setDeletingPatientId(null);
-      },
-      onError: () => {
-        toast.error(t('patientDeleteError'));
-      },
+    loadPatients();
+  }, [page]);
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
-  const getGenderLabel = (gender: Gender) => {
-    return gender === Gender.MALE ? t('male') : t('female');
-  };
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="skeleton h-10 w-full" />
-        <div className="skeleton h-64 w-full" />
+      <div className="flex items-center justify-center p-8">
+        <p className="text-muted-foreground">Loading patients...</p>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder={t('searchPatients')}
-            value={searchQuery}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-      </div>
-
-      <div className="medical-card overflow-hidden">
+      <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead>{t('name')}</TableHead>
               <TableHead>{t('nationalId')}</TableHead>
-              <TableHead>{t('patientName')}</TableHead>
+              <TableHead>{t('dateOfBirth')}</TableHead>
               <TableHead>{t('gender')}</TableHead>
-              <TableHead>{t('age')}</TableHead>
-              <TableHead>{t('phoneNumber')}</TableHead>
-              <TableHead>{t('email')}</TableHead>
-              <TableHead className="text-right">{t('actions')}</TableHead>
+              <TableHead>{t('job')}</TableHead>
+              <TableHead>{t('address')}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {patients?.length === 0 ? (
+            {patients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
+                <TableCell
+                  colSpan={6}
+                  className="text-center text-muted-foreground"
+                >
                   {t('noPatients')}
                 </TableCell>
               </TableRow>
             ) : (
-              patients?.map((patient) => (
+              patients.map((patient) => (
                 <TableRow key={patient.id}>
-                  <TableCell className="font-mono text-sm">{patient.national_id}</TableCell>
-                  <TableCell className="font-medium">{patient.name}</TableCell>
-                  <TableCell>
-                    <span className={patient.gender === Gender.MALE ? 'medical-badge-info' : 'medical-badge-warning'}>
-                      {getGenderLabel(patient.gender)}
-                    </span>
+                  <TableCell className="font-medium">
+                    {patient.user.firstName} {patient.user.lastName}
                   </TableCell>
+                  <TableCell>{patient.user.socialSecurityNumber}</TableCell>
+                  <TableCell>{formatDate(patient.user.dateOfBirth)}</TableCell>
                   <TableCell>
-                    {calculateAge(patient.birthdate)} {t('years')}
+                    <Badge variant="outline">{patient.user.gender}</Badge>
                   </TableCell>
-                  <TableCell>{patient.phone_number || '-'}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{patient.email || '-'}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => setDeletingPatientId(patient.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t('delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <TableCell>{patient.job}</TableCell>
+                  <TableCell className="max-w-[200px] truncate">
+                    {patient.address}
                   </TableCell>
                 </TableRow>
               ))
@@ -143,24 +119,37 @@ export function PatientTable() {
         </Table>
       </div>
 
-      <AlertDialog open={!!deletingPatientId} onOpenChange={(open: boolean) => !open && setDeletingPatientId(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('deletePatientWarning')}</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deletingPatientId && handleDelete(deletingPatientId)}
-              disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {t('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-muted-foreground">
+          {t('showing')} {patients.length > 0 ? (page - 1) * limit + 1 : 0} -{' '}
+          {Math.min(page * limit, totalItems)} {t('of')} {totalItems}{' '}
+          {t('patients')}
+        </p>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handlePreviousPage}
+            disabled={page === 1}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {t('previous')}
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {t('page')} {page} {t('of')} {totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleNextPage}
+            disabled={page === totalPages}
+          >
+            {t('next')}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
