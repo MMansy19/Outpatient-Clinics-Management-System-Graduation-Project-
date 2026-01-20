@@ -88,9 +88,9 @@ export default function HomePage({ params }: HomePageProps) {
         const allDoctors = await mockDoctorsAPI.getDoctors();
         const images = [
           'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=400&h=400&fit=crop',
-          'https://images.unsplash.com/photo-1594824476967-48c8b964273f?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1537368910025-700350fe46c7?w=400&h=400&fit=crop',
           'https://images.unsplash.com/photo-1622253692010-333f2da6031d?w=400&h=400&fit=crop',
-          'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=400&fit=crop',
+          'https://images.unsplash.com/photo-1666214280557-f1b5022eb634?w=400&h=400&fit=crop',
           'https://images.unsplash.com/photo-1582750433449-648ed127bb54?w=400&h=400&fit=crop',
         ];
         const topDoctors: DoctorDisplay[] = allDoctors.slice(0, 5).map((doctor, index) => ({
