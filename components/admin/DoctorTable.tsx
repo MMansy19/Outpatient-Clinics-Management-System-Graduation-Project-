@@ -67,18 +67,19 @@ export function DoctorTable() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('name')}</TableHead>
-              <TableHead>{t('email')}</TableHead>
-              <TableHead>{t('phone')}</TableHead>
-              <TableHead>{t('speciality')}</TableHead>
-              <TableHead>{t('nationalId')}</TableHead>
-              <TableHead>{t('status')}</TableHead>
-            </TableRow>
-          </TableHeader>
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[150px]">{t('name')}</TableHead>
+                <TableHead className="min-w-[200px]">{t('email')}</TableHead>
+                <TableHead className="min-w-[120px]">{t('phone')}</TableHead>
+                <TableHead className="min-w-[150px]">{t('speciality')}</TableHead>
+                <TableHead className="min-w-[140px]">{t('nationalId')}</TableHead>
+                <TableHead className="min-w-[100px]">{t('status')}</TableHead>
+              </TableRow>
+            </TableHeader>
           <TableBody>
             {doctors.length === 0 ? (
               <TableRow>
@@ -116,16 +117,17 @@ export function DoctorTable() {
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           {t('showing')} {doctors.length > 0 ? (page - 1) * limit + 1 : 0} -{' '}
           {Math.min(page * limit, totalItems)} {t('of')} {totalItems}{' '}
           {t('doctors')}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-center sm:justify-end">
           <Button
             variant="outline"
             size="sm"
@@ -133,9 +135,9 @@ export function DoctorTable() {
             disabled={page === 1}
           >
             <ChevronLeft className="h-4 w-4" />
-            {t('previous')}
+            <span className="hidden sm:inline ml-1">{t('previous')}</span>
           </Button>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs sm:text-sm text-muted-foreground px-2">
             {t('page')} {page} {t('of')} {totalPages}
           </span>
           <Button
@@ -144,7 +146,7 @@ export function DoctorTable() {
             onClick={handleNextPage}
             disabled={page === totalPages}
           >
-            {t('next')}
+            <span className="hidden sm:inline mr-1">{t('next')}</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

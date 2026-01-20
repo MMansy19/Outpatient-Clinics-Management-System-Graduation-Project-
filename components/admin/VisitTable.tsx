@@ -81,23 +81,23 @@ export function VisitTable() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold">{t('visits')}</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold">{t('visits')}</h2>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             {t('totalRecords')}: {totalItems}
           </p>
         </div>
       </div>
 
-      <div className="medical-card overflow-hidden">
+      <div className="medical-card overflow-hidden p-0">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>{t('visitId')}</TableHead>
-                <TableHead>{t('patientId')}</TableHead>
-                <TableHead>{t('doctorId')}</TableHead>
-                <TableHead>{t('diagnoses')}</TableHead>
-                <TableHead>{t('createdAt')}</TableHead>
+                <TableHead className="min-w-[120px]">{t('visitId')}</TableHead>
+                <TableHead className="min-w-[120px]">{t('patientId')}</TableHead>
+                <TableHead className="min-w-[120px]">{t('doctorId')}</TableHead>
+                <TableHead className="min-w-[200px]">{t('diagnoses')}</TableHead>
+                <TableHead className="min-w-[150px]">{t('createdAt')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -134,11 +134,11 @@ export function VisitTable() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <p className="text-xs sm:text-sm text-muted-foreground">
           {t('page')} {page} {t('of')} {totalPages}
         </p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 justify-center sm:justify-end">
           <Button
             onClick={handlePreviousPage}
             disabled={page === 1}
@@ -146,7 +146,7 @@ export function VisitTable() {
             size="sm"
           >
             <ChevronLeft className="h-4 w-4" />
-            {t('previous')}
+            <span className="hidden sm:inline ml-1">{t('previous')}</span>
           </Button>
           <Button
             onClick={handleNextPage}
@@ -154,7 +154,7 @@ export function VisitTable() {
             variant="outline"
             size="sm"
           >
-            {t('next')}
+            <span className="hidden sm:inline mr-1">{t('next')}</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
