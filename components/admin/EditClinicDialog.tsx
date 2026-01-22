@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -25,56 +25,74 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
-import { useUpdateClinic } from '@/lib/api/queries/useClinics';
-import { clinicSchema, type ClinicFormData } from '@/lib/schemas/clinicSchema';
-import type { Clinic } from '@/types/entities/Clinic';
+import { adminApi } from '@/lib/api/admin.service';
+import type { ClinicResponse } from '@/lib/api/types';
+import { z } from 'zod';
+
+const clinicSchema = z.object({
+  name: z.string().min(1, 'Clinic name is required'),
+  speciality: z.string().min(1, 'Speciality is required'),
+});
+
+type ClinicFormData = z.infer<typeof clinicSchema>;
 
 interface EditClinicDialogProps {
-  clinic: Clinic;
+  clinic: ClinicResponse | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function EditClinicDialog({ clinic, open, onOpenChange }: EditClinicDialogProps) {
+export function EditClinicDialog({
+  clinic,
+  open,
+  onOpenChange,
+  onSuccess,
+}: EditClinicDialogProps) {
   const t = useTranslations('admin');
-  const { mutate: updateClinic, isPending } = useUpdateClinic();
+  const [isPending, setIsPending] = useState(false);
 
   const form = useForm<ClinicFormData>({
     resolver: zodResolver(clinicSchema),
     defaultValues: {
-      name: clinic.name,
-      department: clinic.department,
-      description: clinic.description || '',
-      location: clinic.location || '',
-      phone_number: clinic.phone_number || '',
+      name: '',
+      speciality: '',
     },
   });
 
   useEffect(() => {
-    form.reset({
-      name: clinic.name,
-      department: clinic.department,
-      description: clinic.description || '',
-      location: clinic.location || '',
-      phone_number: clinic.phone_number || '',
-    });
+    if (clinic) {
+      form.reset({
+        name: clinic.name,
+        speciality: clinic.speciality,
+      });
+    }
   }, [clinic, form]);
 
-  const onSubmit = (data: ClinicFormData) => {
-    updateClinic(
-      { id: clinic.id, data },
-      {
-        onSuccess: () => {
-          toast.success(t('clinicUpdated'));
-          onOpenChange(false);
-        },
-        onError: () => {
-          toast.error(t('clinicUpdateError'));
-        },
-      }
-    );
+  const onSubmit = async (data: ClinicFormData) => {
+    if (!clinic) return;
+
+    try {
+      setIsPending(true);
+      await adminApi.updateClinic(clinic.id, {
+        name: data.name,
+        speciality: data.speciality,
+      });
+
+      toast.success(t('clinicUpdated') || 'Clinic updated successfully');
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Failed to update clinic:', error);
+      toast.error(
+        error?.response?.data?.message ||
+          t('clinicUpdateError') ||
+          'Failed to update clinic'
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -82,7 +100,9 @@ export function EditClinicDialog({ clinic, open, onOpenChange }: EditClinicDialo
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('editClinic')}</DialogTitle>
-          <DialogDescription>{t('editClinicDescription')}</DialogDescription>
+          <DialogDescription>
+            {t('editClinicDescription') || 'Update clinic information'}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -103,54 +123,12 @@ export function EditClinicDialog({ clinic, open, onOpenChange }: EditClinicDialo
 
             <FormField
               control={form.control}
-              name="department"
+              name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('department')}</FormLabel>
+                  <FormLabel>{t('speciality')}</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('location')}</FormLabel>
-                  <FormControl>
-                    <Input disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
-                  <FormControl>
-                    <Input type="tel" disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('description')}</FormLabel>
-                  <FormControl>
-                    <Textarea rows={3} disabled={isPending} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,14 +136,23 @@ export function EditClinicDialog({ clinic, open, onOpenChange }: EditClinicDialo
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+              >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-medical-primary hover:bg-medical-primary/90">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-medical-primary hover:bg-medical-primary/90"
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('updating')}
+                    {t('updating') || 'Updating...'}
                   </>
                 ) : (
                   t('update')

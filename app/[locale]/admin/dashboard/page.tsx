@@ -15,7 +15,12 @@ import { VisitTable } from '@/components/admin/VisitTable';
 import { QRCodeGenerator } from '@/components/admin/QRCodeGenerator';
 import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { StatsCards } from '@/components/admin/StatsCards';
-import { mockClinicsAPI, mockDoctorsAPI, mockPatientsAPI, mockVisitsAPI } from '@/lib/api/mockData';
+import { adminApi } from '@/lib/api/admin.service';
+import {
+  mockDoctorsAPI,
+  mockPatientsAPI,
+  mockVisitsAPI,
+} from '@/lib/api/mockData';
 
 interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
@@ -36,7 +41,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     const loadStats = async () => {
       try {
         const [clinics, doctors, patientsData, visits] = await Promise.all([
-          mockClinicsAPI.getClinics(),
+          adminApi.getClinics(), // Use adminApi instead of mockClinicsAPI
           mockDoctorsAPI.getDoctors(),
           mockPatientsAPI.searchPatients(),
           mockVisitsAPI.getTodayVisits(),
@@ -82,7 +87,9 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
           {/* Management Tabs */}
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <h2 className="text-xl sm:text-2xl font-bold">{t('systemManagement')}</h2>
+              <h2 className="text-xl sm:text-2xl font-bold">
+                {t('systemManagement')}
+              </h2>
               <Button
                 onClick={() => setIsQRDialogOpen(true)}
                 variant="outline"

@@ -131,6 +131,8 @@ export const createDoctorSchema = z.object({
     .string()
     .min(2, 'Speciality must be at least 2 characters')
     .max(128, 'Speciality must not exceed 128 characters'),
+      clinicId: z.string().uuid('Please select a valid clinic'), 
+
 });
 
 export type CreateDoctorFormData = z.infer<typeof createDoctorSchema>;

@@ -64,6 +64,7 @@ export interface CreateDoctorDto {
   phone: string;
   password: string; // Minimum 8 characters
   speciality: string;
+  clinicId: string;
 }
 
 export interface CreatePatientDto {
@@ -177,6 +178,10 @@ export interface JwtPayload {
   aud?: string; // Audience
 }
 
+// ============================================================================
+// Pagination
+// ============================================================================
+
 /**
  * Pagination Parameters
  */
@@ -185,7 +190,9 @@ export interface PaginationParams {
   limit: number;
 }
 
-
+// ============================================================================
+// Admin API Response Types
+// ============================================================================
 
 /**
  * Doctor Response (from admin endpoint)
@@ -235,6 +242,15 @@ export interface VisitResponse {
 }
 
 /**
+ * Clinic Response (from admin endpoint)
+ */
+export interface ClinicResponse {
+  id: string;
+  name: string;
+  speciality: string;
+}
+
+/**
  * Paginated Doctors Response
  */
 export interface PaginatedDoctorsResponse {
@@ -264,6 +280,10 @@ export interface PaginatedVisitsResponse {
   totalPages: number;
 }
 
+// ============================================================================
+// Admin Update DTOs
+// ============================================================================
+
 /**
  * Update Patient DTO
  */
@@ -279,4 +299,20 @@ export interface UpdatePatientDto {
  */
 export interface UpdatePatientResponse {
   message: string;
+}
+
+/**
+ * Create Clinic DTO
+ */
+export interface CreateClinicDto {
+  name: string;
+  speciality: string;
+}
+
+/**
+ * Update Clinic DTO
+ */
+export interface UpdateClinicDto {
+  name?: string;
+  speciality?: string;
 }

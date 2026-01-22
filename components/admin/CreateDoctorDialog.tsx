@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast, toastMessages } from '@/lib/utils/toast';
@@ -33,9 +33,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateDoctor } from '@/lib/api/hooks/useAuth';
-import { createDoctorSchema, type CreateDoctorFormData } from '@/lib/schemas/auth.schemas';
+import {
+  createDoctorSchema,
+  type CreateDoctorFormData,
+} from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
+import { adminApi } from '@/lib/api/admin.service';
+import type { ClinicResponse } from '@/lib/api/types';
 
 const MEDICAL_SPECIALITIES = [
   'Cardiology',
@@ -67,6 +72,8 @@ interface CreateDoctorDialogProps {
 
 export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   const [open, setOpen] = useState(false);
+  const [clinics, setClinics] = useState<ClinicResponse[]>([]);
+  const [loadingClinics, setLoadingClinics] = useState(false);
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
   const form = useForm<CreateDoctorFormData>({
@@ -80,19 +87,36 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       phone: '',
       password: '',
       speciality: '',
+      clinicId: '',
     },
   });
 
   // Watch the national ID field to show extracted info
   const nationalId = form.watch('socialSecurityNumber');
 
-  // Note: Doctor form doesn't have separate birthdate/gender fields
-  // The National ID contains this information and is validated server-side
-  // Gender and birthdate are extracted for display purposes only via NationalIdInfo component
+  // Load clinics when dialog opens
+  useEffect(() => {
+    if (open) {
+      loadClinics();
+    }
+  }, [open]);
+
+  const loadClinics = async () => {
+    try {
+      setLoadingClinics(true);
+      const data = await adminApi.getClinics();
+      setClinics(data);
+    } catch (error) {
+      console.error('Failed to load clinics:', error);
+      toast.error('Failed to load clinics', 'Unable to fetch clinic list');
+    } finally {
+      setLoadingClinics(false);
+    }
+  };
 
   const onSubmit = (data: CreateDoctorFormData) => {
-    console.log('📝 Creating doctor with data:', data);
-    
+    console.log('🔍 Creating doctor with data:', data);
+
     createDoctor(data, {
       onSuccess: (response) => {
         console.log('✅ Doctor created successfully:', response);
@@ -106,32 +130,46 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       },
       onError: (error: unknown) => {
         console.error('❌ Create doctor error:', error);
-        
+
         // Handle different error cases
-        if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
-          const response = error.response as { data?: unknown; status?: number };
+        if (
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object'
+        ) {
+          const response = error.response as {
+            data?: unknown;
+            status?: number;
+          };
           console.error('Response data:', response.data);
           console.error('Response status:', response.status);
-          
+
           // Check if it's a "User already exists" error
-          if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
+          if (
+            response.status === 400 &&
+            typeof response.data === 'string' &&
+            response.data.includes('already exists')
+          ) {
             toast.error(
               toastMessages.doctor.alreadyExists,
               toastMessages.doctor.alreadyExistsDescription
             );
             return;
           }
-          
+
           // Get error message from response
-          const message = typeof response.data === 'string' 
-            ? response.data 
-            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
-                ? response.data.message 
-                : 'Please check the form and try again.');
-          toast.error(
-            toastMessages.doctor.createError,
-            message
-          );
+          const message =
+            typeof response.data === 'string'
+              ? response.data
+              : response.data &&
+                  typeof response.data === 'object' &&
+                  'message' in response.data &&
+                  typeof response.data.message === 'string'
+                ? response.data.message
+                : 'Please check the form and try again.';
+          toast.error(toastMessages.doctor.createError, message);
         } else {
           toast.error(
             toastMessages.network.error,
@@ -171,7 +209,11 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="John" {...field} disabled={isPending} />
+                      <Input
+                        placeholder="John"
+                        {...field}
+                        disabled={isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -185,7 +227,11 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Doe" {...field} disabled={isPending} />
+                      <Input
+                        placeholder="Doe"
+                        {...field}
+                        disabled={isPending}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -201,10 +247,10 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 <FormItem>
                   <FormLabel>National ID (14 digits)</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="30202041234567" 
-                      maxLength={14} 
-                      {...field} 
+                    <Input
+                      placeholder="30202041234567"
+                      maxLength={14}
+                      {...field}
                       disabled={isPending}
                     />
                   </FormControl>
@@ -224,10 +270,10 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="doctor@kasralainy.edu.eg" 
-                      {...field} 
+                    <Input
+                      type="email"
+                      placeholder="doctor@kasralainy.edu.eg"
+                      {...field}
                       disabled={isPending}
                     />
                   </FormControl>
@@ -243,15 +289,57 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 <FormItem>
                   <FormLabel>Phone Number</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder="+201012345678" 
-                      {...field} 
+                    <Input
+                      placeholder="+201012345678"
+                      {...field}
                       disabled={isPending}
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
                     Format: +201XXXXXXXXX
                   </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Clinic Selection */}
+            <FormField
+              control={form.control}
+              name="clinicId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Clinic</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    disabled={isPending || loadingClinics}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            loadingClinics
+                              ? 'Loading clinics...'
+                              : 'Select clinic'
+                          }
+                        />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {clinics.length === 0 && !loadingClinics ? (
+                        <SelectItem value="no-clinics" disabled>
+                          No clinics available
+                        </SelectItem>
+                      ) : (
+                        clinics.map((clinic) => (
+                          <SelectItem key={clinic.id} value={clinic.id}>
+                            {clinic.name} - {clinic.speciality}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -295,15 +383,16 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="StrongPassword123!" 
-                      {...field} 
+                    <Input
+                      type="password"
+                      placeholder="StrongPassword123!"
+                      {...field}
                       disabled={isPending}
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    Minimum 8 characters with uppercase, lowercase, number, and special character
+                    Minimum 8 characters with uppercase, lowercase, number, and
+                    special character
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -347,7 +436,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               >
                 Cancel
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending || loadingClinics}>
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
