@@ -9,47 +9,56 @@ import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 const USE_MOCK_DATA = true;
 const HISTORY_KEY = ['medical-history'];
 
-export const useGetPatientLabs = (patientId: number): UseQueryResult<Lab[], Error> => {
+export const useGetPatientLabs = (socialSecurityNumber: string): UseQueryResult<Lab[], Error> => {
   return useQuery({
-    queryKey: [...HISTORY_KEY, 'labs', patientId],
+    queryKey: [...HISTORY_KEY, 'labs', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        return await mockMedicalHistoryAPI.getPatientLabs(patientId);
+        // For mock data, we'll use a mock ID (number)
+        const mockPatientId = 1;
+        return await mockMedicalHistoryAPI.getPatientLabs(mockPatientId);
       }
-      const response = await apiClient.get<Lab[]>(`/doctor/medical-history/labs/${patientId}`);
+      // Backend endpoint: /doctor/patient/{socialSecurityNumber}/labs
+      const response = await apiClient.get<Lab[]>(`/doctor/patient/${socialSecurityNumber}/labs`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };
 
-export const useGetPatientScans = (patientId: number): UseQueryResult<Scan[], Error> => {
+export const useGetPatientScans = (socialSecurityNumber: string): UseQueryResult<Scan[], Error> => {
   return useQuery({
-    queryKey: [...HISTORY_KEY, 'scans', patientId],
+    queryKey: [...HISTORY_KEY, 'scans', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        return await mockMedicalHistoryAPI.getPatientScans(patientId);
+        // For mock data, we'll use a mock ID (number)
+        const mockPatientId = 1;
+        return await mockMedicalHistoryAPI.getPatientScans(mockPatientId);
       }
-      const response = await apiClient.get<Scan[]>(`/doctor/medical-history/scans/${patientId}`);
+      // Backend endpoint: /doctor/patient/{socialSecurityNumber}/scans
+      const response = await apiClient.get<Scan[]>(`/doctor/patient/${socialSecurityNumber}/scans`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };
 
-export const useGetPatientMedications = (patientId: number): UseQueryResult<Medication[], Error> => {
+export const useGetPatientMedications = (socialSecurityNumber: string): UseQueryResult<Medication[], Error> => {
   return useQuery({
-    queryKey: [...HISTORY_KEY, 'medications', patientId],
+    queryKey: [...HISTORY_KEY, 'medications', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        return await mockMedicalHistoryAPI.getPatientMedications(patientId);
+        // For mock data, we'll use a mock ID (number)
+        const mockPatientId = 1;
+        return await mockMedicalHistoryAPI.getPatientMedications(mockPatientId);
       }
-      const response = await apiClient.get<Medication[]>(`/doctor/medical-history/medications/${patientId}`);
+      // Backend endpoint: /doctor/patient/{socialSecurityNumber}/medications
+      const response = await apiClient.get<Medication[]>(`/doctor/patient/${socialSecurityNumber}/medications`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -61,14 +70,15 @@ interface MedicalHistoryTimeline {
   medications: Array<{ date: Date; type: 'medication'; data: Medication }>;
 }
 
-export const useGetMedicalHistoryTimeline = (patientId: number): UseQueryResult<MedicalHistoryTimeline, Error> => {
+export const useGetMedicalHistoryTimeline = (socialSecurityNumber: string): UseQueryResult<MedicalHistoryTimeline, Error> => {
   return useQuery({
-    queryKey: [...HISTORY_KEY, 'timeline', patientId],
+    queryKey: [...HISTORY_KEY, 'timeline', socialSecurityNumber],
     queryFn: async () => {
-      const response = await apiClient.get<MedicalHistoryTimeline>(`/doctor/medical-history/timeline/${patientId}`);
+      // Backend endpoint: /doctor/patient/{socialSecurityNumber}/timeline
+      const response = await apiClient.get<MedicalHistoryTimeline>(`/doctor/patient/${socialSecurityNumber}/timeline`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };

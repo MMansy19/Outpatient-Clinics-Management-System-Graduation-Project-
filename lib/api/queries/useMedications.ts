@@ -28,31 +28,31 @@ const medicationsKeys = {
 
 /**
  * Get Patient Medications
- * 
+ *
  * Retrieves all medications for a specific patient.
- * 
- * @param {string} patientId - Patient UUID from backend
+ *
+ * @param {string} socialSecurityNumber - Patient's 14-digit social security number
  * @returns {UseQueryResult} Query result with medications array
- * 
+ *
  * @example
  * ```typescript
- * const { data: medications, isLoading, error } = useGetPatientMedications(patientId);
- * 
+ * const { data: medications, isLoading, error } = useGetPatientMedications('29512011234567');
+ *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
- * 
+ *
  * return medications.map(med => (
  *   <MedicationCard key={med.id} medication={med} />
  * ));
  * ```
  */
 export const useGetPatientMedications = (
-  patientId: string
+  socialSecurityNumber: string
 ): UseQueryResult<unknown[], Error> => {
   return useQuery({
-    queryKey: medicationsKeys.patient(patientId),
-    queryFn: () => doctorApi.getPatientMedications(patientId),
-    enabled: !!patientId, // Only run when patientId is provided
+    queryKey: medicationsKeys.patient(socialSecurityNumber),
+    queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
+    enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
@@ -131,13 +131,14 @@ export const useCreateMedication = (): UseMutationResult<
     mutationFn: (data: CreateMedicationDto) => doctorApi.createMedication(data),
     onSuccess: (response, variables) => {
       // Invalidate patient medications list
+      // Note: medications are keyed by socialSecurityNumber, not patientId
       queryClient.invalidateQueries({
-        queryKey: medicationsKeys.patient(variables.patientId),
+        queryKey: medicationsKeys.all,
       });
 
       // Invalidate patient details (may include medication count)
       queryClient.invalidateQueries({
-        queryKey: ['patients', variables.patientId],
+        queryKey: ['patients'],
       });
 
       // Optionally set the new medication in cache
@@ -183,7 +184,7 @@ export const useCreateMedication = (): UseMutationResult<
 export const useUpdateMedication = (): UseMutationResult<
   unknown,
   Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; patientId: string }
+  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -196,9 +197,9 @@ export const useUpdateMedication = (): UseMutationResult<
         queryKey: medicationsKeys.detail(variables.medicationId),
       });
 
-      // Invalidate patient medications list
+      // Invalidate all medications queries
       queryClient.invalidateQueries({
-        queryKey: medicationsKeys.patient(variables.patientId),
+        queryKey: medicationsKeys.all,
       });
     },
     onError: (error) => {
@@ -235,7 +236,7 @@ export const useUpdateMedication = (): UseMutationResult<
 export const useDeleteMedication = (): UseMutationResult<
   void,
   Error,
-  { medicationId: string; patientId: string }
+  { medicationId: string; socialSecurityNumber: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -247,14 +248,14 @@ export const useDeleteMedication = (): UseMutationResult<
         queryKey: medicationsKeys.detail(variables.medicationId),
       });
 
-      // Invalidate patient medications list
+      // Invalidate all medications queries
       queryClient.invalidateQueries({
-        queryKey: medicationsKeys.patient(variables.patientId),
+        queryKey: medicationsKeys.all,
       });
 
       // Invalidate patient details
       queryClient.invalidateQueries({
-        queryKey: ['patients', variables.patientId],
+        queryKey: ['patients'],
       });
     },
     onError: (error) => {
@@ -295,26 +296,15 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
 
     // Optimistic update: Modify cache before server responds
     onMutate: async (newMedication) => {
-      const queryKey = medicationsKeys.patient(newMedication.patientId);
-
-      // Cancel outgoing refetches
-      await queryClient.cancelQueries({ queryKey });
+      // For now, invalidate all queries since we don't have socialSecurityNumber in the medication data
+      // In a real implementation, you'd want to extract it or pass it separately
+      await queryClient.cancelQueries({ queryKey: medicationsKeys.all });
 
       // Snapshot previous value
-      const previousMedications = queryClient.getQueryData(queryKey);
-
-      // Optimistically update cache
-      queryClient.setQueryData(queryKey, (old: unknown[] = []) => [
-        ...old,
-        {
-          ...newMedication,
-          id: 'temp-' + Date.now(), // Temporary ID
-          created_at: new Date(),
-        },
-      ]);
+      const previousData = queryClient.getCache().getAll();
 
       // Return context with snapshot
-      return { previousMedications, queryKey };
+      return { previousData };
     },
 
     // On error, rollback to snapshot
@@ -328,10 +318,10 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
       console.error('[useCreateMedicationOptimistic] Error:', err);
     },
 
-    // On success, replace temp ID with real ID
-    onSettled: (_data, _error, variables) => {
+    // On success, invalidate all queries
+    onSettled: (_data, _error) => {
       queryClient.invalidateQueries({
-        queryKey: medicationsKeys.patient(variables.patientId),
+        queryKey: medicationsKeys.all,
       });
     },
   });
@@ -339,27 +329,27 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
 
 /**
  * Prefetch Medications
- * 
+ *
  * Utility function to prefetch medications before user navigates.
  * Improves perceived performance.
- * 
- * @param {string} patientId - Patient UUID
- * 
+ *
+ * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ *
  * @example
  * ```typescript
  * // In a patient list, prefetch on hover
  * <PatientCard
- *   onMouseEnter={() => prefetchPatientMedications(patient.id)}
+ *   onMouseEnter={() => prefetchPatientMedications(patient.socialSecurityNumber)}
  * />
  * ```
  */
 export const usePrefetchPatientMedications = () => {
   const queryClient = useQueryClient();
 
-  return (patientId: string) => {
+  return (socialSecurityNumber: string) => {
     queryClient.prefetchQuery({
-      queryKey: medicationsKeys.patient(patientId),
-      queryFn: () => doctorApi.getPatientMedications(patientId),
+      queryKey: medicationsKeys.patient(socialSecurityNumber),
+      queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
       staleTime: 5 * 60 * 1000,
     });
   };

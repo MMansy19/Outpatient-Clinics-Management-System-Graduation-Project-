@@ -1,6 +1,13 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
+// Extend Axios request config to include metadata
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  metadata?: {
+    startTime?: number;
+  };
+}
+
 /**
  * Base API Client Configuration
  * 
@@ -35,7 +42,10 @@ class ApiClient {
   private setupInterceptors(): void {
     // Request Interceptor
     this.instance.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
+      (config: ExtendedAxiosRequestConfig) => {
+        // Add timestamp for caching
+        config.metadata = { startTime: Date.now() };
+
         // Log requests in development
         if (process.env.NODE_ENV === 'development') {
           console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
@@ -52,10 +62,12 @@ class ApiClient {
     // Response Interceptor
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Log successful responses in development
+        // Log successful responses in development with performance metrics
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[API Response] ${response.status} ${response.config.url}`);
-          console.log(response);
+          const config = response.config as ExtendedAxiosRequestConfig;
+          const startTime = config.metadata?.startTime;
+          const duration = startTime ? Date.now() - startTime : 0;
+          console.log(`[API Response] ${response.status} ${response.config.url} (${duration}ms)`);
         }
         return response;
       },
@@ -63,20 +75,37 @@ class ApiClient {
         // Handle 401 Unauthorized (token expired or invalid)
         if (error.response?.status === 401) {
           console.error('[API Error] 401 Unauthorized - Token expired or invalid');
-          
-          // Clear auth state
-          useAuthStore.getState().logout();
-          
-          // Redirect to login
+
+          // Only redirect if we're not already on the login page
           if (typeof window !== 'undefined') {
-            const locale = localStorage.getItem('locale') || 'en';
-            window.location.href = `/${locale}/login`;
+            const currentPath = window.location.pathname;
+            const isLoginPage = currentPath.includes('/login');
+
+            if (!isLoginPage) {
+              // Clear auth state
+              useAuthStore.getState().logout();
+
+              // Get current locale for redirect
+              const pathParts = currentPath.split('/');
+              const locale = pathParts[1] || 'en';
+
+              // Redirect to login with return URL
+              const returnUrl = encodeURIComponent(currentPath);
+              window.location.href = `/${locale}/login?redirect=${returnUrl}`;
+            }
           }
         }
 
         // Handle 403 Forbidden (insufficient permissions)
         if (error.response?.status === 403) {
           console.error('[API Error] 403 Forbidden - Insufficient permissions');
+
+          // Redirect to unauthorized page
+          if (typeof window !== 'undefined') {
+            const pathParts = window.location.pathname.split('/');
+            const locale = pathParts[1] || 'en';
+            window.location.href = `/${locale}/unauthorized`;
+          }
         }
 
         // Handle network errors
@@ -86,11 +115,15 @@ class ApiClient {
 
         // Log error details in development
         if (process.env.NODE_ENV === 'development') {
+          const config = error.config as ExtendedAxiosRequestConfig | undefined;
+          const startTime = config?.metadata?.startTime;
+          const duration = startTime ? Date.now() - startTime : 0;
           console.error('[API Error Details]', {
             url: error.config?.url,
             method: error.config?.method,
             status: error.response?.status,
             data: error.response?.data,
+            duration: `${duration}ms`,
           });
         }
 

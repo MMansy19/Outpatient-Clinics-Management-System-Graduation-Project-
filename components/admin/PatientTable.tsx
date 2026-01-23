@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   Table,
@@ -29,9 +29,24 @@ export function PatientTable() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const limit = 10;
 
+  const loadPatients = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getPatients({ page, limit });
+      setPatients(data.items);
+      setTotalPages(data.totalPages);
+      setTotalItems(data.totalItems);
+    } catch (error) {
+      console.error('Failed to load patients:', error);
+      toast.error('Failed to load patients');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, limit]);
+
   useEffect(() => {
     loadPatients();
-  }, [page]);
+  }, [loadPatients]);
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -50,25 +65,10 @@ export function PatientTable() {
     setIsEditDialogOpen(true);
   };
 
-  const handleEditSuccess = () => {
+  const handleEditSuccess = useCallback(() => {
     // Reload patients after successful edit
     loadPatients();
-  };
-
-  const loadPatients = async () => {
-    try {
-      setLoading(true);
-      const data = await adminApi.getPatients({ page, limit });
-      setPatients(data.items);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.totalItems);
-    } catch (error) {
-      console.error('Failed to load patients:', error);
-      toast.error('Failed to load patients');
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [loadPatients]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {

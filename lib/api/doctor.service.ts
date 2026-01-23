@@ -23,6 +23,14 @@ import type {
  */
 
 export const doctorApi = {
+  /**
+   * Check if Doctor service is running
+   */
+  isUp: async (): Promise<string> => {
+    const response = await apiClient.get<string>('/doctor');
+    return response.data;
+  },
+
   // ============================================================================
   // Visit Management
   // ============================================================================
@@ -169,25 +177,25 @@ export const doctorApi = {
 
   /**
    * Get Patient Medications
-   * 
+   *
    * Retrieves all medications prescribed to a specific patient.
-   * 
+   *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/medication/patient/:patientId
-   * 
-   * @param {string} patientId - Patient UUID
+   * **Endpoint:** GET /api/v1/doctor/patient/:socialSecurityNumber/medications
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
    * @returns {Promise<Medication[]>} Array of patient medications
    * @throws {AxiosError} When request fails
-   * 
+   *
    * @example
    * ```typescript
-   * const medications = await doctorApi.getPatientMedications("patient-uuid");
+   * const medications = await doctorApi.getPatientMedications("29512011234567");
    * medications.forEach(med => console.log(`${med.name}: ${med.dosage}`));
    * ```
    */
-  getPatientMedications: async (patientId: string): Promise<unknown[]> => {
+  getPatientMedications: async (socialSecurityNumber: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/medication/patient/${patientId}`
+      `/doctor/patient/${socialSecurityNumber}/medications`
     );
     return response.data;
   },

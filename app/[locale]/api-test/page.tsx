@@ -177,6 +177,24 @@ export default function ApiTestPage() {
       'Update Patient'
     );
 
+  const testGetVisitsData = () =>
+    handleApiCall(
+      () => apiClient.get('/visits'),
+      'Get Visits Data'
+    );
+
+  const testGetLabsData = () =>
+    handleApiCall(
+      () => apiClient.get('/labs'),
+      'Get Labs Data'
+    );
+
+  const testGetScansData = () =>
+    handleApiCall(
+      () => apiClient.get('/scans'),
+      'Get Scans Data'
+    );
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <Navbar locale={locale} />
@@ -204,25 +222,16 @@ export default function ApiTestPage() {
           <div className="overflow-x-auto">
             <TabsList className="inline-flex md:space-x-2 space-x-1">
               <TabsTrigger value="gateway" className="flex-shrink-0">
-                Gateway
+                🚀 Gateway
               </TabsTrigger>
               <TabsTrigger value="auth" className="flex-shrink-0">
-                Auth
+                🔐 Auth
               </TabsTrigger>
               <TabsTrigger value="admin" className="flex-shrink-0">
-                Admin
+                ⚙️ Admin
               </TabsTrigger>
-              <TabsTrigger value="patient" className="flex-shrink-0">
-                Patient
-              </TabsTrigger>
-              <TabsTrigger value="visit" className="flex-shrink-0">
-                Visit
-              </TabsTrigger>
-              <TabsTrigger value="medication" className="flex-shrink-0">
-                Medication
-              </TabsTrigger>
-              <TabsTrigger value="update-patient" className="flex-shrink-0">
-                Update Patient
+              <TabsTrigger value="doctor" className="flex-shrink-0">
+                👨‍⚕️ Doctor
               </TabsTrigger>
             </TabsList>
           </div>
@@ -231,7 +240,7 @@ export default function ApiTestPage() {
           <TabsContent value="gateway">
             <Card>
               <CardHeader>
-                <CardTitle>Gateway Status Tests</CardTitle>
+                <CardTitle>🚀 Gateway Status Tests</CardTitle>
                 <CardDescription>
                   Test if the API Gateway and services are running
                 </CardDescription>
@@ -270,7 +279,7 @@ export default function ApiTestPage() {
           <TabsContent value="auth">
             <Card>
               <CardHeader>
-                <CardTitle>Authentication Tests</CardTitle>
+                <CardTitle>🔐 Authentication Tests</CardTitle>
                 <CardDescription>POST /api/v1/auth/login</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -307,333 +316,659 @@ export default function ApiTestPage() {
             </Card>
           </TabsContent>
 
-          {/* Admin Tests */}
+          {/* Admin Tests with Nested Tabs */}
           <TabsContent value="admin">
-            <Card>
-              <CardHeader>
-                <CardTitle>Admin API Tests</CardTitle>
-                <CardDescription>
-                  Get paginated lists of doctors, patients, and visits
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert>
-                  <AlertDescription>
-                    🔐 These endpoints require authentication. Login first in
-                    the Auth tab.
-                  </AlertDescription>
-                </Alert>
+            <Tabs defaultValue="admin-create-admin" className="space-y-4">
+              <div className="overflow-x-auto">
+                <TabsList className="inline-flex md:space-x-2 space-x-1">
+                  <TabsTrigger value="admin-create-admin" className="flex-shrink-0 text-xs">
+                    Create Admin
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-create-doctor" className="flex-shrink-0 text-xs">
+                    Create Doctor
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-create-patient" className="flex-shrink-0 text-xs">
+                    Create Patient
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-status" className="flex-shrink-0 text-xs">
+                    Admin Status
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-doctors" className="flex-shrink-0 text-xs">
+                    Get Doctors
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-patients" className="flex-shrink-0 text-xs">
+                    Get Patients
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-visits" className="flex-shrink-0 text-xs">
+                    Get Visits
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-update-patient" className="flex-shrink-0 text-xs">
+                    Update Patient
+                  </TabsTrigger>
+                  <TabsTrigger value="admin-clinic" className="flex-shrink-0 text-xs">
+                    Clinic
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="adminPage">Page Number</Label>
-                    <Input
-                      id="adminPage"
-                      type="number"
-                      min="1"
-                      value={adminPage}
-                      onChange={(e) => setAdminPage(parseInt(e.target.value))}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="adminLimit">Items Per Page</Label>
-                    <Input
-                      id="adminLimit"
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={adminLimit}
-                      onChange={(e) => setAdminLimit(parseInt(e.target.value))}
-                    />
-                  </div>
-                </div>
+              {/* Create Admin */}
+              <TabsContent value="admin-create-admin">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Admin</CardTitle>
+                    <CardDescription>POST /api/v1/auth/admin/create</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 This endpoint requires super admin authentication.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => toast.info('Admin creation endpoint - Implement as needed')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Test Create Admin
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <div className="flex flex-col gap-2">
-                  <Button
-                    onClick={testGetDoctors}
-                    disabled={loading}
-                    className="w-full"
-                  >
-                    {loading ? 'Loading...' : 'GET /api/v1/admin/doctors'}
-                  </Button>
-                  <Button
-                    onClick={testGetPatients}
-                    disabled={loading}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {loading ? 'Loading...' : 'GET /api/v1/admin/patients'}
-                  </Button>
-                  <Button
-                    onClick={testGetVisits}
-                    disabled={loading}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {loading ? 'Loading...' : 'GET /api/v1/admin/visits'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+              {/* Create Doctor */}
+              <TabsContent value="admin-create-doctor">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Doctor</CardTitle>
+                    <CardDescription>POST /api/v1/auth/doctor/create</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 This endpoint requires admin authentication.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => toast.info('Doctor creation endpoint - Implement as needed')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Test Create Doctor
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Create Patient */}
+              <TabsContent value="admin-create-patient">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Patient</CardTitle>
+                    <CardDescription>POST /api/v1/auth/patient/create</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="firstName">First Name</Label>
+                        <Input
+                          id="firstName"
+                          value={patientFirstName}
+                          onChange={(e) => setPatientFirstName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="lastName">Last Name</Label>
+                        <Input
+                          id="lastName"
+                          value={patientLastName}
+                          onChange={(e) => setPatientLastName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="nationalId">National ID (14 digits)</Label>
+                        <Input
+                          id="nationalId"
+                          value={patientNationalId}
+                          onChange={(e) => setPatientNationalId(e.target.value)}
+                          placeholder="30202041234567"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="job">Job</Label>
+                        <Input
+                          id="job"
+                          value={patientJob}
+                          onChange={(e) => setPatientJob(e.target.value)}
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <Label htmlFor="address">Address</Label>
+                        <Input
+                          id="address"
+                          value={patientAddress}
+                          onChange={(e) => setPatientAddress(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={testCreatePatient}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Creating...' : 'Test Create Patient'}
+                    </Button>
+                    <Alert>
+                      <AlertDescription>
+                        💡 After creating a patient, copy the returned UUID to use
+                        in other tests
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Admin Status */}
+              <TabsContent value="admin-status">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Admin Status</CardTitle>
+                    <CardDescription>GET /api/v1/admin</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 These endpoints require authentication.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => handleApiCall(() => adminApi.isUp(), 'Admin Status')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Test Admin Status
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Get Doctors */}
+              <TabsContent value="admin-doctors">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get All Doctors</CardTitle>
+                    <CardDescription>GET /api/v1/admin/doctors</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="adminPage">Page Number</Label>
+                        <Input
+                          id="adminPage"
+                          type="number"
+                          min="1"
+                          value={adminPage}
+                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="adminLimit">Items Per Page</Label>
+                        <Input
+                          id="adminLimit"
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={adminLimit}
+                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={testGetDoctors}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'GET /api/v1/admin/doctors'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Get Patients */}
+              <TabsContent value="admin-patients">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get All Patients</CardTitle>
+                    <CardDescription>GET /api/v1/admin/patients</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="adminPage2">Page Number</Label>
+                        <Input
+                          id="adminPage2"
+                          type="number"
+                          min="1"
+                          value={adminPage}
+                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="adminLimit2">Items Per Page</Label>
+                        <Input
+                          id="adminLimit2"
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={adminLimit}
+                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={testGetPatients}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'GET /api/v1/admin/patients'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Get Visits */}
+              <TabsContent value="admin-visits">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get All Visits</CardTitle>
+                    <CardDescription>GET /api/v1/admin/visits</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="adminPage3">Page Number</Label>
+                        <Input
+                          id="adminPage3"
+                          type="number"
+                          min="1"
+                          value={adminPage}
+                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="adminLimit3">Items Per Page</Label>
+                        <Input
+                          id="adminLimit3"
+                          type="number"
+                          min="1"
+                          max="100"
+                          value={adminLimit}
+                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={testGetVisits}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'GET /api/v1/admin/visits'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Update Patient */}
+              <TabsContent value="admin-update-patient">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Update Patient</CardTitle>
+                    <CardDescription>PATCH /api/v1/admin/patient/{'{id}'}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 This endpoint requires admin authentication.
+                      </AlertDescription>
+                    </Alert>
+
+                    <div>
+                      <Label htmlFor="updatePatientId">Patient UUID</Label>
+                      <Input
+                        id="updatePatientId"
+                        value={updatePatientId}
+                        onChange={(e) => setUpdatePatientId(e.target.value)}
+                        placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="updateFirstName">First Name</Label>
+                        <Input
+                          id="updateFirstName"
+                          value={updateFirstName}
+                          onChange={(e) => setUpdateFirstName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="updateLastName">Last Name</Label>
+                        <Input
+                          id="updateLastName"
+                          value={updateLastName}
+                          onChange={(e) => setUpdateLastName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="updateJob">Job</Label>
+                        <Input
+                          id="updateJob"
+                          value={updateJob}
+                          onChange={(e) => setUpdateJob(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="updateAddress">Address</Label>
+                        <Input
+                          id="updateAddress"
+                          value={updateAddress}
+                          onChange={(e) => setUpdateAddress(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={testUpdatePatient}
+                      disabled={loading || !updatePatientId}
+                      className="w-full"
+                    >
+                      {loading ? 'Updating...' : 'Test Update Patient'}
+                    </Button>
+
+                    <Alert>
+                      <AlertDescription>
+                        💡 Get a patient ID from the Get Patients tab
+                      </AlertDescription>
+                    </Alert>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Clinic */}
+              <TabsContent value="admin-clinic">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Clinic Management</CardTitle>
+                    <CardDescription>POST /api/v1/admin/clinic</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 This endpoint requires admin authentication.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => toast.info('Clinic endpoint - Implement as needed')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Test Create Clinic
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
 
-          {/* Patient Tests */}
-          <TabsContent value="patient">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Patient Test</CardTitle>
-                <CardDescription>
-                  POST /api/v1/auth/patient/create
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name</Label>
-                    <Input
-                      id="firstName"
-                      value={patientFirstName}
-                      onChange={(e) => setPatientFirstName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name</Label>
-                    <Input
-                      id="lastName"
-                      value={patientLastName}
-                      onChange={(e) => setPatientLastName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="nationalId">National ID (14 digits)</Label>
-                    <Input
-                      id="nationalId"
-                      value={patientNationalId}
-                      onChange={(e) => setPatientNationalId(e.target.value)}
-                      placeholder="30202041234567"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="job">Job</Label>
-                    <Input
-                      id="job"
-                      value={patientJob}
-                      onChange={(e) => setPatientJob(e.target.value)}
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label htmlFor="address">Address</Label>
-                    <Input
-                      id="address"
-                      value={patientAddress}
-                      onChange={(e) => setPatientAddress(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={testCreatePatient}
-                  disabled={loading}
-                  className="w-full sm:w-auto"
-                >
-                  {loading ? 'Creating...' : 'Test Create Patient'}
-                </Button>
-                <Alert>
-                  <AlertDescription>
-                    💡 After creating a patient, copy the returned UUID to use
-                    in Visit/Medication tests
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
-          </TabsContent>
+          {/* Doctor Tests with Nested Tabs */}
+          <TabsContent value="doctor">
+            <Tabs defaultValue="doctor-status" className="space-y-4">
+              <div className="overflow-x-auto">
+                <TabsList className="inline-flex md:space-x-2 space-x-1">
+                  <TabsTrigger value="doctor-status" className="flex-shrink-0 text-xs">
+                    Doctor Status
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-visit" className="flex-shrink-0 text-xs">
+                    Create Visit
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-medication" className="flex-shrink-0 text-xs">
+                    Create Med
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-visits-data" className="flex-shrink-0 text-xs">
+                    Visits Data
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-medications-data" className="flex-shrink-0 text-xs">
+                    Meds Data
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-scans-data" className="flex-shrink-0 text-xs">
+                    Scans Data
+                  </TabsTrigger>
+                  <TabsTrigger value="doctor-labs-data" className="flex-shrink-0 text-xs">
+                    Labs Data
+                  </TabsTrigger>
+                </TabsList>
+              </div>
 
-          {/* Visit Tests */}
-          <TabsContent value="visit">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Visit Test</CardTitle>
-                <CardDescription>
-                  POST /api/v1/doctor/visit/create
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="visitPatientId">Patient UUID</Label>
-                  <Input
-                    id="visitPatientId"
-                    value={visitPatientId}
-                    onChange={(e) => setVisitPatientId(e.target.value)}
-                    placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="diagnoses">Diagnoses</Label>
-                  <Textarea
-                    id="diagnoses"
-                    value={visitDiagnoses}
-                    onChange={(e) => setVisitDiagnoses(e.target.value)}
-                    rows={4}
-                  />
-                </div>
-                <Button
-                  onClick={testCreateVisit}
-                  disabled={loading || !visitPatientId}
-                  className="w-full sm:w-auto"
-                >
-                  {loading ? 'Creating...' : 'Test Create Visit'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              {/* Doctor Status */}
+              <TabsContent value="doctor-status">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Doctor Status</CardTitle>
+                    <CardDescription>GET /api/v1/doctor</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔐 These endpoints require doctor authentication.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => handleApiCall(() => doctorApi.isUp(), 'Doctor Status')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      Test Doctor Status
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          {/* Medication Tests */}
-          <TabsContent value="medication">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Medication Test</CardTitle>
-                <CardDescription>
-                  POST /api/v1/doctor/medication/create
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="medicationPatientId">Patient UUID</Label>
-                  <Input
-                    id="medicationPatientId"
-                    value={medicationPatientId}
-                    onChange={(e) => setMedicationPatientId(e.target.value)}
-                    placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="medName">Medication Name</Label>
-                    <Input
-                      id="medName"
-                      value={medicationName}
-                      onChange={(e) => setMedicationName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="dosage">Dosage</Label>
-                    <Input
-                      id="dosage"
-                      type="number"
-                      value={medicationDosage}
-                      onChange={(e) =>
-                        setMedicationDosage(parseInt(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="period">Period (days)</Label>
-                    <Input
-                      id="period"
-                      type="number"
-                      value={medicationPeriod}
-                      onChange={(e) =>
-                        setMedicationPeriod(parseInt(e.target.value))
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="comments">Comments</Label>
-                    <Input
-                      id="comments"
-                      value={medicationComments}
-                      onChange={(e) => setMedicationComments(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={testCreateMedication}
-                  disabled={loading || !medicationPatientId}
-                  className="w-full sm:w-auto"
-                >
-                  {loading ? 'Creating...' : 'Test Create Medication'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+              {/* Create Visit */}
+              <TabsContent value="doctor-visit">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Visit</CardTitle>
+                    <CardDescription>POST /api/v1/doctor/visit/create</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="visitPatientId">Patient UUID</Label>
+                      <Input
+                        id="visitPatientId"
+                        value={visitPatientId}
+                        onChange={(e) => setVisitPatientId(e.target.value)}
+                        placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="diagnoses">Diagnoses</Label>
+                      <Textarea
+                        id="diagnoses"
+                        value={visitDiagnoses}
+                        onChange={(e) => setVisitDiagnoses(e.target.value)}
+                        rows={4}
+                      />
+                    </div>
+                    <Button
+                      onClick={testCreateVisit}
+                      disabled={loading || !visitPatientId}
+                      className="w-full"
+                    >
+                      {loading ? 'Creating...' : 'Test Create Visit'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-          {/* Update Patient Tests */}
-          <TabsContent value="update-patient">
-            <Card>
-              <CardHeader>
-                <CardTitle>Update Patient Test</CardTitle>
-                <CardDescription>
-                  PATCH /api/v1/admin/patient/{'{id}'}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert>
-                  <AlertDescription>
-                    🔐 This endpoint requires admin authentication. Login first in
-                    the Auth tab.
-                  </AlertDescription>
-                </Alert>
+              {/* Create Medication */}
+              <TabsContent value="doctor-medication">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Create Medication</CardTitle>
+                    <CardDescription>POST /api/v1/doctor/medication/create</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div>
+                      <Label htmlFor="medicationPatientId">Patient UUID</Label>
+                      <Input
+                        id="medicationPatientId"
+                        value={medicationPatientId}
+                        onChange={(e) => setMedicationPatientId(e.target.value)}
+                        placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="medName">Medication Name</Label>
+                        <Input
+                          id="medName"
+                          value={medicationName}
+                          onChange={(e) => setMedicationName(e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="dosage">Dosage</Label>
+                        <Input
+                          id="dosage"
+                          type="number"
+                          value={medicationDosage}
+                          onChange={(e) => setMedicationDosage(parseInt(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="period">Period (days)</Label>
+                        <Input
+                          id="period"
+                          type="number"
+                          value={medicationPeriod}
+                          onChange={(e) => setMedicationPeriod(parseInt(e.target.value))}
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="comments">Comments</Label>
+                        <Input
+                          id="comments"
+                          value={medicationComments}
+                          onChange={(e) => setMedicationComments(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={testCreateMedication}
+                      disabled={loading || !medicationPatientId}
+                      className="w-full"
+                    >
+                      {loading ? 'Creating...' : 'Test Create Medication'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <div>
-                  <Label htmlFor="updatePatientId">Patient UUID</Label>
-                  <Input
-                    id="updatePatientId"
-                    value={updatePatientId}
-                    onChange={(e) => setUpdatePatientId(e.target.value)}
-                    placeholder="0281ba4f-7592-477e-9d02-f2641aa89221"
-                  />
-                </div>
+              {/* Visits Data */}
+              <TabsContent value="doctor-visits-data">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get Patient Visits</CardTitle>
+                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/visits</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        📋 This endpoint returns patient visits with clinic data.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={testGetVisitsData}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'Test Get Visits Data'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="updateFirstName">First Name</Label>
-                    <Input
-                      id="updateFirstName"
-                      value={updateFirstName}
-                      onChange={(e) => setUpdateFirstName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="updateLastName">Last Name</Label>
-                    <Input
-                      id="updateLastName"
-                      value={updateLastName}
-                      onChange={(e) => setUpdateLastName(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="updateJob">Job</Label>
-                    <Input
-                      id="updateJob"
-                      value={updateJob}
-                      onChange={(e) => setUpdateJob(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="updateAddress">Address</Label>
-                    <Input
-                      id="updateAddress"
-                      value={updateAddress}
-                      onChange={(e) => setUpdateAddress(e.target.value)}
-                    />
-                  </div>
-                </div>
+              {/* Medications Data */}
+              <TabsContent value="doctor-medications-data">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get Patient Medications</CardTitle>
+                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/medications</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        💊 This endpoint returns patient medications.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={() => handleApiCall(() => apiClient.get('/medications'), 'Get Medications')}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'Test Get Medications'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <Button
-                  onClick={testUpdatePatient}
-                  disabled={loading || !updatePatientId}
-                  className="w-full sm:w-auto"
-                >
-                  {loading ? 'Updating...' : 'Test Update Patient'}
-                </Button>
+              {/* Scans Data */}
+              <TabsContent value="doctor-scans-data">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get Patient Scans</CardTitle>
+                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/scans</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🔬 This endpoint returns patient scan results.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={testGetScansData}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'Test Get Scans Data'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                <Alert>
-                  <AlertDescription>
-                    💡 Get a patient ID from the Admin tab by clicking "GET
-                    /api/v1/admin/patients"
-                  </AlertDescription>
-                </Alert>
-              </CardContent>
-            </Card>
+              {/* Labs Data */}
+              <TabsContent value="doctor-labs-data">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Get Patient Labs</CardTitle>
+                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/labs</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <Alert>
+                      <AlertDescription>
+                        🧪 This endpoint returns patient lab test results.
+                      </AlertDescription>
+                    </Alert>
+                    <Button
+                      onClick={testGetLabsData}
+                      disabled={loading}
+                      className="w-full"
+                    >
+                      {loading ? 'Loading...' : 'Test Get Labs Data'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
 
