@@ -7,12 +7,14 @@
  * Response from backend AI model when scanning National ID
  */
 export interface ScanNationalIdResponse {
-  /** Full name as extracted from ID card (usually in Arabic) */
-  fullName: string;
-  /** 14-digit Egyptian National ID number */
-  nationalId: string;
-  /** Address as written on the ID card */
-  address: string;
+  /** First name as extracted from ID card */
+  FirstName: string;
+  /** Last name as extracted from ID card */
+  LastName: string;
+  /** Location as written on the ID card */
+  Location: string;
+  /** 14-digit Egyptian National ID number (Social Security Number) */
+  socialSecurityNumber: string;
 }
 
 /**
@@ -42,20 +44,26 @@ export interface EnrichedScanData extends ScanNationalIdResponse {
   imageBase64?: string;
   /** Flag indicating if this is mock data for testing */
   isMockData?: boolean;
+  /** Backward compatibility - full name constructed from FirstName + LastName */
+  fullName?: string;
+  /** Backward compatibility - national ID (alias for socialSecurityNumber) */
+  nationalId?: string;
+  /** Backward compatibility - address (alias for Location) */
+  address?: string;
 }
 
 /**
  * Scanned ID data structure used throughout the application
  */
 export interface ScannedIdData {
-  /** Full name in Arabic from ID card */
-  fullNameArabic: string;
-  /** Full name in English (if available) */
-  fullNameEnglish?: string;
-  /** 14-digit National ID number */
-  nationalId: string;
-  /** Address from ID card */
-  address: string;
+  /** First name from ID card */
+  FirstName: string;
+  /** Last name from ID card */
+  LastName: string;
+  /** Location from ID card */
+  Location: string;
+  /** 14-digit National ID number (Social Security Number) */
+  socialSecurityNumber: string;
   /** Auto-derived gender from ID number */
   gender: 'male' | 'female';
   /** Auto-derived birthdate from ID number */
@@ -64,6 +72,12 @@ export interface ScannedIdData {
   confidence?: number;
   /** Base64 image for preview */
   rawImage?: string;
+  /** Backward compatibility - full name */
+  fullName?: string;
+  /** Backward compatibility - national ID */
+  nationalId?: string;
+  /** Backward compatibility - address */
+  address?: string;
 }
 
 /**

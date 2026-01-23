@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect } from 'react';
+import { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { QrCode } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
@@ -16,11 +16,8 @@ import { QRCodeGenerator } from '@/components/admin/QRCodeGenerator';
 import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { StatsCards } from '@/components/admin/StatsCards';
 import { adminApi } from '@/lib/api/admin.service';
-import {
-  mockDoctorsAPI,
-  mockPatientsAPI,
-  mockVisitsAPI,
-} from '@/lib/api/mockData';
+import { useGetDoctors } from '@/lib/api/queries/useUsers';
+import { useSearchPatients } from '@/lib/api/queries/usePatients';
 
 interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
@@ -30,36 +27,29 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('admin');
   const [isQRDialogOpen, setIsQRDialogOpen] = useState(false);
-  const [stats, setStats] = useState({
-    totalClinics: 0,
-    totalDoctors: 0,
-    totalPatients: 0,
-    todayVisits: 0,
+
+  // Use query hooks for real data
+  // Use React Query for clinics
+  const { data: clinics } = useQuery({
+    queryKey: ['clinics'],
+    queryFn: () => adminApi.getClinics(),
+    staleTime: 5 * 60 * 1000,
+  });
+  const { data: doctors } = useGetDoctors();
+  const { data: patientsData } = useSearchPatients({});
+  // Use getVisits for today (first page, large limit)
+  const { data: visits } = useQuery({
+    queryKey: ['visits', 'today'],
+    queryFn: () => adminApi.getVisits({ page: 1, limit: 1000 }),
+    staleTime: 2 * 60 * 1000,
   });
 
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        const [clinics, doctors, patientsData, visits] = await Promise.all([
-          adminApi.getClinics(), // Use adminApi instead of mockClinicsAPI
-          mockDoctorsAPI.getDoctors(),
-          mockPatientsAPI.searchPatients(),
-          mockVisitsAPI.getTodayVisits(),
-        ]);
-
-        setStats({
-          totalClinics: clinics.length,
-          totalDoctors: doctors.length,
-          totalPatients: patientsData.total,
-          todayVisits: visits.length,
-        });
-      } catch (error) {
-        console.error('Failed to load stats:', error);
-      }
-    };
-
-    loadStats();
-  }, []);
+  const stats = {
+    totalClinics: clinics?.length || 0,
+    totalDoctors: doctors?.length || 0,
+    totalPatients: patientsData?.total || 0,
+    todayVisits: visits?.length || 0,
+  };
 
   return (
     <AuthGuard allowedRoles={[Role.SUPER_ADMIN, Role.ADMIN]} locale={locale}>

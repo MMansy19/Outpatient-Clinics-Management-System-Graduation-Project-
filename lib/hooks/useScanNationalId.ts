@@ -86,7 +86,7 @@ export function useScanNationalId(
         }
       }
 
-      // Send to backend AI model (or use mock data)
+      // Send to backend OCR service
       try {
         const enrichedData = await scanAndEnrichNationalId(processedImage);
         console.log('✅ National ID scan completed successfully');
@@ -99,8 +99,10 @@ export function useScanNationalId(
 
     onSuccess: (data) => {
       console.log('📋 Scan result:', {
-        name: data.fullName,
-        nationalId: data.nationalId,
+        FirstName: data.FirstName,
+        LastName: data.LastName,
+        socialSecurityNumber: data.socialSecurityNumber,
+        Location: data.Location,
         gender: data.gender,
         birthdate: data.birthdate.toISOString(),
       });

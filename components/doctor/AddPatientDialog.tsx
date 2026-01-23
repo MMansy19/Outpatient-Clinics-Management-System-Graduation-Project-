@@ -76,9 +76,9 @@ export function AddPatientDialog({
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: prefilledData ? {
-      ...splitName(prefilledData.fullName),
+      ...splitName(prefilledData.fullName || ''),
       language: Language.ENGLISH,
-      socialSecurityNumber: prefilledData.nationalId,
+      socialSecurityNumber: prefilledData.nationalId || '',
       address: prefilledData.address || '',
       job: '',
     } : {
@@ -102,7 +102,7 @@ export function AddPatientDialog({
         firstName,
         lastName,
         language: Language.ENGLISH,
-        socialSecurityNumber: prefilledData.nationalId,
+        socialSecurityNumber: prefilledData.nationalId || '',
         address: prefilledData.address || '',
         job: '',
       });

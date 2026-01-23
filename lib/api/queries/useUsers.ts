@@ -2,9 +2,7 @@ import { useMutation, useQuery, useQueryClient, UseQueryResult, UseMutationResul
 import { apiClient } from '@/lib/api/client';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import { mockDoctorsAPI, mockPatientsAPI } from '@/lib/api/mockData';
 
-const USE_MOCK_DATA = true;
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
 
@@ -13,9 +11,6 @@ export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClini
   return useQuery({
     queryKey: clinicId ? [...DOCTORS_KEY, { clinicId }] : DOCTORS_KEY,
     queryFn: async () => {
-      if (USE_MOCK_DATA) {
-        return await mockDoctorsAPI.getDoctors();
-      }
       const url = clinicId ? `/admin/doctors?clinic_id=${clinicId}` : '/admin/doctors';
       const response = await apiClient.get<DoctorWithClinic[]>(url);
       return response.data;
@@ -57,9 +52,6 @@ export const useDeleteDoctor = (): UseMutationResult<void, Error, number> => {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      if (USE_MOCK_DATA) {
-        return await mockDoctorsAPI.deleteDoctor(id);
-      }
       await apiClient.delete(`/admin/doctors/${id}`);
     },
     onSuccess: () => {
@@ -73,10 +65,6 @@ export const useGetPatients = (searchQuery?: string): UseQueryResult<Patient[], 
   return useQuery({
     queryKey: searchQuery ? [...PATIENTS_KEY, { searchQuery }] : PATIENTS_KEY,
     queryFn: async () => {
-      if (USE_MOCK_DATA) {
-        const result = await mockPatientsAPI.searchPatients(searchQuery ? { query: searchQuery } : undefined);
-        return result.patients;
-      }
       const url = searchQuery ? `/admin/patients?search=${searchQuery}` : '/admin/patients';
       const response = await apiClient.get<Patient[]>(url);
       return response.data;
@@ -90,9 +78,6 @@ export const useDeletePatient = (): UseMutationResult<void, Error, number> => {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      if (USE_MOCK_DATA) {
-        return await mockPatientsAPI.deletePatient(id);
-      }
       await apiClient.delete(`/admin/patients/${id}`);
     },
     onSuccess: () => {
