@@ -62,19 +62,6 @@ export function AddPatientDialog({
   const tScan = useTranslations('scan');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
-  // Split full name into first and last name
-  const splitName = (fullName: string): { firstName: string; lastName: string } => {
-    console.log('🔤 Splitting name:', fullName);
-    const parts = fullName.trim().split(' ');
-    if (parts.length === 1) {
-      return { firstName: parts[0], lastName: '' };
-    }
-    const firstName = parts[0];
-    const lastName = parts.slice(1).join(' ');
-    console.log('📝 Split result:', { firstName, lastName, parts });
-    return { firstName, lastName };
-  };
-
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: prefilledData ? {
@@ -337,7 +324,7 @@ export function AddPatientDialog({
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job/Occupation (Optional)</FormLabel>
+                    <FormLabel>Job/Occupation *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Engineer"

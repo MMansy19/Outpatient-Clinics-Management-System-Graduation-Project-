@@ -90,7 +90,7 @@ export default function CreatePatientPage() {
     }
   };
 
-  const validateField = (field: keyof PatientData, value: string): string | null => {
+  const validateField = (value: string): string | null => {
     if (!value || value.trim() === '') {
       return 'This field is required';
     }
@@ -101,15 +101,15 @@ export default function CreatePatientPage() {
     const errors: Record<string, string> = {};
 
     // Validate firstName
-    const firstNameError = validateField('firstName', patientData.firstName);
+    const firstNameError = validateField(patientData.firstName || '');
     if (firstNameError) errors.firstName = firstNameError;
 
     // Validate lastName
-    const lastNameError = validateField('lastName', patientData.lastName);
+    const lastNameError = validateField(patientData.lastName || '');
     if (lastNameError) errors.lastName = lastNameError;
 
     // Validate socialSecurityNumber
-    const ssnError = validateField('socialSecurityNumber', patientData.socialSecurityNumber);
+    const ssnError = validateField(patientData.socialSecurityNumber || '');
     if (ssnError) errors.socialSecurityNumber = ssnError;
 
     setValidationErrors(errors);
