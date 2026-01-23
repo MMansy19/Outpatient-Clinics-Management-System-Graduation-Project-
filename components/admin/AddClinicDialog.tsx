@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 import {
   Dialog,
@@ -24,42 +25,61 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
-import { useCreateClinic } from '@/lib/api/queries/useClinics';
-import { clinicSchema, type ClinicFormData } from '@/lib/schemas/clinicSchema';
+import { adminApi } from '@/lib/api/admin.service';
+import { z } from 'zod';
+
+const clinicSchema = z.object({
+  name: z.string().min(1, 'Clinic name is required'),
+  speciality: z.string().min(1, 'Speciality is required'),
+});
+
+type ClinicFormData = z.infer<typeof clinicSchema>;
 
 interface AddClinicDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function AddClinicDialog({ open, onOpenChange }: AddClinicDialogProps) {
+export function AddClinicDialog({
+  open,
+  onOpenChange,
+  onSuccess,
+}: AddClinicDialogProps) {
   const t = useTranslations('admin');
-  const { mutate: createClinic, isPending } = useCreateClinic();
+  const [isPending, setIsPending] = useState(false);
 
   const form = useForm<ClinicFormData>({
     resolver: zodResolver(clinicSchema),
     defaultValues: {
       name: '',
-      department: '',
-      description: '',
-      location: '',
-      phone_number: '',
+      speciality: '',
     },
   });
 
-  const onSubmit = (data: ClinicFormData) => {
-    createClinic(data, {
-      onSuccess: () => {
-        toast.success(t('clinicCreated'));
-        form.reset();
-        onOpenChange(false);
-      },
-      onError: () => {
-        toast.error(t('clinicCreateError'));
-      },
-    });
+  const onSubmit = async (data: ClinicFormData) => {
+    try {
+      setIsPending(true);
+      await adminApi.createClinic({
+        name: data.name,
+        speciality: data.speciality,
+      });
+
+      toast.success(t('clinicCreated') || 'Clinic created successfully');
+      form.reset();
+      onOpenChange(false);
+      onSuccess?.();
+    } catch (error: any) {
+      console.error('Failed to create clinic:', error);
+      toast.error(
+        error?.response?.data?.message ||
+          t('clinicCreateError') ||
+          'Failed to create clinic'
+      );
+    } finally {
+      setIsPending(false);
+    }
   };
 
   return (
@@ -67,7 +87,9 @@ export function AddClinicDialog({ open, onOpenChange }: AddClinicDialogProps) {
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>{t('addClinic')}</DialogTitle>
-          <DialogDescription>{t('addClinicDescription')}</DialogDescription>
+          <DialogDescription>
+            {t('addClinicDescription') || 'Create a new clinic in the system'}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -79,7 +101,13 @@ export function AddClinicDialog({ open, onOpenChange }: AddClinicDialogProps) {
                 <FormItem>
                   <FormLabel>{t('clinicName')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('clinicNamePlaceholder')} disabled={isPending} {...field} />
+                    <Input
+                      placeholder={
+                        t('clinicNamePlaceholder') || 'Enter clinic name'
+                      }
+                      disabled={isPending}
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -88,56 +116,16 @@ export function AddClinicDialog({ open, onOpenChange }: AddClinicDialogProps) {
 
             <FormField
               control={form.control}
-              name="department"
+              name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('department')}</FormLabel>
+                  <FormLabel>{t('speciality')}</FormLabel>
                   <FormControl>
-                    <Input placeholder={t('departmentPlaceholder')} disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('location')}</FormLabel>
-                  <FormControl>
-                    <Input placeholder={t('locationPlaceholder')} disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="phone_number"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="01234567890" disabled={isPending} {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('description')}</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder={t('descriptionPlaceholder')}
-                      rows={3}
+                    <Input
+                      placeholder={
+                        t('specialityPlaceholder') ||
+                        'Enter speciality (e.g., Dermatology)'
+                      }
                       disabled={isPending}
                       {...field}
                     />
@@ -148,14 +136,23 @@ export function AddClinicDialog({ open, onOpenChange }: AddClinicDialogProps) {
             />
 
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isPending}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={isPending}
+              >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending} className="bg-medical-primary hover:bg-medical-primary/90">
+              <Button
+                type="submit"
+                disabled={isPending}
+                className="bg-medical-primary hover:bg-medical-primary/90"
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('creating')}
+                    {t('creating') || 'Creating...'}
                   </>
                 ) : (
                   t('create')

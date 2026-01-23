@@ -3,13 +3,16 @@ import type {
   PaginatedDoctorsResponse,
   PaginatedPatientsResponse,
   PaginatedVisitsResponse,
-  PaginationParams
+  PaginationParams,
+  ClinicResponse,
+  CreateClinicDto,
+  UpdateClinicDto
 } from './types';
 
 /**
  * Admin API Service
  * 
- * Handles all admin-related API calls for managing doctors, patients, and visits.
+ * Handles all admin-related API calls for managing doctors, patients, visits, and clinics.
  */
 
 export const adminApi = {
@@ -66,6 +69,50 @@ export const adminApi = {
         limit: params.limit,
       },
     });
+    return response.data;
+  },
+
+  /**
+   * Get all clinics
+   * 
+   * @returns List of all clinics
+   */
+  getClinics: async (): Promise<ClinicResponse[]> => {
+    const response = await apiClient.get<ClinicResponse[]>('/admin/clinics');
+    return response.data;
+  },
+
+  /**
+   * Create a new clinic
+   * 
+   * @param data - Clinic data (name, speciality)
+   * @returns Success message with clinic ID
+   */
+  createClinic: async (data: CreateClinicDto): Promise<{ message: string; id: string }> => {
+    const response = await apiClient.post<{ message: string; id: string }>('/admin/clinic', data);
+    return response.data;
+  },
+
+  /**
+   * Update clinic information
+   * 
+   * @param id - Clinic ID (UUID)
+   * @param data - Updated clinic data
+   * @returns Success message
+   */
+  updateClinic: async (id: string, data: UpdateClinicDto): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/admin/clinic/${id}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete a clinic
+   * 
+   * @param id - Clinic ID (UUID)
+   * @returns Success message
+   */
+  deleteClinic: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/admin/clinic/${id}`);
     return response.data;
   },
 

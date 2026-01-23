@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Pencil, Trash2, MoreHorizontal, Search } from 'lucide-react';
 import { toast } from 'sonner';
@@ -32,43 +32,73 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { useGetClinicsWithStats, useDeleteClinic } from '@/lib/api/queries/useClinics';
+import { adminApi } from '@/lib/api/admin.service';
+import type { ClinicResponse } from '@/lib/api/types';
 import { AddClinicDialog } from './AddClinicDialog';
-import { EditClinicDialog } from './EditClinicDialog';
-import type { ClinicWithStats } from '@/types/entities/Clinic';
+// import { EditClinicDialog } from './EditClinicDialog';
 
 export function ClinicTable() {
   const t = useTranslations('admin');
   const [searchQuery, setSearchQuery] = useState('');
-  const [editingClinic, setEditingClinic] = useState<ClinicWithStats | null>(null);
-  const [deletingClinicId, setDeletingClinicId] = useState<number | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-
-  const { data: clinics, isLoading } = useGetClinicsWithStats();
-  const { mutate: deleteClinic, isPending: isDeleting } = useDeleteClinic();
-
-  const filteredClinics = clinics?.filter((clinic) =>
-    clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    clinic.department.toLowerCase().includes(searchQuery.toLowerCase())
+  const [clinics, setClinics] = useState<ClinicResponse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editingClinic, setEditingClinic] = useState<ClinicResponse | null>(
+    null
   );
+  const [deletingClinicId, setDeletingClinicId] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = (id: number) => {
-    deleteClinic(id, {
-      onSuccess: () => {
-        toast.success(t('clinicDeleted'));
-        setDeletingClinicId(null);
-      },
-      onError: () => {
-        toast.error(t('clinicDeleteError'));
-      },
-    });
+  useEffect(() => {
+    loadClinics();
+  }, []);
+
+  const loadClinics = async () => {
+    try {
+      setLoading(true);
+      const data = await adminApi.getClinics();
+      setClinics(data);
+    } catch (error) {
+      console.error('Failed to load clinics:', error);
+      toast.error('Failed to load clinics');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  if (isLoading) {
+  const filteredClinics = clinics?.filter(
+    (clinic) =>
+      clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      clinic.speciality.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleDelete = async (id: string) => {
+    try {
+      setIsDeleting(true);
+      await adminApi.deleteClinic(id);
+      toast.success(t('clinicDeleted') || 'Clinic deleted successfully');
+      setDeletingClinicId(null);
+      loadClinics(); // Reload the clinics list
+    } catch (error) {
+      console.error('Failed to delete clinic:', error);
+      toast.error(t('clinicDeleteError') || 'Failed to delete clinic');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleAddSuccess = () => {
+    loadClinics(); // Reload clinics after successful add
+  };
+
+  const handleEditSuccess = () => {
+    loadClinics(); // Reload clinics after successful edit
+  };
+
+  if (loading) {
     return (
-      <div className="space-y-4">
-        <div className="skeleton h-10 w-full" />
-        <div className="skeleton h-64 w-full" />
+      <div className="flex items-center justify-center p-8">
+        <p className="text-muted-foreground">Loading clinics...</p>
       </div>
     );
   }
@@ -94,81 +124,94 @@ export function ClinicTable() {
         </Button>
       </div>
 
-      <div className="medical-card overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>{t('clinicName')}</TableHead>
-              <TableHead>{t('department')}</TableHead>
-              <TableHead>{t('location')}</TableHead>
-              <TableHead className="text-center">{t('doctors')}</TableHead>
-              <TableHead className="text-center">{t('patients')}</TableHead>
-              <TableHead className="text-center">{t('todayVisits')}</TableHead>
-              <TableHead className="text-right">{t('actions')}</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredClinics?.length === 0 ? (
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
               <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  {t('noClinics')}
-                </TableCell>
+                <TableHead className="min-w-[200px]">
+                  {t('clinicName')}
+                </TableHead>
+                <TableHead className="min-w-[150px]">
+                  {t('speciality')}
+                </TableHead>
+                <TableHead className="text-right min-w-[100px]">
+                  {t('actions')}
+                </TableHead>
               </TableRow>
-            ) : (
-              filteredClinics?.map((clinic) => (
-                <TableRow key={clinic.id}>
-                  <TableCell className="font-medium">{clinic.name}</TableCell>
-                  <TableCell>{clinic.department}</TableCell>
-                  <TableCell>{clinic.location || '-'}</TableCell>
-                  <TableCell className="text-center">
-                    <span className="medical-badge-stable">{clinic.doctor_count}</span>
-                  </TableCell>
-                  <TableCell className="text-center">{clinic.patient_count}</TableCell>
-                  <TableCell className="text-center">{clinic.today_visits}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => setEditingClinic(clinic)}>
-                          <Pencil className="mr-2 h-4 w-4" />
-                          {t('edit')}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => setDeletingClinicId(clinic.id)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          {t('delete')}
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            </TableHeader>
+            <TableBody>
+              {filteredClinics?.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={3}
+                    className="text-center text-muted-foreground"
+                  >
+                    {t('noClinics')}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                filteredClinics?.map((clinic) => (
+                  <TableRow key={clinic.id}>
+                    <TableCell className="font-medium">{clinic.name}</TableCell>
+                    <TableCell>{clinic.speciality}</TableCell>
+                    <TableCell className="text-right">
+                      {/* <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem
+                            onClick={() => setEditingClinic(clinic)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4" />
+                            {t('edit')}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setDeletingClinicId(clinic.id)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {t('delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu> */}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
-      <AddClinicDialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen} />
-
+      <AddClinicDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        onSuccess={handleAddSuccess}
+      />
+      {/* 
       {editingClinic && (
         <EditClinicDialog
           clinic={editingClinic}
           open={!!editingClinic}
           onOpenChange={(open) => !open && setEditingClinic(null)}
+          onSuccess={handleEditSuccess}
         />
-      )}
+      )} */}
 
-      <AlertDialog open={!!deletingClinicId} onOpenChange={(open) => !open && setDeletingClinicId(null)}>
+      <AlertDialog
+        open={!!deletingClinicId}
+        onOpenChange={(open) => !open && setDeletingClinicId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>{t('deleteClinicWarning')}</AlertDialogDescription>
+            <AlertDialogDescription>
+              {t('deleteClinicWarning')}
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>

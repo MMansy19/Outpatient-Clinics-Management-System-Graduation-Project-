@@ -477,7 +477,8 @@
     "patientUpdatedSuccess": "Patient data is successfully updated",
     "patientUpdateFailed": "Failed to update patient",
     "loading": "Loading...",
-    "totalRecords": "Total Records"
+    "totalRecords": "Total Records",
+  "specialityPlaceholder": "e.g., Cardiology, Neurology"
   },
   "scan": {
     "selectRegistrationMethod": "Select Registration Method",
