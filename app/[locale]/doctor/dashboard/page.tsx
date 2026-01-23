@@ -225,7 +225,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToDashboard')}
             </Button>
             <PatientProfile
-              patientId={selectedPatientId}
+              patientId={String(selectedPatientId)}
               onNewVisit={handleNewVisit}
             />
           </div>

@@ -295,31 +295,27 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
     mutationFn: (data: CreateMedicationDto) => doctorApi.createMedication(data),
 
     // Optimistic update: Modify cache before server responds
-    onMutate: async (newMedication) => {
-      // For now, invalidate all queries since we don't have socialSecurityNumber in the medication data
-      // In a real implementation, you'd want to extract it or pass it separately
+    onMutate: async () => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
       await queryClient.cancelQueries({ queryKey: medicationsKeys.all });
 
-      // Snapshot previous value
-      const previousData = queryClient.getCache().getAll();
+      // Note: In a real optimistic update, you would:
+      // 1. Get previous data from the specific query
+      // 2. Optimistically update the cache with new data
+      // 3. Return context with both previousData and queryKey for rollback
 
-      // Return context with snapshot
-      return { previousData };
+      // Return empty context for now
+      return {};
     },
 
     // On error, rollback to snapshot
-    onError: (err, _newMedication, context) => {
-      if (context?.previousMedications) {
-        queryClient.setQueryData(
-          context.queryKey,
-          context.previousMedications
-        );
-      }
+    onError: (err, _newMedication) => {
+      // Rollback logic would go here if we had stored previous data
       console.error('[useCreateMedicationOptimistic] Error:', err);
     },
 
     // On success, invalidate all queries
-    onSettled: (_data, _error) => {
+    onSettled: () => {
       queryClient.invalidateQueries({
         queryKey: medicationsKeys.all,
       });

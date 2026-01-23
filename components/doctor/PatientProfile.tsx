@@ -21,7 +21,7 @@ import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 import { Gender } from '@/types/entities/Patient';
 
 interface PatientProfileProps {
-  patientId: number;
+  patientId: string;
   onEdit?: () => void;
   onNewVisit?: () => void;
 }
@@ -31,8 +31,8 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
-  const { data: patient, isLoading: loadingPatient } = useGetPatient(patientId);
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(patientId);
+  const { data: patient, isLoading: loadingPatient } = useGetPatient(Number(patientId));
+  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patientId));
 
   if (loadingPatient) {
     return (
