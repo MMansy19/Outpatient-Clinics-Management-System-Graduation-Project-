@@ -309,7 +309,7 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
     },
 
     // On error, rollback to snapshot
-    onError: (err, _newMedication) => {
+    onError: (err) => {
       // Rollback logic would go here if we had stored previous data
       console.error('[useCreateMedicationOptimistic] Error:', err);
     },
