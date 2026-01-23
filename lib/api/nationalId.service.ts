@@ -93,8 +93,8 @@ export async function scanAndEnrichNationalId(
   const nationalIdNumber = scanResult.socialSecurityNumber;
 
   // Extract gender and birthdate from National ID number (only if valid)
-  let gender: 'male' | 'female' | undefined;
-  let birthdate: Date | undefined;
+  let gender: 'male' | 'female' | null = null;
+  let birthdate: Date | null = null;
 
   if (nationalIdNumber && validateNationalId(nationalIdNumber)) {
     try {
