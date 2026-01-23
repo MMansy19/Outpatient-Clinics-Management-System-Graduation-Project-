@@ -106,9 +106,12 @@ export async function scanAndEnrichNationalId(
   }
 
   // Construct fullName for backward compatibility
-  const fullName = scanResult.firstName && scanResult.lastName
-    ? `${scanResult.firstName} ${scanResult.lastName}`
-    : (scanResult as any).fullName;
+    let fullName: string | undefined = undefined;
+    if (scanResult.firstName && scanResult.lastName) {
+      fullName = `${scanResult.firstName} ${scanResult.lastName}`;
+    } else if ('fullName' in scanResult && typeof (scanResult as { fullName?: string }).fullName === 'string') {
+      fullName = (scanResult as { fullName?: string }).fullName;
+    }
 
   // Return enriched data
   const enrichedData: EnrichedScanData = {
