@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+"use client";
+import React, { useState } from 'react';
 import {
   User,
   Calendar,
@@ -9,8 +10,6 @@ import {
   Edit,
   Plus,
   X,
-  FileText,
-  Clock,
 } from 'lucide-react';
 
 interface PatientData {
@@ -55,7 +54,7 @@ interface ExtractedData {
   followUp: string;
 }
 
-type ActiveTab = 'info' | 'visits' | 'medications';
+type ActiveTab = 'info' | 'visits' | 'medications' | 'labs' | 'scans';
 
 export default function PatientProfile() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('info');
@@ -67,7 +66,6 @@ export default function PatientProfile() {
   const [editingTranscript, setEditingTranscript] = useState<boolean>(false);
   const [showAddVisit, setShowAddVisit] = useState<boolean>(false);
   const [showAddMedication, setShowAddMedication] = useState<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
 
   const patientData: PatientData = {
     name: 'Ahmed Mohamed Hassan',
@@ -359,6 +357,31 @@ export default function PatientProfile() {
           </button>
         </div>
 
+        <div className="flex gap-2 mb-4">
+          <button
+            onClick={() => setActiveTab('labs')}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+              activeTab === 'labs'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-white text-gray-600'
+            }`}
+            type="button"
+          >
+            Labs
+          </button>
+          <button
+            onClick={() => setActiveTab('scans')}
+            className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all ${
+              activeTab === 'scans'
+                ? 'bg-purple-600 text-white'
+                : 'bg-white text-gray-600'
+            }`}
+            type="button"
+          >
+            Scans
+          </button>
+        </div>
+
         {activeTab === 'info' && (
           <div className="bg-white rounded-2xl p-5 shadow-sm">
             <h3 className="font-bold text-gray-900 mb-4">
@@ -535,6 +558,56 @@ export default function PatientProfile() {
                 </div>
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'labs' && (
+          <div className="space-y-3">
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-4">Lab Test Results</h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-blue-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Complete Blood Count (CBC)</p>
+                  <p className="text-sm text-gray-700 mb-2">All values within normal range</p>
+                  <p className="text-xs text-gray-500">Dr. Nadia Ibrahim • 10/01/2025</p>
+                </div>
+                <div className="p-3 bg-yellow-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Liver Function Test (LFT)</p>
+                  <p className="text-sm text-gray-700 mb-2">Slightly elevated ALT levels, recommend follow-up</p>
+                  <p className="text-xs text-gray-500">Dr. Omar Farouk • 15/12/2024</p>
+                </div>
+                <div className="p-3 bg-orange-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Lipid Profile</p>
+                  <p className="text-sm text-gray-700 mb-2">Cholesterol levels slightly high, diet modification advised</p>
+                  <p className="text-xs text-gray-500">Dr. Nadia Ibrahim • 20/11/2024</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'scans' && (
+          <div className="space-y-3">
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <h3 className="font-bold text-gray-900 mb-4">Scan Results</h3>
+              <div className="space-y-3">
+                <div className="p-3 bg-green-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Chest X-Ray</p>
+                  <p className="text-sm text-gray-700 mb-2">Clear lungs, no abnormalities detected</p>
+                  <p className="text-xs text-gray-500">Dr. Karim Mansour • 08/01/2025</p>
+                </div>
+                <div className="p-3 bg-yellow-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Abdominal Ultrasound</p>
+                  <p className="text-sm text-gray-700 mb-2">Liver and gallbladder normal, slight fatty liver grade 1</p>
+                  <p className="text-xs text-gray-500">Dr. Laila Ahmed • 01/12/2024</p>
+                </div>
+                <div className="p-3 bg-blue-50 rounded-xl">
+                  <p className="text-xs text-gray-600 mb-1">Brain MRI</p>
+                  <p className="text-sm text-gray-700 mb-2">No significant findings, brain structure normal</p>
+                  <p className="text-xs text-gray-500">Dr. Karim Mansour • 15/10/2024</p>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Pencil, Trash2, MoreHorizontal, Search } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -15,12 +15,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,9 +36,6 @@ export function ClinicTable() {
   const [searchQuery, setSearchQuery] = useState('');
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [editingClinic, setEditingClinic] = useState<ClinicResponse | null>(
-    null
-  );
   const [deletingClinicId, setDeletingClinicId] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -89,10 +80,6 @@ export function ClinicTable() {
 
   const handleAddSuccess = () => {
     loadClinics(); // Reload clinics after successful add
-  };
-
-  const handleEditSuccess = () => {
-    loadClinics(); // Reload clinics after successful edit
   };
 
   if (loading) {

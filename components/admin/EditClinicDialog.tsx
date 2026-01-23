@@ -83,10 +83,11 @@ export function EditClinicDialog({
       toast.success(t('clinicUpdated') || 'Clinic updated successfully');
       onOpenChange(false);
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       console.error('Failed to update clinic:', error);
+      const err = error as { response?: { data?: { message?: string } } };
       toast.error(
-        error?.response?.data?.message ||
+        err?.response?.data?.message ||
           t('clinicUpdateError') ||
           'Failed to update clinic'
       );

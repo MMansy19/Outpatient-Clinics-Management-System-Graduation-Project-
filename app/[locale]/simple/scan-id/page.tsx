@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Camera,
@@ -182,10 +183,11 @@ export default function ScanIdPage() {
             <div className="bg-white rounded-2xl p-6 shadow-lg animate-slide-up">
               {/* Image Preview */}
               <div className="aspect-video bg-gray-100 rounded-xl mb-4 overflow-hidden">
-                <img
+                <Image
                   src={selectedImage}
                   alt="ID"
-                  className="w-full h-full object-contain"
+                  fill
+                  className="object-contain"
                 />
               </div>
 

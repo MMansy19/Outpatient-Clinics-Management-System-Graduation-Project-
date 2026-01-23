@@ -27,6 +27,9 @@ export const authApi = {
     return response.data;
   },
 
+  // Note: Session verification is now handled by checking the persisted auth state
+  // The HTTP-only cookie is automatically validated on API calls
+
   /**
    * User Login
    * 

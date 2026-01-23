@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { Camera, Loader2, AlertCircle, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
@@ -414,10 +415,11 @@ export function NationalIdScanner({
                 ) : (
                   <div className="relative aspect-[3/2] rounded-lg border-2 border-muted-foreground/25 overflow-hidden">
                     {previewUrl && (
-                      <img
+                      <Image
                         src={previewUrl}
                         alt="Selected ID"
-                        className="w-full h-full object-contain bg-muted/10"
+                        fill
+                        className="object-contain bg-muted/10"
                       />
                     )}
                     <Button

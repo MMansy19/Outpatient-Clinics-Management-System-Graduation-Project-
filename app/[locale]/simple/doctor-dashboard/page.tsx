@@ -6,7 +6,6 @@ import {
   Camera,
   Calendar,
   Clock,
-  Users,
   Activity,
   CheckCircle,
   ChevronRight,

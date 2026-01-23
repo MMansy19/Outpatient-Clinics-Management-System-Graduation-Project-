@@ -2,7 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useIsAuthenticated, useUserRole } from '@/stores/authStore';
+import { useUserRole } from '@/stores/authStore';
+import { useSessionValidation } from '@/hooks/useSessionValidation';
 import { Role } from '@/lib/api/types';
 import { Loader2 } from 'lucide-react';
 
@@ -13,15 +14,20 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
-  const isAuthenticated = useIsAuthenticated();
   const userRole = useUserRole();
+  const { isValidating, isAuthenticated: isSessionValid } = useSessionValidation();
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    // Not authenticated - redirect to login
-    if (!isAuthenticated) {
-      console.log('[AuthGuard] User not authenticated, redirecting to login');
+    // Only redirect after we've finished validating the session
+    if (isValidating) {
+      return;
+    }
+
+    // If session validation failed, redirect to login
+    if (!isSessionValid) {
+      console.log('[AuthGuard] Session validation failed, redirecting to login');
       router.push(`/${locale}/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
@@ -33,13 +39,28 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
         router.push(`/${locale}/unauthorized`);
       }
     }
-  }, [isAuthenticated, userRole, allowedRoles, router, pathname, locale]);
+  }, [isValidating, isSessionValid, userRole, allowedRoles, router, pathname, locale]);
 
-  // Show loading while checking auth
-  if (!isAuthenticated) {
+  // Show loading while validating session
+  if (isValidating) {
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-medical-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-medical-primary" />
+          <p className="text-sm text-muted-foreground">Validating session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // If validation is complete but not authenticated, show nothing (will redirect)
+  if (!isSessionValid) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-medical-primary" />
+          <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+        </div>
       </div>
     );
   }
