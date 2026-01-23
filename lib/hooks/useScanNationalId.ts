@@ -99,10 +99,10 @@ export function useScanNationalId(
 
     onSuccess: (data) => {
       console.log('📋 Scan result:', {
-        FirstName: data.FirstName,
-        LastName: data.LastName,
+        firstName: data.firstName,
+        lastName: data.lastName,
         socialSecurityNumber: data.socialSecurityNumber,
-        Location: data.Location,
+        location: data.location,
         gender: data.gender,
         birthdate: data.birthdate.toISOString(),
       });

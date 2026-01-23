@@ -21,10 +21,10 @@ type Gender = 'male' | 'female';
 type BloodType = '' | 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 
 interface PatientData {
-  FirstName: string;
-  LastName: string;
+  firstName: string;
+  lastName: string;
   socialSecurityNumber: string;
-  Location: string;
+  location: string;
   birthDate: string;
   phone: string;
   gender: Gender;
@@ -37,11 +37,12 @@ export default function CreatePatientPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [patientData, setPatientData] = useState<PatientData>({
-    FirstName: 'Ahmed',
-    LastName: 'Mohamed Hassan',
+    firstName: 'Ahmed',
+    lastName: 'Mohamed Hassan',
     socialSecurityNumber: '29512011234567',
-    Location: 'Cairo, Egypt',
+    location: 'Cairo, Egypt',
     birthDate: '1995-01-12',
     phone: '',
     gender: 'male',
@@ -50,14 +51,20 @@ export default function CreatePatientPage() {
   });
 
   const handleSave = async () => {
+    // Validate form first
+    if (!validateForm()) {
+      console.log('⚠️ Form validation failed');
+      return;
+    }
+
     setSaving(true);
 
     // TODO: Replace with actual API call
     // await authApi.createPatient({
-    //   firstName: patientData.FirstName,
-    //   lastName: patientData.LastName,
+    //   firstName: patientData.firstName,
+    //   lastName: patientData.lastName,
     //   socialSecurityNumber: patientData.socialSecurityNumber,
-    //   address: patientData.Location,
+    //   address: patientData.location,
     //   job: patientData.job,
     //   language: 1,
     // });
@@ -73,10 +80,44 @@ export default function CreatePatientPage() {
 
   const updateField = (field: keyof PatientData, value: string) => {
     setPatientData((prev) => ({ ...prev, [field]: value }));
+    // Clear validation error when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
+  };
+
+  const validateField = (field: keyof PatientData, value: string): string | null => {
+    if (!value || value.trim() === '') {
+      return 'This field is required';
+    }
+    return null;
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Validate firstName
+    const firstNameError = validateField('firstName', patientData.firstName);
+    if (firstNameError) errors.firstName = firstNameError;
+
+    // Validate lastName
+    const lastNameError = validateField('lastName', patientData.lastName);
+    if (lastNameError) errors.lastName = lastNameError;
+
+    // Validate socialSecurityNumber
+    const ssnError = validateField('socialSecurityNumber', patientData.socialSecurityNumber);
+    if (ssnError) errors.socialSecurityNumber = ssnError;
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const isFormValid =
-    patientData.FirstName && patientData.LastName && patientData.socialSecurityNumber && patientData.birthDate;
+    patientData.firstName && patientData.lastName && patientData.socialSecurityNumber && patientData.birthDate;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
@@ -155,11 +196,21 @@ export default function CreatePatientPage() {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
-                      value={patientData.FirstName}
-                      onChange={(e) => updateField('FirstName', e.target.value)}
+                      value={patientData.firstName}
+                      onChange={(e) => updateField('firstName', e.target.value)}
                       disabled={!editing}
-                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all"
+                      className={`w-full pl-11 pr-4 py-3 border-2 ${
+                        validationErrors.firstName
+                          ? 'border-red-300 focus:ring-2 focus:ring-red-500'
+                          : 'border-gray-200 focus:ring-2 focus:ring-blue-500'
+                      } rounded-xl focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all`}
                     />
+                    {validationErrors.firstName && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {validationErrors.firstName}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -170,11 +221,21 @@ export default function CreatePatientPage() {
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                       type="text"
-                      value={patientData.LastName}
-                      onChange={(e) => updateField('LastName', e.target.value)}
+                      value={patientData.lastName}
+                      onChange={(e) => updateField('lastName', e.target.value)}
                       disabled={!editing}
-                      className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all"
+                      className={`w-full pl-11 pr-4 py-3 border-2 ${
+                        validationErrors.lastName
+                          ? 'border-red-300 focus:ring-2 focus:ring-red-500'
+                          : 'border-gray-200 focus:ring-2 focus:ring-blue-500'
+                      } rounded-xl focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all`}
                     />
+                    {validationErrors.lastName && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                        <AlertCircle className="w-4 h-4" />
+                        {validationErrors.lastName}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -187,8 +248,18 @@ export default function CreatePatientPage() {
                   type="text"
                   value={patientData.socialSecurityNumber}
                   disabled
-                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-900 font-mono"
+                  className={`w-full px-4 py-3 border-2 ${
+                    validationErrors.socialSecurityNumber
+                      ? 'border-red-300'
+                      : 'border-gray-200'
+                  } rounded-xl bg-gray-50 text-gray-900 font-mono`}
                 />
+                {validationErrors.socialSecurityNumber && (
+                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {validationErrors.socialSecurityNumber}
+                  </p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -231,8 +302,8 @@ export default function CreatePatientPage() {
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    value={patientData.Location}
-                    onChange={(e) => updateField('Location', e.target.value)}
+                    value={patientData.location}
+                    onChange={(e) => updateField('location', e.target.value)}
                     disabled={!editing}
                     className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900"
                   />

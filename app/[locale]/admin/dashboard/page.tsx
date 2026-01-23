@@ -18,6 +18,7 @@ import { StatsCards } from '@/components/admin/StatsCards';
 import { adminApi } from '@/lib/api/admin.service';
 import { useGetDoctors } from '@/lib/api/queries/useUsers';
 import { useSearchPatients } from '@/lib/api/queries/usePatients';
+import { useQuery } from '@tanstack/react-query';
 
 interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
@@ -48,7 +49,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     totalClinics: clinics?.length || 0,
     totalDoctors: doctors?.length || 0,
     totalPatients: patientsData?.total || 0,
-    todayVisits: visits?.length || 0,
+    todayVisits: visits?.totalItems || 0,
   };
 
   return (

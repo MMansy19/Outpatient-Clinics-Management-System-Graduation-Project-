@@ -15,63 +15,63 @@ import { ScanNationalIdResponse } from '@/types/ocr';
  */
 const MOCK_DATA_POOL: ScanNationalIdResponse[] = [
   {
-    FirstName: 'أحمد',
-    LastName: 'محمد علي',
-    Location: '53 شارع التحرير، الدقي، الجيزة، مصر',
+    firstName: 'أحمد',
+    lastName: 'محمد علي',
+    location: '53 شارع التحرير، الدقي، الجيزة، مصر',
     socialSecurityNumber: '29501011234567', // Male, born Jan 1, 1995, Cairo
   },
   {
-    FirstName: 'فاطمة',
-    LastName: 'حسن إبراهيم',
-    Location: '12 شارع الهرم، الجيزة، مصر',
+    firstName: 'فاطمة',
+    lastName: 'حسن إبراهيم',
+    location: '12 شارع الهرم، الجيزة، مصر',
     socialSecurityNumber: '29612151234568', // Female, born Dec 15, 1996, Alexandria
   },
   {
-    FirstName: 'محمود',
-    LastName: 'أحمد السيد',
-    Location: '25 شارع النيل، المعادي، القاهرة، مصر',
+    firstName: 'محمود',
+    lastName: 'أحمد السيد',
+    location: '25 شارع النيل، المعادي، القاهرة، مصر',
     socialSecurityNumber: '28803201234569', // Male, born Mar 20, 1988, Giza
   },
   {
-    FirstName: 'سارة',
-    LastName: 'علي محمد',
-    Location: '8 شارع الجامعة، المنصورة، الدقهلية، مصر',
+    firstName: 'سارة',
+    lastName: 'علي محمد',
+    location: '8 شارع الجامعة، المنصورة، الدقهلية، مصر',
     socialSecurityNumber: '30105101234562', // Female, born May 10, 2001, Cairo
   },
   {
-    FirstName: 'عمر',
-    LastName: 'خالد حسين',
-    Location: '45 شارع الثورة، بورسعيد، مصر',
+    firstName: 'عمر',
+    lastName: 'خالد حسين',
+    location: '45 شارع الثورة، بورسعيد، مصر',
     socialSecurityNumber: '29209081234571', // Male, born Sep 8, 1992, Port Said
   },
   {
-    FirstName: 'ليلى',
-    LastName: 'حسام الدين',
-    Location: '17 شارع السلام، السويس، مصر',
+    firstName: 'ليلى',
+    lastName: 'حسام الدين',
+    location: '17 شارع السلام، السويس، مصر',
     socialSecurityNumber: '29807221234564', // Female, born Jul 22, 1998, Suez
   },
   {
-    FirstName: 'يوسف',
-    LastName: 'عبد الرحمن',
-    Location: '33 شارع المدينة، الإسماعيلية، مصر',
+    firstName: 'يوسف',
+    lastName: 'عبد الرحمن',
+    location: '33 شارع المدينة، الإسماعيلية، مصر',
     socialSecurityNumber: '28511301234573', // Male, born Nov 30, 1985, Ismailia
   },
   {
-    FirstName: 'منى',
-    LastName: 'أحمد عبد الله',
-    Location: '22 شارع الجلاء، المنصورة، الدقهلية، مصر',
+    firstName: 'منى',
+    lastName: 'أحمد عبد الله',
+    location: '22 شارع الجلاء، المنصورة، الدقهلية، مصر',
     socialSecurityNumber: '30202041234566', // Female, born Feb 4, 2002, Dakahlia
   },
   {
-    FirstName: 'حسن',
-    LastName: 'محمد صالح',
-    Location: '11 شارع الزهراء، الزقازيق، الشرقية، مصر',
+    firstName: 'حسن',
+    lastName: 'محمد صالح',
+    location: '11 شارع الزهراء، الزقازيق، الشرقية، مصر',
     socialSecurityNumber: '29106151234575', // Male, born Jun 15, 1991, Sharqia
   },
   {
-    FirstName: 'نور الهدى',
-    LastName: 'يوسف',
-    Location: '29 شارع القاهرة، شبرا الخيمة، القليوبية، مصر',
+    firstName: 'نور الهدى',
+    lastName: 'يوسف',
+    location: '29 شارع القاهرة، شبرا الخيمة، القليوبية، مصر',
     socialSecurityNumber: '29904101234568', // Female, born Apr 10, 1999, Kaliobeya
   },
 ];
@@ -108,9 +108,9 @@ export async function mockScanNationalId(
       
       // Log for development visibility
       console.log('🔧 Mock National ID Scan:', {
-        FirstName: mockData.FirstName,
-        LastName: mockData.LastName,
-        Location: mockData.Location,
+        firstName: mockData.firstName,
+        lastName: mockData.lastName,
+        location: mockData.location,
         socialSecurityNumber: mockData.socialSecurityNumber,
         processingTime: `${delay.toFixed(0)}ms`,
       });

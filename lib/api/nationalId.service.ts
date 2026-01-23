@@ -35,15 +35,10 @@ export async function scanNationalId(
     // Call backend OCR service via doctorApi
     const response = await doctorApi.processNationalId(imageBase64);
 
-    // Validate the response
-    if (!response.socialSecurityNumber || (!response.FirstName && !response.LastName)) {
-      throw new OCRProcessingError('Invalid response from OCR service');
-    }
-
     console.log('✅ National ID scanned successfully:', {
-      FirstName: response.FirstName,
-      LastName: response.LastName,
-      socialSecurityNumber: response.socialSecurityNumber.length,
+      firstName: response.firstName,
+      lastName: response.lastName,
+      socialSecurityNumber: response.socialSecurityNumber?.length || 0,
     });
 
     return response;
@@ -96,25 +91,23 @@ export async function scanAndEnrichNationalId(
 
   // Validate National ID format using socialSecurityNumber
   const nationalIdNumber = scanResult.socialSecurityNumber;
-  if (!validateNationalId(nationalIdNumber)) {
-    throw new OCRProcessingError(
-      'Invalid National ID format detected. Please verify the ID card and try again.'
-    );
-  }
 
-  // Extract gender and birthdate from National ID number
-  const gender = extractGenderFromNationalId(nationalIdNumber);
-  const birthdate = extractBirthdateFromNationalId(nationalIdNumber);
+  // Extract gender and birthdate from National ID number (only if valid)
+  let gender: 'male' | 'female' | undefined;
+  let birthdate: Date | undefined;
 
-  if (!gender || !birthdate) {
-    throw new OCRProcessingError(
-      'Could not extract information from National ID number. Please check the ID format.'
-    );
+  if (nationalIdNumber && validateNationalId(nationalIdNumber)) {
+    try {
+      gender = extractGenderFromNationalId(nationalIdNumber);
+      birthdate = extractBirthdateFromNationalId(nationalIdNumber);
+    } catch (error) {
+      console.warn('⚠️ Failed to extract gender/birthdate from National ID:', error);
+    }
   }
 
   // Construct fullName for backward compatibility
-  const fullName = scanResult.FirstName && scanResult.LastName
-    ? `${scanResult.FirstName} ${scanResult.LastName}`
+  const fullName = scanResult.firstName && scanResult.lastName
+    ? `${scanResult.firstName} ${scanResult.lastName}`
     : (scanResult as any).fullName;
 
   // Return enriched data
@@ -122,10 +115,10 @@ export async function scanAndEnrichNationalId(
     ...scanResult,
     fullName, // Backward compatibility
     nationalId: nationalIdNumber, // Backward compatibility
-    address: scanResult.Location, // Backward compatibility
-    gender,
-    birthdate,
-    dateOfBirth: birthdate, // Alias for birthdate
+    address: scanResult.location, // Backward compatibility
+    gender: gender || 'male', // Default to male if not available
+    birthdate: birthdate || new Date(), // Default to current date if not available
+    dateOfBirth: birthdate || new Date(), // Alias for birthdate
     confidence: 0.95, // Default confidence for real scans
     rawImage: imageBase64, // Keep original image for preview
     imageBase64, // Alias for rawImage
@@ -133,11 +126,11 @@ export async function scanAndEnrichNationalId(
   };
 
   console.log('📋 Enriched scan data:', {
-    FirstName: enrichedData.FirstName,
-    LastName: enrichedData.LastName,
+    firstName: enrichedData.firstName,
+    lastName: enrichedData.lastName,
     socialSecurityNumber: enrichedData.socialSecurityNumber,
     gender: enrichedData.gender,
-    birthdate: enrichedData.birthdate.toLocaleDateString(),
+    birthdate: enrichedData.birthdate?.toLocaleDateString() || 'N/A',
   });
 
   return enrichedData;

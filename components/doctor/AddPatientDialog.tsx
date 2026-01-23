@@ -79,7 +79,7 @@ export function AddPatientDialog({
       ...splitName(prefilledData.fullName || ''),
       language: Language.ENGLISH,
       socialSecurityNumber: prefilledData.nationalId || '',
-      address: prefilledData.address || '',
+      address: prefilledData.address ?? '',
       job: '',
     } : {
       firstName: '',
@@ -97,13 +97,13 @@ export function AddPatientDialog({
   // Populate form with scanned data when available
   useEffect(() => {
     if (prefilledData && dataSource === 'scan') {
-      const { firstName, lastName } = splitName(prefilledData.fullName);
+      const { firstName, lastName } = splitName(prefilledData.fullName || '');
       form.reset({
         firstName,
         lastName,
         language: Language.ENGLISH,
         socialSecurityNumber: prefilledData.nationalId || '',
-        address: prefilledData.address || '',
+        address: prefilledData.address ?? '',
         job: '',
       });
     }

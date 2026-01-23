@@ -8,11 +8,11 @@
  */
 export interface ScanNationalIdResponse {
   /** First name as extracted from ID card */
-  FirstName: string;
+  firstName: string;
   /** Last name as extracted from ID card */
-  LastName: string;
+  lastName: string;
   /** Location as written on the ID card */
-  Location: string;
+  location: string;
   /** 14-digit Egyptian National ID number (Social Security Number) */
   socialSecurityNumber: string;
 }
@@ -44,11 +44,11 @@ export interface EnrichedScanData extends ScanNationalIdResponse {
   imageBase64?: string;
   /** Flag indicating if this is mock data for testing */
   isMockData?: boolean;
-  /** Backward compatibility - full name constructed from FirstName + LastName */
+  /** Backward compatibility - full name constructed from firstName + lastName */
   fullName?: string;
   /** Backward compatibility - national ID (alias for socialSecurityNumber) */
   nationalId?: string;
-  /** Backward compatibility - address (alias for Location) */
+  /** Backward compatibility - address (alias for location) */
   address?: string;
 }
 
@@ -57,11 +57,11 @@ export interface EnrichedScanData extends ScanNationalIdResponse {
  */
 export interface ScannedIdData {
   /** First name from ID card */
-  FirstName: string;
+  firstName: string;
   /** Last name from ID card */
-  LastName: string;
+  lastName: string;
   /** Location from ID card */
-  Location: string;
+  location: string;
   /** 14-digit National ID number (Social Security Number) */
   socialSecurityNumber: string;
   /** Auto-derived gender from ID number */

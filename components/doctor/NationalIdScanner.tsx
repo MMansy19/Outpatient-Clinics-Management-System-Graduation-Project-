@@ -205,6 +205,7 @@ export function NationalIdScanner({
   };
 
   const handleRemoveFile = () => {
+    
     setSelectedFile(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -229,22 +230,26 @@ export function NationalIdScanner({
     });
   };
 
-  const handleClose = () => {
-    if (!isScanning && !isCapturing) {
-      // Stop video stream if active
-      if (videoStream) {
-        videoStream.getTracks().forEach(track => track.stop());
-        setVideoStream(null);
-        setIsWebCameraActive(false);
-      }
-      // Clean up file preview
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl);
-      }
-      setSelectedFile(null);
-      setPreviewUrl(null);
-      setError(null);
-      setActiveTab('camera');
+  const handleClose = (forceClose = false) => {
+    // Always clean up resources, regardless of processing state
+    // Stop video stream if active
+    if (videoStream) {
+      videoStream.getTracks().forEach(track => track.stop());
+      setVideoStream(null);
+      setIsWebCameraActive(false);
+    }
+    // Clean up file preview
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setError(null);
+    setActiveTab('camera');
+    setIsCapturing(false);
+
+    // Only close if not processing or if forced
+    if (!isScanning && !isCapturing || forceClose) {
       onClose();
     }
   };
@@ -252,7 +257,14 @@ export function NationalIdScanner({
   const isProcessing = isCapturing || isScanning;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          handleClose(true);
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-[500px] p-0">
         <VisuallyHidden>
           <DialogTitle>{t('scanNationalId')}</DialogTitle>
@@ -368,8 +380,7 @@ export function NationalIdScanner({
 
                 <Button
                   variant="outline"
-                  onClick={handleClose}
-                  disabled={isProcessing}
+                  onClick={() => handleClose()}
                   className="w-full"
                 >
                   {tCommon('cancel')}
@@ -471,7 +482,7 @@ export function NationalIdScanner({
 
                 <Button
                   variant="outline"
-                  onClick={handleClose}
+                  onClick={() => handleClose()}
                   disabled={isProcessing}
                   className="w-full"
                 >

@@ -17,9 +17,9 @@ import { scanAndEnrichNationalId } from '@/lib/api/nationalId.service';
 import { OCRProcessingError } from '@/types/ocr';
 
 interface ExtractedData {
-  FirstName: string;
-  LastName: string;
-  Location: string;
+  firstName: string;
+  lastName: string;
+  location: string;
   socialSecurityNumber: string;
   birthDate: string;
   photo?: string;
@@ -65,9 +65,9 @@ export default function ScanIdPage() {
       const birthDate = extractBirthdateFromId(enrichedData.socialSecurityNumber);
 
       setExtractedData({
-        FirstName: enrichedData.FirstName,
-        LastName: enrichedData.LastName,
-        Location: enrichedData.Location,
+        firstName: enrichedData.firstName,
+        lastName: enrichedData.lastName,
+        location: enrichedData.location,
         socialSecurityNumber: enrichedData.socialSecurityNumber,
         birthDate: birthDate,
         photo: selectedImage,
@@ -294,13 +294,13 @@ export default function ScanIdPage() {
                     <div className="p-4 bg-blue-50 rounded-xl">
                       <p className="text-xs text-gray-600 mb-1">First Name</p>
                       <p className="font-semibold text-gray-900">
-                        {extractedData.FirstName}
+                        {extractedData.firstName}
                       </p>
                     </div>
                     <div className="p-4 bg-blue-50 rounded-xl">
                       <p className="text-xs text-gray-600 mb-1">Last Name</p>
                       <p className="font-semibold text-gray-900">
-                        {extractedData.LastName}
+                        {extractedData.lastName}
                       </p>
                     </div>
                   </div>
@@ -313,7 +313,7 @@ export default function ScanIdPage() {
                   <div className="p-4 bg-gray-50 rounded-xl">
                     <p className="text-xs text-gray-600 mb-1">Location</p>
                     <p className="font-semibold text-gray-900">
-                      {extractedData.Location}
+                      {extractedData.location}
                     </p>
                   </div>
                   <div className="p-4 bg-gray-50 rounded-xl">
