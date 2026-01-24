@@ -15,7 +15,7 @@ import type { Scan } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
 
 interface HistoryTimelineProps {
-  patientId: number;
+  patientId: string;
 }
 
 type FilterType = 'all' | 'visits' | 'labs' | 'scans' | 'medications';

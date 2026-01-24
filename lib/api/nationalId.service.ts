@@ -6,10 +6,8 @@
  */
 
 import axios from 'axios';
-import { apiClient } from './client';
-import { mockScanNationalId, isMockModeEnabled } from './mockNationalIdData';
+import { doctorApi } from './doctor.service';
 import {
-  ScanNationalIdRequest,
   ScanNationalIdResponse,
   EnrichedScanData,
   OCRProcessingError,
@@ -22,47 +20,28 @@ import {
 
 /**
  * Scan National ID card using backend AI model
- * 
+ *
  * @param imageBase64 - Base64 encoded image of National ID card
- * @returns Extracted data: full name, national ID number, address
+ * @returns Extracted data: FirstName, LastName, Location, socialSecurityNumber
  * @throws OCRProcessingError if scan fails
- * 
- * Note: This function automatically uses mock data if NEXT_PUBLIC_USE_MOCK_SCAN=true
- * 
- * TODO: Update endpoint URL when backend AI service is deployed
- * Expected endpoint: POST /api/v1/national-id/scan
+ *
+ * This function calls the doctorApi.processNationalId method which handles
+ * the API call to POST /api/v1/ocr/process-id
  */
 export async function scanNationalId(
   imageBase64: string
 ): Promise<ScanNationalIdResponse> {
-  // Use mock data in development until backend AI endpoint is ready
-  if (isMockModeEnabled()) {
-    console.log('🔧 Using mock National ID scan data (AI endpoint not ready)');
-    return mockScanNationalId(imageBase64);
-  }
-
   try {
-    const requestPayload: ScanNationalIdRequest = {
-      image: imageBase64,
-    };
-
-    // TODO: Replace with actual backend AI endpoint when deployed
-    const response = await apiClient.post<ScanNationalIdResponse>(
-      '/api/v1/national-id/scan',
-      requestPayload
-    );
-
-    // Validate the response
-    if (!response.data.nationalId || !response.data.fullName) {
-      throw new OCRProcessingError('Invalid response from OCR service');
-    }
+    // Call backend OCR service via doctorApi
+    const response = await doctorApi.processNationalId(imageBase64);
 
     console.log('✅ National ID scanned successfully:', {
-      name: response.data.fullName,
-      idLength: response.data.nationalId.length,
+      firstName: response.firstName,
+      lastName: response.lastName,
+      socialSecurityNumber: response.socialSecurityNumber?.length || 0,
     });
 
-    return response.data;
+    return response;
   } catch (error) {
     console.error('❌ National ID scan failed:', error);
 
@@ -103,32 +82,46 @@ export async function scanNationalId(
 export async function scanAndEnrichNationalId(
   imageBase64: string
 ): Promise<EnrichedScanData> {
+  if (!imageBase64) {
+    throw new OCRProcessingError('File is required. Please upload a valid image.');
+  }
+
   // Get OCR data from backend (or mock)
   const scanResult = await scanNationalId(imageBase64);
 
-  // Validate National ID format
-  if (!validateNationalId(scanResult.nationalId)) {
-    throw new OCRProcessingError(
-      'Invalid National ID format detected. Please verify the ID card and try again.'
-    );
+  // Validate National ID format using socialSecurityNumber
+  const nationalIdNumber = scanResult.socialSecurityNumber;
+
+  // Extract gender and birthdate from National ID number (only if valid)
+  let gender: 'male' | 'female' | null = null;
+  let birthdate: Date | null = null;
+
+  if (nationalIdNumber && validateNationalId(nationalIdNumber)) {
+    try {
+      gender = extractGenderFromNationalId(nationalIdNumber);
+      birthdate = extractBirthdateFromNationalId(nationalIdNumber);
+    } catch (error) {
+      console.warn('⚠️ Failed to extract gender/birthdate from National ID:', error);
+    }
   }
 
-  // Extract gender and birthdate from National ID number
-  const gender = extractGenderFromNationalId(scanResult.nationalId);
-  const birthdate = extractBirthdateFromNationalId(scanResult.nationalId);
-
-  if (!gender || !birthdate) {
-    throw new OCRProcessingError(
-      'Could not extract information from National ID number. Please check the ID format.'
-    );
-  }
+  // Construct fullName for backward compatibility
+    let fullName: string | undefined = undefined;
+    if (scanResult.firstName && scanResult.lastName) {
+      fullName = `${scanResult.firstName} ${scanResult.lastName}`;
+    } else if ('fullName' in scanResult && typeof (scanResult as { fullName?: string }).fullName === 'string') {
+      fullName = (scanResult as { fullName?: string }).fullName;
+    }
 
   // Return enriched data
   const enrichedData: EnrichedScanData = {
     ...scanResult,
-    gender,
-    birthdate,
-    dateOfBirth: birthdate, // Alias for birthdate
+    fullName, // Backward compatibility
+    nationalId: nationalIdNumber, // Backward compatibility
+    address: scanResult.location, // Backward compatibility
+    gender: gender || 'male', // Default to male if not available
+    birthdate: birthdate || new Date(), // Default to current date if not available
+    dateOfBirth: birthdate || new Date(), // Alias for birthdate
     confidence: 0.95, // Default confidence for real scans
     rawImage: imageBase64, // Keep original image for preview
     imageBase64, // Alias for rawImage
@@ -136,10 +129,11 @@ export async function scanAndEnrichNationalId(
   };
 
   console.log('📋 Enriched scan data:', {
-    name: enrichedData.fullName,
-    nationalId: enrichedData.nationalId,
+    firstName: enrichedData.firstName,
+    lastName: enrichedData.lastName,
+    socialSecurityNumber: enrichedData.socialSecurityNumber,
     gender: enrichedData.gender,
-    birthdate: enrichedData.birthdate.toLocaleDateString(),
+    birthdate: enrichedData.birthdate?.toLocaleDateString() || 'N/A',
   });
 
   return enrichedData;
@@ -215,8 +209,6 @@ export async function compressImage(
   });
 }
 
-// Re-export for convenience
-export { isMockModeEnabled } from './mockNationalIdData';
 export type {
   ScanNationalIdRequest,
   ScanNationalIdResponse,

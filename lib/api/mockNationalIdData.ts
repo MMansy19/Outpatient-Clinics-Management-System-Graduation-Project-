@@ -15,54 +15,64 @@ import { ScanNationalIdResponse } from '@/types/ocr';
  */
 const MOCK_DATA_POOL: ScanNationalIdResponse[] = [
   {
-    fullName: 'أحمد محمد علي',
-    nationalId: '29501011234567', // Male, born Jan 1, 1995, Cairo
-    address: '53 شارع التحرير، الدقي، الجيزة، مصر',
+    firstName: 'أحمد',
+    lastName: 'محمد علي',
+    location: '53 شارع التحرير، الدقي، الجيزة، مصر',
+    socialSecurityNumber: '29501011234567', // Male, born Jan 1, 1995, Cairo
   },
   {
-    fullName: 'فاطمة حسن إبراهيم',
-    nationalId: '29612151234568', // Female, born Dec 15, 1996, Alexandria
-    address: '12 شارع الهرم، الجيزة، مصر',
+    firstName: 'فاطمة',
+    lastName: 'حسن إبراهيم',
+    location: '12 شارع الهرم، الجيزة، مصر',
+    socialSecurityNumber: '29612151234568', // Female, born Dec 15, 1996, Alexandria
   },
   {
-    fullName: 'محمود أحمد السيد',
-    nationalId: '28803201234569', // Male, born Mar 20, 1988, Giza
-    address: '25 شارع النيل، المعادي، القاهرة، مصر',
+    firstName: 'محمود',
+    lastName: 'أحمد السيد',
+    location: '25 شارع النيل، المعادي، القاهرة، مصر',
+    socialSecurityNumber: '28803201234569', // Male, born Mar 20, 1988, Giza
   },
   {
-    fullName: 'سارة علي محمد',
-    nationalId: '30105101234562', // Female, born May 10, 2001, Cairo
-    address: '8 شارع الجامعة، المنصورة، الدقهلية، مصر',
+    firstName: 'سارة',
+    lastName: 'علي محمد',
+    location: '8 شارع الجامعة، المنصورة، الدقهلية، مصر',
+    socialSecurityNumber: '30105101234562', // Female, born May 10, 2001, Cairo
   },
   {
-    fullName: 'عمر خالد حسين',
-    nationalId: '29209081234571', // Male, born Sep 8, 1992, Port Said
-    address: '45 شارع الثورة، بورسعيد، مصر',
+    firstName: 'عمر',
+    lastName: 'خالد حسين',
+    location: '45 شارع الثورة، بورسعيد، مصر',
+    socialSecurityNumber: '29209081234571', // Male, born Sep 8, 1992, Port Said
   },
   {
-    fullName: 'ليلى حسام الدين',
-    nationalId: '29807221234564', // Female, born Jul 22, 1998, Suez
-    address: '17 شارع السلام، السويس، مصر',
+    firstName: 'ليلى',
+    lastName: 'حسام الدين',
+    location: '17 شارع السلام، السويس، مصر',
+    socialSecurityNumber: '29807221234564', // Female, born Jul 22, 1998, Suez
   },
   {
-    fullName: 'يوسف عبد الرحمن',
-    nationalId: '28511301234573', // Male, born Nov 30, 1985, Ismailia
-    address: '33 شارع المدينة، الإسماعيلية، مصر',
+    firstName: 'يوسف',
+    lastName: 'عبد الرحمن',
+    location: '33 شارع المدينة، الإسماعيلية، مصر',
+    socialSecurityNumber: '28511301234573', // Male, born Nov 30, 1985, Ismailia
   },
   {
-    fullName: 'منى أحمد عبد الله',
-    nationalId: '30202041234566', // Female, born Feb 4, 2002, Dakahlia
-    address: '22 شارع الجلاء، المنصورة، الدقهلية، مصر',
+    firstName: 'منى',
+    lastName: 'أحمد عبد الله',
+    location: '22 شارع الجلاء، المنصورة، الدقهلية، مصر',
+    socialSecurityNumber: '30202041234566', // Female, born Feb 4, 2002, Dakahlia
   },
   {
-    fullName: 'حسن محمد صالح',
-    nationalId: '29106151234575', // Male, born Jun 15, 1991, Sharqia
-    address: '11 شارع الزهراء، الزقازيق، الشرقية، مصر',
+    firstName: 'حسن',
+    lastName: 'محمد صالح',
+    location: '11 شارع الزهراء، الزقازيق، الشرقية، مصر',
+    socialSecurityNumber: '29106151234575', // Male, born Jun 15, 1991, Sharqia
   },
   {
-    fullName: 'نور الهدى يوسف',
-    nationalId: '29904101234568', // Female, born Apr 10, 1999, Kaliobeya
-    address: '29 شارع القاهرة، شبرا الخيمة، القليوبية، مصر',
+    firstName: 'نور الهدى',
+    lastName: 'يوسف',
+    location: '29 شارع القاهرة، شبرا الخيمة، القليوبية، مصر',
+    socialSecurityNumber: '29904101234568', // Female, born Apr 10, 1999, Kaliobeya
   },
 ];
 
@@ -98,8 +108,10 @@ export async function mockScanNationalId(
       
       // Log for development visibility
       console.log('🔧 Mock National ID Scan:', {
-        name: mockData.fullName,
-        id: mockData.nationalId,
+        firstName: mockData.firstName,
+        lastName: mockData.lastName,
+        location: mockData.location,
+        socialSecurityNumber: mockData.socialSecurityNumber,
         processingTime: `${delay.toFixed(0)}ms`,
       });
       

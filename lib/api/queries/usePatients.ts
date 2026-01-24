@@ -3,13 +3,8 @@ import { apiClient } from '@/lib/api/client';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 import type { CreatePatientRequest } from '@/types/api';
-import { mockPatientsAPI } from '@/lib/api/mockData';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
 
-// TODO: Set to false once backend endpoint is confirmed working
-// Can be controlled via environment variable
-// See SEARCH_REVIEW_FINDINGS.md for verification checklist
-const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const PATIENTS_KEY = ['patients'];
 
 interface PatientsResponse {
@@ -21,27 +16,23 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'search', filters],
     queryFn: async () => {
-      if (USE_MOCK_DATA) {
-        return await mockPatientsAPI.searchPatients(filters);
-      }
-      
       // Build query parameters for backend API
       const params = new URLSearchParams();
-      
+
       // General search (searches across name, national_id, email, phone)
       if (filters.query) params.append('search', filters.query);
-      
+
       // Convert period to actual date ranges
       if (filters.period && filters.period !== 'custom') {
         const { startDate, endDate } = calculateDateRange(filters.period);
         if (startDate) params.append('start_date', formatDateForAPI(startDate));
         if (endDate) params.append('end_date', formatDateForAPI(endDate));
       }
-      
+
       // Custom date range (overrides period)
       if (filters.startDate) params.append('start_date', formatDateForAPI(filters.startDate));
       if (filters.endDate) params.append('end_date', formatDateForAPI(filters.endDate));
-      
+
       // Other filters
       if (filters.clinicId) params.append('clinic_id', filters.clinicId.toString());
       if (filters.gender) params.append('gender', filters.gender);
@@ -64,9 +55,6 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
   return useQuery({
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
-      if (USE_MOCK_DATA) {
-        return await mockPatientsAPI.getPatient(id);
-      }
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
       return response.data;
     },
@@ -80,9 +68,6 @@ export const useCreatePatient = (): UseMutationResult<Patient, Error, CreatePati
 
   return useMutation({
     mutationFn: async (data: CreatePatientRequest) => {
-      if (USE_MOCK_DATA) {
-        return await mockPatientsAPI.createPatient(data);
-      }
       const response = await apiClient.post<Patient>('/doctor/patients', data);
       return response.data;
     },
@@ -97,9 +82,6 @@ export const useUpdatePatient = (): UseMutationResult<Patient, Error, { id: numb
 
   return useMutation({
     mutationFn: async ({ id, data }: { id: number; data: Partial<Patient> }) => {
-      if (USE_MOCK_DATA) {
-        return await mockPatientsAPI.updatePatient(id, data);
-      }
       const response = await apiClient.patch<Patient>(`/doctor/patients/${id}`, data);
       return response.data;
     },

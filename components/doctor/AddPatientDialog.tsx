@@ -62,24 +62,14 @@ export function AddPatientDialog({
   const tScan = useTranslations('scan');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
-  // Split full name into first and last name
-  const splitName = (fullName: string): { firstName: string; lastName: string } => {
-    const parts = fullName.trim().split(' ');
-    if (parts.length === 1) {
-      return { firstName: parts[0], lastName: '' };
-    }
-    const firstName = parts[0];
-    const lastName = parts.slice(1).join(' ');
-    return { firstName, lastName };
-  };
-
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
     defaultValues: prefilledData ? {
-      ...splitName(prefilledData.fullName),
+      firstName: prefilledData.firstName || '',
+      lastName: prefilledData.lastName || '',
       language: Language.ENGLISH,
-      socialSecurityNumber: prefilledData.nationalId,
-      address: prefilledData.address || '',
+      socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
+      address: prefilledData.address ?? prefilledData.location ?? '',
       job: '',
     } : {
       firstName: '',
@@ -97,13 +87,17 @@ export function AddPatientDialog({
   // Populate form with scanned data when available
   useEffect(() => {
     if (prefilledData && dataSource === 'scan') {
-      const { firstName, lastName } = splitName(prefilledData.fullName);
+      console.log('🔍 Prefilling form with scanned data:', {
+        firstName: prefilledData.firstName,
+        lastName: prefilledData.lastName,
+        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId,
+      });
       form.reset({
-        firstName,
-        lastName,
+        firstName: prefilledData.firstName || '',
+        lastName: prefilledData.lastName || '',
         language: Language.ENGLISH,
-        socialSecurityNumber: prefilledData.nationalId,
-        address: prefilledData.address || '',
+        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
+        address: prefilledData.address ?? prefilledData.location ?? '',
         job: '',
       });
     }
@@ -330,7 +324,7 @@ export function AddPatientDialog({
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job/Occupation (Optional)</FormLabel>
+                    <FormLabel>Job/Occupation *</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Engineer"

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(find:*)",
-      "Bash(pnpm run build)"
+      "Bash(pnpm run build)",
+      "Bash(pnpm tsc:*)"
     ]
   }
 }

@@ -19,7 +19,6 @@ import { PatientSearch } from '@/components/doctor/PatientSearch';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
-import { ScannedDataPreview } from '@/components/doctor/ScannedDataPreview';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
 import { useGetRecentVisits } from '@/lib/api/queries/useVisits';
@@ -39,7 +38,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
   const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
   const [registrationSource, setRegistrationSource] = useState<'scan' | 'manual'>('manual');
@@ -81,20 +79,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   const handleScanComplete = (data: EnrichedScanData) => {
     setScannedData(data);
-    setIsScannerOpen(false);
-    setIsPreviewOpen(true);
-  };
-
-  const handleConfirmScannedData = (data: EnrichedScanData) => {
-    setScannedData(data);
     setRegistrationSource('scan');
-    setIsPreviewOpen(false);
+    setIsScannerOpen(false);
     setIsAddPatientOpen(true);
-  };
-
-  const handleRetakeScan = () => {
-    setIsPreviewOpen(false);
-    setIsScannerOpen(true);
   };
 
   return (
@@ -225,7 +212,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToDashboard')}
             </Button>
             <PatientProfile
-              patientId={selectedPatientId}
+              patientId={String(selectedPatientId)}
               onNewVisit={handleNewVisit}
             />
           </div>
@@ -264,16 +251,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           onClose={() => setIsScannerOpen(false)}
           onScanComplete={handleScanComplete}
         />
-
-        {scannedData && (
-          <ScannedDataPreview
-            open={isPreviewOpen}
-            onClose={() => setIsPreviewOpen(false)}
-            data={scannedData}
-            onConfirm={handleConfirmScannedData}
-            onRetake={handleRetakeScan}
-          />
-        )}
       </div>
     </AuthGuard>
   );

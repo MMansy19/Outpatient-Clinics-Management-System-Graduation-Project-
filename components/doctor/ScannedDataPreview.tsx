@@ -123,14 +123,14 @@ export function ScannedDataPreview({
               <DataField
                 icon={<User className="h-4 w-4" />}
                 label={t('fields.fullName')}
-                value={data.fullName}
+                value={data.fullName ?? ''}
               />
 
               {/* National ID */}
               <DataField
                 icon={<Hash className="h-4 w-4" />}
                 label={t('fields.nationalId')}
-                value={data.nationalId}
+                value={data.nationalId ?? ''}
               />
 
               {/* Date of Birth */}
