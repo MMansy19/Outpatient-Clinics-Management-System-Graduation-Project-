@@ -10,7 +10,7 @@ import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
-import { mockMedicalHistoryAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
+import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 
 /**
  * Query Key Factory for Medications
