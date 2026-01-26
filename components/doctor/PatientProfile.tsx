@@ -58,15 +58,18 @@ export function PatientProfile({
   // Debug logging
   console.log('🔍 PatientProfile - Received patient prop:', patient);
 
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(String(patient.socialSecurityNumber));
+  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(patient.socialSecurityNumber));
 
   // Debug logging
   console.log('🔍 PatientProfile - Visits Query:', {
     patientId: patient.id,
     nationalId: patient.socialSecurityNumber,
-    visits,
+    visitsResponse,
     isLoading: loadingVisits
   });
+
+  // Extract visits from the wrapped response structure
+  const visits = visitsResponse?.clinics?.flatMap((clinic: any) => clinic.visits || []) || [];
 
   // Dialog states
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
@@ -89,6 +92,11 @@ export function PatientProfile({
     loadingLabs,
     loadingScans
   });
+
+  // Extract data from wrapped response structures
+  const medicationsList = medications?.medications || [];
+  const labsList = labs?.labs || [];
+  const scansList = scans?.scans || [];
 
   if (loadingVisits) {
     return (
@@ -115,9 +123,9 @@ export function PatientProfile({
   // Tabs configuration
   const tabs = [
     { value: 'visits', label: t('visits'), icon: Activity, count: visits?.length || 0 },
-    { value: 'medications', label: tPatient('medications'), icon: Pill, count: medications?.length || 0 },
-    { value: 'labs', label: tPatient('labs'), icon: TestTube2, count: labs?.length || 0 },
-    { value: 'scans', label: tPatient('scans'), icon: ScanLine, count: scans?.length || 0 },
+    { value: 'medications', label: tPatient('medications'), icon: Pill, count: medicationsList?.length || 0 },
+    { value: 'labs', label: tPatient('labs'), icon: TestTube2, count: labsList?.length || 0 },
+    { value: 'scans', label: tPatient('scans'), icon: ScanLine, count: scansList?.length || 0 },
   ];
 
   return (
@@ -264,15 +272,15 @@ export function PatientProfile({
                   </div>
                 ) : visits && visits.length > 0 ? (
                   <div className="space-y-3">
-                    {visits.slice(0, 5).map((visit) => (
+                    {visits.slice(0, 5).map((visit: any, index: number) => (
                       <EntityListItem
-                        key={visit.id}
+                        key={index}
                         entity={visit}
                         icon={Activity}
-                        title={visit.chief_complaint || 'Visit'}
-                        subtitle={`Dr. ${visit.doctor?.username || 'N/A'}`}
-                        description={visit.diagnosis}
-                        date={visit.created_at.toString()}
+                        title={visit.diagnoses || 'Visit'}
+                        subtitle={`Dr. ${visit.doctor?.name || 'N/A'}`}
+                        description={visit.diagnoses}
+                        date={visit.createdAt}
                       />
                     ))}
                   </div>
@@ -299,7 +307,7 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('medications')}</CardTitle>
                     <CardDescription>
-                      {medications ? `${medications.length} ${t('totalMedications')}` : tCommon('loading')}
+                      {medicationsList ? `${medicationsList.length} ${t('totalMedications')}` : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -318,15 +326,15 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                     <div className="skeleton h-16 w-full" />
                   </div>
-                ) : medications && medications.length > 0 ? (
+                ) : medicationsList && medicationsList.length > 0 ? (
                   <div className="space-y-3">
-                    {medications?.map((medication: any) => (
+                    {medicationsList?.map((medication: any, index: number) => (
                       <EntityListItem
-                        key={medication.id}
+                        key={index}
                         entity={medication}
                         icon={Pill}
                         title={medication.name}
-                        subtitle={`${medication.dosage} - ${medication.frequency}`}
+                        subtitle={`${medication.dosage} - ${medication.period} days`}
                       />
                     ))}
                   </div>
@@ -352,7 +360,7 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('labs')}</CardTitle>
                     <CardDescription>
-                      {labs ? `${labs.length} ${t('totalLabs')}` : tCommon('loading')}
+                      {labsList ? `${labsList.length} ${t('totalLabs')}` : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -371,26 +379,26 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                     <div className="skeleton h-16 w-full" />
                   </div>
-                ) : labs && labs.length > 0 ? (
+                ) : labsList && labsList.length > 0 ? (
                   <div className="space-y-3">
-                    {labs?.map((lab: any) => (
+                    {labsList?.map((lab: any, index: number) => (
                       <EntityListItem
-                        key={lab.id}
+                        key={index}
                         entity={lab}
                         icon={TestTube2}
                         title={lab.name}
                         description={lab.comments}
-                        date={lab.created_at}
+                        date={lab.createdAt}
                         actions={
-                          lab.result_url && (
+                          lab.photoUrl && (
                             <a
-                              href={lab.result_url}
+                              href={lab.photoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-medical-primary hover:underline"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {tCommon('viewImage')}
+                              {t('viewImage')}
                             </a>
                           )
                         }
@@ -419,7 +427,7 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('scans')}</CardTitle>
                     <CardDescription>
-                      {scans ? `${scans.length} ${t('totalScans')}` : tCommon('loading')}
+                      {scansList ? `${scansList.length} ${t('totalScans')}` : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -438,20 +446,20 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                     <div className="skeleton h-16 w-full" />
                   </div>
-                ) : scans && scans.length > 0 ? (
+                ) : scansList && scansList.length > 0 ? (
                   <div className="space-y-3">
-                    {scans?.map((scan: any) => (
+                    {scansList?.map((scan: any, index: number) => (
                       <EntityListItem
-                        key={scan.id}
+                        key={index}
                         entity={scan}
                         icon={ScanLine}
-                        title={scan.type}
+                        title={scan.name || scan.type || 'Scan'}
                         description={scan.comments}
-                        date={scan.scan_date}
+                        date={scan.createdAt}
                         actions={
-                          scan.image_url && (
+                          scan.photoUrl && (
                             <a
-                              href={scan.image_url}
+                              href={scan.photoUrl}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-xs text-medical-primary hover:underline"
@@ -505,14 +513,14 @@ export function PatientProfile({
                       </div>
                     ) : visits && visits.length > 0 ? (
                       <div className="space-y-3">
-                        {visits.slice(0, 5).map((visit) => (
+                        {visits.slice(0, 5).map((visit: any, index: number) => (
                           <EntityListItem
-                            key={visit.id}
+                            key={index}
                             entity={visit}
                             icon={Activity}
-                            title={visit.chief_complaint || 'Visit'}
-                            subtitle={`Dr. ${visit.doctor?.username || 'N/A'}`}
-                            date={visit.created_at.toString()}
+                            title={visit.diagnoses || 'Visit'}
+                            subtitle={`Dr. ${visit.doctor?.name || 'N/A'}`}
+                            date={visit.createdAt}
                           />
                         ))}
                       </div>
@@ -547,15 +555,15 @@ export function PatientProfile({
                         <div className="skeleton h-16 w-full" />
                         <div className="skeleton h-16 w-full" />
                       </div>
-                    ) : medications && medications.length > 0 ? (
+                    ) : medicationsList && medicationsList.length > 0 ? (
                       <div className="space-y-3">
-                        {medications?.map((medication: any) => (
+                        {medicationsList?.map((medication: any, index: number) => (
                           <EntityListItem
-                            key={medication.id}
+                            key={index}
                             entity={medication}
                             icon={Pill}
                             title={medication.name}
-                            subtitle={`${medication.dosage} - ${medication.frequency}`}
+                            subtitle={`${medication.dosage} - ${medication.period} days`}
                           />
                         ))}
                       </div>
@@ -590,16 +598,16 @@ export function PatientProfile({
                         <div className="skeleton h-16 w-full" />
                         <div className="skeleton h-16 w-full" />
                       </div>
-                    ) : labs && labs.length > 0 ? (
+                    ) : labsList && labsList.length > 0 ? (
                       <div className="space-y-3">
-                        {labs?.map((lab: any) => (
+                        {labsList?.map((lab: any, index: number) => (
                           <EntityListItem
-                            key={lab.id}
+                            key={index}
                             entity={lab}
                             icon={TestTube2}
                             title={lab.name}
                             description={lab.comments}
-                            date={lab.created_at}
+                            date={lab.createdAt}
                           />
                         ))}
                       </div>
@@ -634,16 +642,16 @@ export function PatientProfile({
                         <div className="skeleton h-16 w-full" />
                         <div className="skeleton h-16 w-full" />
                       </div>
-                    ) : scans && scans.length > 0 ? (
+                    ) : scansList && scansList.length > 0 ? (
                       <div className="space-y-3">
-                        {scans?.map((scan: any) => (
+                        {scansList?.map((scan: any, index: number) => (
                           <EntityListItem
-                            key={scan.id}
+                            key={index}
                             entity={scan}
                             icon={ScanLine}
-                            title={scan.type}
+                            title={scan.name || scan.type || 'Scan'}
                             description={scan.comments}
-                            date={scan.scan_date}
+                            date={scan.createdAt}
                           />
                         ))}
                       </div>

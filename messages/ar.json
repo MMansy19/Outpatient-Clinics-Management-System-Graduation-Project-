@@ -181,6 +181,7 @@
   },
   "doctor": {
     "dashboard": "لوحة التحكم",
+    "viewImage": "عرض الصورة",
     "visits": "الزيارات",
     "dashboardSubtitle": "إدارة مرضاك وسير العمل السريري",
     "patients": "المرضى",
