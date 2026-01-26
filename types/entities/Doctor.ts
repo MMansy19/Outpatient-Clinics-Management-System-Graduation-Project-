@@ -6,6 +6,7 @@ export interface Doctor extends UserPublic {
   clinic_id: number;
   phone_number: string;
   years_of_experience?: number;
+  
 }
 
 export interface DoctorWithClinic extends Doctor {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { User, Calendar, Phone, Mail, Edit, Activity, Clock } from 'lucide-react';
+import { User, Calendar, Phone, Mail, Edit, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,27 +14,64 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { useGetPatient } from '@/lib/api/queries/usePatients';
+// import { useGetPatient } from '@/lib/api/queries/usePatients';
 import { useGetPatientVisits } from '@/lib/api/queries/useVisits';
-import { HistoryTimeline } from '@/components/doctor/HistoryTimeline';
+import { useGetPatientMedications } from '@/lib/api/queries/useMedications';
+import { useGetPatientLabs } from '@/lib/api/queries/useLabs';
+import { useGetPatientScans } from '@/lib/api/queries/useScans';
+import { LabForm } from '@/components/doctor/LabForm';
+import { ScanForm } from '@/components/doctor/ScanForm';
+import { MedicationForm } from '@/components/doctor/MedicationForm';
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 import { Gender } from '@/types/entities/Patient';
+import { useState } from 'react';
 
 interface PatientProfileProps {
-  patientId: string;
+  patient: {
+    name: string;
+    gender: Gender;
+    birthdate: string;
+    national_id: string;
+    address?: string;
+    job?: string;
+    phone_number?: string;
+    email?: string;
+    [key: string]: any;
+  };
+  patientId: string | number;
   onEdit?: () => void;
   onNewVisit?: () => void;
+  onNewMedication?: () => void;
+  onNewLab?: () => void;
+  onNewScan?: () => void;
 }
 
-export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfileProps) {
+export function PatientProfile({
+  patient,
+  onEdit,
+  onNewVisit,
+  onNewMedication,
+  onNewLab,
+  onNewScan,
+}: PatientProfileProps) {
   const t = useTranslations('doctor');
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
-  const { data: patient, isLoading: loadingPatient } = useGetPatient(Number(patientId));
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patientId));
+  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patient.patientId));
 
-  if (loadingPatient) {
+  // Dialog states
+  const [isLabFormOpen, setIsLabFormOpen] = useState(false);
+  const [isScanFormOpen, setIsScanFormOpen] = useState(false);
+  const [isMedicationFormOpen, setIsMedicationFormOpen] = useState(false);
+
+  // Fetch additional data using socialSecurityNumber
+  const nationalId =  String(patient?.national_id || '');
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(nationalId);
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(nationalId);
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(nationalId);
+
+  if (loadingVisits) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-32 w-full" />
@@ -163,23 +200,32 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
         </Card>
       )}
 
-      {/* Recent Visits & Timeline Tabs */}
-      <Tabs defaultValue="recent" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:w-auto">
-          <TabsTrigger value="recent">
+      {/* Patient Data Tabs - 4 Tabs */}
+      <Tabs defaultValue="visits" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 md:w-auto">
+          <TabsTrigger value="visits">
             <Activity className="mr-2 h-4 w-4" />
-            {t('recentVisits')}
+            {t('visits')}
           </TabsTrigger>
-          <TabsTrigger value="timeline">
-            <Clock className="mr-2 h-4 w-4" />
-            {tPatient('medicalHistory')}
+          <TabsTrigger value="medications">
+            <Pill className="mr-2 h-4 w-4" />
+            {tPatient('medications')}
+          </TabsTrigger>
+          <TabsTrigger value="labs">
+            <TestTube2 className="mr-2 h-4 w-4" />
+            {tPatient('labs')}
+          </TabsTrigger>
+          <TabsTrigger value="scans">
+            <ScanLine className="mr-2 h-4 w-4" />
+            {tPatient('scans')}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="recent">
+        {/* Visits Tab */}
+        <TabsContent value="visits">
           <Card>
             <CardHeader>
-              <CardTitle>{t('recentVisits')}</CardTitle>
+              <CardTitle>{t('visits')}</CardTitle>
               <CardDescription>
                 {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
               </CardDescription>
@@ -228,10 +274,242 @@ export function PatientProfile({ patientId, onEdit, onNewVisit }: PatientProfile
           </Card>
         </TabsContent>
 
-        <TabsContent value="timeline">
-          <HistoryTimeline patientId={patientId} />
+        {/* Medications Tab */}
+        <TabsContent value="medications">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{tPatient('medications')}</CardTitle>
+                  <CardDescription>
+                    {medications ? `${medications.length} ${t('totalMedications')}` : tCommon('loading')}
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setIsMedicationFormOpen(true)}
+                  className="bg-medical-primary hover:bg-medical-primary/90"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('addMedication')}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="max-h-[500px] overflow-y-auto">
+              {loadingMedications ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : medications && medications.length > 0 ? (
+                <div className="space-y-3">
+                  {medications?.map((medication: any) => (
+                    <div
+                      key={medication.id}
+                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium line-clamp-1">{medication.name}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {medication.dosage} - {medication.frequency}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">{t('noMedicationsYet')}</p>
+                  {onNewMedication && (
+                    <Button
+                      variant="outline"
+                      onClick={onNewMedication}
+                      className="mt-4"
+                    >
+                      {t('addFirstMedication')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Labs Tab */}
+        <TabsContent value="labs">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{tPatient('labs')}</CardTitle>
+                  <CardDescription>
+                    {labs ? `${labs.length} ${t('totalLabs')}` : tCommon('loading')}
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setIsLabFormOpen(true)}
+                  className="bg-medical-primary hover:bg-medical-primary/90"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('addLab')}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="max-h-[500px] overflow-y-auto">
+              {loadingLabs ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : labs && labs.length > 0 ? (
+                <div className="space-y-3">
+                  {labs?.map((lab: any) => (
+                    <div
+                      key={lab.id}
+                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium line-clamp-1">{lab.name}</p>
+                        {lab.comments && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {lab.comments}
+                          </p>
+                        )}
+                        {lab.result_url && (
+                          <a
+                            href={lab.result_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-medical-primary hover:underline mt-1 inline-block"
+                          >
+                            {tCommon('viewImage')}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">{t('noLabsYet')}</p>
+                  {onNewLab && (
+                    <Button
+                      variant="outline"
+                      onClick={onNewLab}
+                      className="mt-4"
+                    >
+                      {t('addFirstLab')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Scans Tab */}
+        <TabsContent value="scans">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>{tPatient('scans')}</CardTitle>
+                  <CardDescription>
+                    {scans ? `${scans.length} ${t('totalScans')}` : tCommon('loading')}
+                  </CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setIsScanFormOpen(true)}
+                  className="bg-medical-primary hover:bg-medical-primary/90"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t('addScan')}
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="max-h-[500px] overflow-y-auto">
+              {loadingScans ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : scans && scans.length > 0 ? (
+                <div className="space-y-3">
+                  {scans?.map((scan: any) => (
+                    <div
+                      key={scan.id}
+                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium line-clamp-1">{scan.type}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-1">
+                          {formatDate(scan.scan_date)}
+                        </p>
+                        {scan.comments && (
+                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                            {scan.comments}
+                          </p>
+                        )}
+                        {scan.photoUrl && (
+                          <a
+                            href={scan.photoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-medical-primary hover:underline mt-1 inline-block"
+                          >
+                            {tCommon('viewImage')}
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">{t('noScansYet')}</p>
+                  {onNewScan && (
+                    <Button
+                      variant="outline"
+                      onClick={onNewScan}
+                      className="mt-4"
+                    >
+                      {t('addFirstScan')}
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs for creating new records */}
+      <LabForm
+        open={isLabFormOpen}
+        onOpenChange={setIsLabFormOpen}
+        socialSecurityNumber={nationalId}
+      />
+
+      <ScanForm
+        open={isScanFormOpen}
+        onOpenChange={setIsScanFormOpen}
+        socialSecurityNumber={nationalId}
+      />
+
+      {/* Medication Form */}
+      {isMedicationFormOpen && (
+        <Card>
+          <MedicationForm
+            patientId={String(patient?.national_id)}
+            onSuccess={() => {
+              setIsMedicationFormOpen(false);
+            }}
+            onCancel={() => setIsMedicationFormOpen(false)}
+          />
+        </Card>
+      )}
     </div>
   );
 }

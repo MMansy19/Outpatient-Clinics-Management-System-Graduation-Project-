@@ -236,8 +236,14 @@ export interface PatientResponse {
 export interface VisitResponse {
   id: string;
   diagnoses: string;
-  patientId: string;
-  doctorId: string;
+  doctor:{
+    id: string;
+    name: string;
+  }
+  patient:{
+    id: string;
+    name: string;
+  }
   createdAt: string; // ISO date string
 }
 

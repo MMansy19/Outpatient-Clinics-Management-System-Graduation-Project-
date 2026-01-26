@@ -3,7 +3,13 @@
     "allow": [
       "Bash(find:*)",
       "Bash(pnpm run build)",
-      "Bash(pnpm tsc:*)"
+      "Bash(pnpm tsc:*)",
+      "Bash(dir:*)",
+      "Bash(npm run build)",
+      "Bash(npx eslint:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(pnpm dev --port 3001)"
     ]
   }
 }

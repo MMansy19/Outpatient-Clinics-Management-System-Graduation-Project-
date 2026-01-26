@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useMemo } from 'react';
+import { use, useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import {
@@ -44,8 +44,19 @@ interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
 }
 
+interface StatsItem {
+  label: string;
+  value: number;
+  subtitle?: string;
+  icon: React.ComponentType<{ className?: string }>;
+  color: string;
+  bgColor: string;
+  progress?: number;
+  change?: number | null;
+}
+
 // Enhanced Stats Card Component
-const EnhancedStatsCard = ({ stat, index }: { stat: any; index: number }) => {
+const EnhancedStatsCard = ({ stat, index }: { stat: StatsItem; index: number }) => {
   const [isVisible, setIsVisible] = useState(false);
   const Icon = stat.icon;
 
@@ -197,12 +208,10 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   });
 
   // Extract data safely
-  const doctors = doctorsData?.items || [];
-  const patients = patientsData?.items || [];
-  const visits = visitsData?.items || [];
 
   // Calculate daily and weekly visits
   const { dailyVisits, weeklyVisits } = useMemo(() => {
+    const visits = visitsData?.items || [];
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const weekAgo = new Date(today);
@@ -219,20 +228,20 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     }).length;
 
     return { dailyVisits: daily, weeklyVisits: weekly };
-  }, [visits]);
+  }, [visitsData?.items]);
 
   // Refetch all data when tab changes or on manual trigger
-  const refreshAllData = () => {
+  const refreshAllData = useCallback(() => {
     refetchClinics();
     refetchDoctors();
     refetchPatients();
     refetchVisits();
-  };
+  }, [refetchClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
   // Auto-refresh on tab change
   useEffect(() => {
     refreshAllData();
-  }, [activeTab]);
+  }, [activeTab, refreshAllData]);
 
   // Calculate stats from real data
   const stats = useMemo(
@@ -248,13 +257,13 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
       },
       {
         label: t('totalDoctors'),
-        value: doctors.length || 0,
-        subtitle: `${doctors.filter((d) => d.isApproved).length || 0} approved`,
+        value: doctorsData?.items?.length || 0,
+        subtitle: `${doctorsData?.items?.filter((d) => d.isApproved).length || 0} approved`,
         icon: UserCheck,
         color: 'text-medical-secondary',
         bgColor: 'bg-medical-secondary/10',
-        progress: doctors.length
-          ? (doctors.filter((d) => d.isApproved).length / doctors.length) * 100
+        progress: doctorsData?.items?.length
+          ? (doctorsData?.items?.filter((d) => d.isApproved).length / doctorsData?.items?.length) * 100
           : 0,
       },
       {
@@ -295,13 +304,13 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
       },
       {
         label: 'Pending Approvals',
-        value: doctors.filter((d) => !d.isApproved).length || 0,
+        value: doctorsData?.items?.filter((d) => !d.isApproved).length || 0,
         subtitle: 'Doctors awaiting approval',
         icon: Clock,
         color: 'text-yellow-600',
         bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-        progress: doctors.length
-          ? (doctors.filter((d) => !d.isApproved).length / doctors.length) * 100
+        progress: doctorsData?.items?.length
+          ? (doctorsData?.items?.filter((d) => !d.isApproved).length / doctorsData?.items?.length) * 100
           : 0,
       },
       {
@@ -316,8 +325,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     ],
     [
       clinics,
-      doctors,
-      patients,
+      doctorsData,
       patientsData,
       visitsData,
       dailyVisits,
