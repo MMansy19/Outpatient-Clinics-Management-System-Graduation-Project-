@@ -1,7 +1,6 @@
 // Doctor Components
 export { PatientSearch } from './PatientSearch';
 export { PatientProfile } from './PatientProfile';
-export { PatientProfile } from './PatientProfile';
 export { PatientRegistrationSheet } from './PatientRegistrationSheet';
 export { NationalIdScanner } from './NationalIdScanner';
 export { AddPatientDialog } from './AddPatientDialog';

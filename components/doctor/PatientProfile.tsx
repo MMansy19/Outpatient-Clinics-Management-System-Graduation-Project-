@@ -25,7 +25,14 @@ import { MedicationDialog } from '@/components/doctor/MedicationDialog';
 import { LabForm } from '@/components/doctor/LabForm';
 import { ScanForm } from '@/components/doctor/ScanForm';
 
-import { EntityListItem } from '@/components/shared/EntityListItem';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
 import { QuickActionCard } from '@/components/shared/QuickActionCard';
@@ -69,7 +76,7 @@ export function PatientProfile({
   });
 
   // Extract visits from the wrapped response structure
-  const visits = visitsResponse?.clinics?.flatMap((clinic: any) => clinic.visits || []) || [];
+  const visits = (visitsResponse as any)?.clinics?.flatMap((clinic: any) => clinic.visits || []) || [];
 
   // Dialog states
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
@@ -94,9 +101,9 @@ export function PatientProfile({
   });
 
   // Extract data from wrapped response structures
-  const medicationsList = medications?.medications || [];
-  const labsList = labs?.labs || [];
-  const scansList = scans?.scans || [];
+  const medicationsList = (medications as any)?.medications || [];
+  const labsList = (labs as any)?.labs || [];
+  const scansList = (scans as any)?.scans || [];
 
   if (loadingVisits) {
     return (
@@ -271,19 +278,24 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                   </div>
                 ) : visits && visits.length > 0 ? (
-                  <div className="space-y-3">
-                    {visits.slice(0, 5).map((visit: any, index: number) => (
-                      <EntityListItem
-                        key={index}
-                        entity={visit}
-                        icon={Activity}
-                        title={visit.diagnoses || 'Visit'}
-                        subtitle={`Dr. ${visit.doctor?.name || 'N/A'}`}
-                        description={visit.diagnoses}
-                        date={visit.createdAt}
-                      />
-                    ))}
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Diagnoses</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visits.map((visit: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(visit.createdAt)}</TableCell>
+                          <TableCell>Dr. {visit.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : (
                   <EmptyState
                     icon={Activity}
@@ -327,17 +339,28 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                   </div>
                 ) : medicationsList && medicationsList.length > 0 ? (
-                  <div className="space-y-3">
-                    {medicationsList?.map((medication: any, index: number) => (
-                      <EntityListItem
-                        key={index}
-                        entity={medication}
-                        icon={Pill}
-                        title={medication.name}
-                        subtitle={`${medication.dosage} - ${medication.period} days`}
-                      />
-                    ))}
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Dosage</TableHead>
+                        <TableHead>Duration</TableHead>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Comments</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {medicationsList.map((medication: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{medication.name}</TableCell>
+                          <TableCell>{medication.dosage}</TableCell>
+                          <TableCell>{medication.period} days</TableCell>
+                          <TableCell>Dr. {medication.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{medication.comments || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : (
                   <EmptyState
                     icon={Pill}
@@ -380,31 +403,39 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                   </div>
                 ) : labsList && labsList.length > 0 ? (
-                  <div className="space-y-3">
-                    {labsList?.map((lab: any, index: number) => (
-                      <EntityListItem
-                        key={index}
-                        entity={lab}
-                        icon={TestTube2}
-                        title={lab.name}
-                        description={lab.comments}
-                        date={lab.createdAt}
-                        actions={
-                          lab.photoUrl && (
-                            <a
-                              href={lab.photoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-medical-primary hover:underline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {t('viewImage')}
-                            </a>
-                          )
-                        }
-                      />
-                    ))}
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Comments</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {labsList.map((lab: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(lab.createdAt)}</TableCell>
+                          <TableCell className="font-medium">{lab.name}</TableCell>
+                          <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{lab.comments || '-'}</TableCell>
+                          <TableCell>
+                            {lab.photoUrl && (
+                              <a
+                                href={lab.photoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-medical-primary hover:underline"
+                              >
+                                {tCommon('viewImage')}
+                              </a>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : (
                   <EmptyState
                     icon={TestTube2}
@@ -447,31 +478,41 @@ export function PatientProfile({
                     <div className="skeleton h-16 w-full" />
                   </div>
                 ) : scansList && scansList.length > 0 ? (
-                  <div className="space-y-3">
-                    {scansList?.map((scan: any, index: number) => (
-                      <EntityListItem
-                        key={index}
-                        entity={scan}
-                        icon={ScanLine}
-                        title={scan.name || scan.type || 'Scan'}
-                        description={scan.comments}
-                        date={scan.createdAt}
-                        actions={
-                          scan.photoUrl && (
-                            <a
-                              href={scan.photoUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-medical-primary hover:underline"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              {tCommon('viewImage')}
-                            </a>
-                          )
-                        }
-                      />
-                    ))}
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Name</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Doctor</TableHead>
+                        <TableHead>Comments</TableHead>
+                        <TableHead>Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scansList.map((scan: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(scan.createdAt)}</TableCell>
+                          <TableCell className="font-medium">{scan.name || '-'}</TableCell>
+                          <TableCell>{scan.type || '-'}</TableCell>
+                          <TableCell>Dr. {scan.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{scan.comments || '-'}</TableCell>
+                          <TableCell>
+                            {scan.photoUrl && (
+                              <a
+                                href={scan.photoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-medical-primary hover:underline"
+                              >
+                                {tCommon('viewImage')}
+                              </a>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 ) : (
                   <EmptyState
                     icon={ScanLine}
@@ -513,15 +554,19 @@ export function PatientProfile({
                       </div>
                     ) : visits && visits.length > 0 ? (
                       <div className="space-y-3">
-                        {visits.slice(0, 5).map((visit: any, index: number) => (
-                          <EntityListItem
-                            key={index}
-                            entity={visit}
-                            icon={Activity}
-                            title={visit.diagnoses || 'Visit'}
-                            subtitle={`Dr. ${visit.doctor?.name || 'N/A'}`}
-                            date={visit.createdAt}
-                          />
+                        {visits.map((visit: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
+                                <Activity className="h-5 w-5 text-medical-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{visit.diagnoses || 'Visit'}</p>
+                                <p className="text-sm text-muted-foreground">Dr. {visit.doctor?.name || 'N/A'}</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -557,14 +602,19 @@ export function PatientProfile({
                       </div>
                     ) : medicationsList && medicationsList.length > 0 ? (
                       <div className="space-y-3">
-                        {medicationsList?.map((medication: any, index: number) => (
-                          <EntityListItem
-                            key={index}
-                            entity={medication}
-                            icon={Pill}
-                            title={medication.name}
-                            subtitle={`${medication.dosage} - ${medication.period} days`}
-                          />
+                        {medicationsList.map((medication: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                <Pill className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{medication.name}</p>
+                                <p className="text-sm text-muted-foreground">{medication.dosage} - {medication.period} days</p>
+                                <p className="text-xs text-muted-foreground">Dr. {medication.doctor?.name || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -600,15 +650,19 @@ export function PatientProfile({
                       </div>
                     ) : labsList && labsList.length > 0 ? (
                       <div className="space-y-3">
-                        {labsList?.map((lab: any, index: number) => (
-                          <EntityListItem
-                            key={index}
-                            entity={lab}
-                            icon={TestTube2}
-                            title={lab.name}
-                            description={lab.comments}
-                            date={lab.createdAt}
-                          />
+                        {labsList.map((lab: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                <TestTube2 className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{lab.name}</p>
+                                <p className="text-sm text-muted-foreground">{lab.comments || '-'}</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(lab.createdAt)} - Dr. {lab.doctor?.name || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -644,15 +698,19 @@ export function PatientProfile({
                       </div>
                     ) : scansList && scansList.length > 0 ? (
                       <div className="space-y-3">
-                        {scansList?.map((scan: any, index: number) => (
-                          <EntityListItem
-                            key={index}
-                            entity={scan}
-                            icon={ScanLine}
-                            title={scan.name || scan.type || 'Scan'}
-                            description={scan.comments}
-                            date={scan.createdAt}
-                          />
+                        {scansList.map((scan: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                                <ScanLine className="h-5 w-5 text-purple-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{scan.name || scan.type || 'Scan'}</p>
+                                <p className="text-sm text-muted-foreground">{scan.comments || '-'}</p>
+                                <p className="text-xs text-muted-foreground">{formatDate(scan.createdAt)} - Dr. {scan.doctor?.name || 'N/A'}</p>
+                              </div>
+                            </div>
+                          </div>
                         ))}
                       </div>
                     ) : (

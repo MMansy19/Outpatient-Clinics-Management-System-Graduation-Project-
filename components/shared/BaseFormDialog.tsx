@@ -64,7 +64,6 @@ export function BaseFormDialog({
         className={`${sizeClasses[size]} max-h-[90vh] overflow-y-auto ${
           className.includes('fullscreen-mobile') ? '' : 'sm:rounded-lg'
         } ${className}`}
-        // Fullscreen on mobile, dialog on desktop
       >
         <DialogHeader className="space-y-2">
           <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
