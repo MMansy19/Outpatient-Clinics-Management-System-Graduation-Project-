@@ -63,6 +63,18 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
   });
 };
 
+export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient, Error> => {
+  return useQuery({
+    queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
+    queryFn: async () => {
+      const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+      return response.data;
+    },
+    enabled: !!socialSecurityNumber,
+    staleTime: 5 * 60 * 1000,
+  });
+};
+
 export const useCreatePatient = (): UseMutationResult<Patient, Error, CreatePatientRequest> => {
   const queryClient = useQueryClient();
 

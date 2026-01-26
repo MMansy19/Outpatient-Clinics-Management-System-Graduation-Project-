@@ -98,8 +98,8 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           onClick={onAddNew}
           className="bg-medical-primary hover:bg-medical-primary/90"
         >
-          <Plus className="mr-2 h-4 w-4" />
-          {t('addNewPatient')}
+          <Plus className="sm:mr-2 h-4 w-4" />
+          <span className="hidden sm:inline">{t('addNewPatient')}</span>
         </Button>
       </div>
 
@@ -300,8 +300,8 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
               <p className="text-muted-foreground">{t('noPatients')}</p>
               <Button variant="outline" onClick={onAddNew} className="mt-4">
-                <Plus className="mr-2 h-4 w-4" />
-                {t('addFirstPatient')}
+                <Plus className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">{t('addNewPatient')}</span>
               </Button>
             </CardContent>
           </Card>
@@ -323,7 +323,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
                 </div>
                 <div className="text-right text-sm">
                   <div className="font-medium">
-                    {calculateAge(patient.birthdate)} {tPatient('years')}
+                    {patient.birthdate ? calculateAge(patient.birthdate) : 'N/A'} {tPatient('years')}
                   </div>
                   <div className="text-muted-foreground">
                     {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}

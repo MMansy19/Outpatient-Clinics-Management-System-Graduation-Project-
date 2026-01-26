@@ -11,7 +11,6 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { useCreateVisit } from '@/lib/api/queries/useVisits';
@@ -21,7 +20,6 @@ import { z } from 'zod';
 
 const visitSchema = z.object({
   diagnoses: z.string().min(1, 'Diagnoses is required'),
-  clinicId: z.string().min(1, 'Clinic ID is required'),
 });
 
 type VisitFormData = z.infer<typeof visitSchema>;
@@ -50,7 +48,6 @@ export function VisitDialog({
     resolver: zodResolver(visitSchema),
     defaultValues: {
       diagnoses: '',
-      clinicId: '',
     },
   });
 
@@ -104,20 +101,6 @@ export function VisitDialog({
                   className="min-h-[150px]"
                   {...field}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="clinicId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Clinic ID</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter clinic ID" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

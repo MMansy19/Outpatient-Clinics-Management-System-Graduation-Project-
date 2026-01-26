@@ -27,14 +27,12 @@ import { useUpdateScan } from '@/lib/api/queries/useScans';
 import { useFormState } from '@/src/hooks/useFormState';
 
 const scanTypes = [
-  'X-Ray',
-  'MRI',
-  'CT Scan',
-  'Ultrasound',
-  'Mammography',
-  'Bone Scan',
-  'Nuclear Scan',
-  'Other',
+  { label: 'MRI', value: "1" },
+  { label: 'CT', value: "2" },
+  { label: 'X-RAY', value: "3" },
+  { label: 'ULTRA SOUND', value: "4" },
+  { label: 'PET CT', value: "5" },
+  { label: 'MAMMOGRAPHY', value: "6" },
 ];
 
 const scanSchema = z.object({
@@ -150,8 +148,8 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
                 </FormControl>
                 <SelectContent>
                   {scanTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

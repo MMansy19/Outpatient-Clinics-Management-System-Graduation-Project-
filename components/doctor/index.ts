@@ -9,7 +9,6 @@ export { HistoryTimeline } from './HistoryTimeline';
 export { ScannedDataPreview } from './ScannedDataPreview';
 
 // Forms (Dialog-based)
-export { VisitForm } from './VisitForm';
 export { VisitDialog } from './VisitDialog';
 export { VisitEditDialog } from './VisitEditDialog';
 

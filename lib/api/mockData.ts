@@ -1,5 +1,5 @@
 // Mock Data Service for Development Without Backend
-import type { AuthResponse, RegisterRequest, CreatePatientRequest } from '@/types/api';
+import type { AuthResponse, RegisterRequest } from '@/types/api';
 import type { Clinic, ClinicWithStats } from '@/types/entities/Clinic';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
@@ -11,7 +11,6 @@ import { ScanType } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
 import { MedicationFrequency } from '@/types/entities/Medication';
 import { UserRole } from '@/types/entities/User';
-import type { SearchFilters } from '@/types/entities/Visit';
 // Storage keys
 export const STORAGE_KEYS = {
   USERS: 'mock_users',
@@ -513,111 +512,6 @@ export const mockClinicsAPI = {
   },
 };
 
-// Mock Patients API
-export const mockPatientsAPI = {
-  async searchPatients(filters?: SearchFilters): Promise<{ patients: Patient[]; total: number }> {
-    await delay();
-    let patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    
-    // Apply filters
-    if (filters) {
-      // General query search (name, national_id, email, phone)
-      if (filters.query) {
-        const lowerQuery = filters.query.toLowerCase();
-        patients = patients.filter((p: Patient) =>
-          p.name.toLowerCase().includes(lowerQuery) ||
-          p.national_id.toString().includes(lowerQuery) ||
-          p.email?.toLowerCase().includes(lowerQuery) ||
-          p.phone_number?.toLowerCase().includes(lowerQuery)
-        );
-      }
-
-      // Specific national ID search (exact match)
-      if (filters.nationalId) {
-        patients = patients.filter((p: Patient) =>
-          p.national_id.toString() === filters.nationalId
-        );
-      }
-
-      // Gender filter
-      if (filters.gender) {
-        patients = patients.filter((p: Patient) =>
-          p.gender === filters.gender
-        );
-      }
-
-      // Age range filter
-      if (filters.minAge !== undefined || filters.maxAge !== undefined) {
-        patients = patients.filter((p: Patient) => {
-          const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
-          const meetsMin = filters.minAge === undefined || age >= filters.minAge;
-          const meetsMax = filters.maxAge === undefined || age <= filters.maxAge;
-          return meetsMin && meetsMax;
-        });
-      }
-
-      // Date range filter (patient creation date)
-      if (filters.startDate || filters.endDate) {
-        patients = patients.filter((p: Patient) => {
-          const createdDate = new Date(p.created_at);
-          const afterStart = !filters.startDate || createdDate >= filters.startDate;
-          const beforeEnd = !filters.endDate || createdDate <= filters.endDate;
-          return afterStart && beforeEnd;
-        });
-      }
-    }
-
-    return { patients, total: patients.length };
-  },
-
-  async getPatient(id: number): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const patient = patients.find((p: Patient) => p.id === id);
-    if (!patient) throw new Error('Patient not found');
-    return patient;
-  },
-
-  async createPatient(data: CreatePatientRequest): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const newPatient: Patient = {
-      id: patients.length + 1,
-      global_id: `PAT${String(patients.length + 1).padStart(3, '0')}`,
-      national_id: data.national_id,
-      name: data.name,
-      birthdate: data.birthdate,
-      gender: data.gender === 'male' ? Gender.MALE : Gender.FEMALE,
-      phone_number: data.phone_number,
-      email: data.email,
-      address: data.address,
-      is_deleted: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-    patients.push(newPatient);
-    setStorageData(STORAGE_KEYS.PATIENTS, patients);
-    return newPatient;
-  },
-
-  async updatePatient(id: number, data: Partial<Patient>): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const index = patients.findIndex((p: Patient) => p.id === id);
-    if (index === -1) throw new Error('Patient not found');
-    
-    patients[index] = { ...patients[index], ...data, updated_at: new Date() };
-    setStorageData(STORAGE_KEYS.PATIENTS, patients);
-    return patients[index];
-  },
-
-  async deletePatient(id: number): Promise<void> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const filtered = patients.filter((p: Patient) => p.id !== id);
-    setStorageData(STORAGE_KEYS.PATIENTS, filtered);
-  },
-};
 
 // Mock Doctors API
 export const mockDoctorsAPI = {
@@ -812,7 +706,7 @@ export const mockVisitsAPI = {
 async function getPatientIdFromSSN(socialSecurityNumber: string): Promise<number> {
   // Try to find the patient by SSN
   const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-  const patient = patients.find((p: Patient) => String(p.national_id) === socialSecurityNumber);
+  const patient = patients.find((p: Patient) => String(p?.national_id) === socialSecurityNumber);
 
   if (patient) {
     console.log('🔍 Found patient by SSN:', patient);

@@ -14,9 +14,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-import { useSearchPatients } from '@/lib/api/queries/usePatients';
+import { useGetPatientByNationalId } from '@/lib/api/queries/usePatients';
 import { EnrichedScanData } from '@/types/ocr';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
+import { Gender } from '@/types/entities/Patient';
 
 interface NationalIdSearchProps {
   onSelectPatient: (patient: any) => void;
@@ -32,12 +33,8 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
   const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
   const [hasScanned, setHasScanned] = useState(false);
 
-  // Build filters object for search
-  const filters = {
-    nationalId: nationalId || undefined,
-  };
-
-  const { data: searchResults, isLoading } = useSearchPatients(filters);
+  // Fetch patient by National ID
+  const { data: patient, isLoading, error, refetch } = useGetPatientByNationalId(nationalId);
 
   // Handle scan completion - automatically navigate to profile
   const handleScanComplete = (data: EnrichedScanData) => {
@@ -49,61 +46,58 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
 
   // Effect to automatically navigate to patient profile when search results arrive after scan
   useEffect(() => {
-    if (hasScanned && !isLoading && searchResults) {
-      if (searchResults.patients && searchResults.patients.length > 0) {
-        // Patient found - navigate to their profile
-        const patient = searchResults.patients[0];
-        onSelectPatient({
-          id: patient.id,
-          name: patient.name,
-          gender: patient.gender,
-          dateOfBirth: patient.birthdate instanceof Date ? patient.birthdate.toISOString() : new Date(patient.birthdate).toISOString(),
-          socialSecurityNumber: patient.national_id,
-          address: patient.address,
-        });
-      } else {
-        // Patient not found - show profile with scanned data and option to register
-        const fullName = scannedData?.fullName || `${scannedData?.firstName || ''} ${scannedData?.lastName || ''}`.trim();
-        onSelectPatient({
-          id: null, // No existing patient ID
-          name: fullName || 'Unknown',
-          gender: scannedData?.gender === 'male' ? 0 : 1,
-          dateOfBirth: scannedData?.dateOfBirth ? scannedData?.dateOfBirth.toISOString() : new Date().toISOString(),
-          socialSecurityNumber: scannedData?.socialSecurityNumber || scannedData?.nationalId || '',
-          address: scannedData?.location || scannedData?.address || '',
-          isNewPatient: true, // Flag to indicate this is a scanned but unregistered patient
-          scannedData: scannedData, // Store full scanned data
-        });
-      }
-      setHasScanned(false); // Reset flag
+    if (hasScanned && nationalId) {
+      refetch().then(() => {
+        // The navigation will be handled by the separate effect below
+      });
     }
-  }, [hasScanned, isLoading, searchResults, scannedData, onSelectPatient]);
+  }, [hasScanned, nationalId, refetch]);
 
-  const handleManualSearch = () => {
-    if (nationalId && searchResults?.patients?.[0]) {
-      const patient = searchResults.patients[0];
-      // Convert patient data to match PatientProfile expected format
+  // Effect to handle patient data and navigate to profile
+  useEffect(() => {
+    if (!nationalId) return;
+
+    if (patient) {
+      // Patient found - navigate to their profile
+      // Transform gender from number (0/1) to Gender enum ('male'/'female')
+      const genderValue = typeof patient.gender === 'number'
+        ? (patient.gender === 0 ? Gender.MALE : Gender.FEMALE)
+        : patient.gender;
+
       onSelectPatient({
         id: patient.id,
         name: patient.name,
-        gender: patient.gender,
-        dateOfBirth: patient.birthdate instanceof Date ? patient.birthdate.toISOString() : new Date(patient.birthdate).toISOString(),
-        socialSecurityNumber: patient.national_id,
+        gender: genderValue,
+        dateOfBirth: patient?.dateOfBirth,
+        socialSecurityNumber: patient?.socialSecurityNumber,
         address: patient.address,
       });
-    }
-  };
+      setHasScanned(false);
+    } else if (error && hasScanned && scannedData) {
+      // Patient not found - show profile with scanned data and option to register
+      const fullName = scannedData.fullName || `${scannedData.firstName || ''} ${scannedData.lastName || ''}`.trim();
+      // Transform gender from string ('male'/'female') to Gender enum
+      const genderValue = scannedData.gender === 'male' ? Gender.MALE : Gender.FEMALE;
 
-  const handleResultClick = (patient: any) => {
-    // Convert patient data to match PatientProfile expected format
-    onSelectPatient({
-      id: patient.id,
-      name: patient.name,
-      gender: patient.gender,
-      dateOfBirth: patient.birthdate instanceof Date ? patient.birthdate.toISOString() : new Date(patient.birthdate).toISOString(),
-      socialSecurityNumber: patient.national_id,
-      address: patient.address,
-    });
+      onSelectPatient({
+        id: null, // No existing patient ID - will be assigned when registered
+        name: fullName || 'Unknown',
+        gender: genderValue,
+        dateOfBirth: scannedData.dateOfBirth ? scannedData.dateOfBirth.toISOString() : new Date().toISOString(),
+        socialSecurityNumber: scannedData.socialSecurityNumber || scannedData.nationalId || '',
+        address: scannedData.location || scannedData.address || '',
+        isNewPatient: true, // Flag to indicate this is a scanned but unregistered patient
+        scannedData: scannedData, // Store full scanned data
+      });
+      setHasScanned(false);
+    }
+  }, [patient, error, hasScanned, scannedData, nationalId, onSelectPatient]);
+
+  const handleManualSearch = () => {
+    if (nationalId && !isLoading) {
+      setHasScanned(true);
+      refetch();
+    }
   };
 
   // Helper function to format date for display
@@ -159,8 +153,8 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               variant="outline"
               className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
             >
-              <ScanLine className="sm:mr-2 h-4 w-4" />
-              <span className="hidden sm:inline">{t('scanID')}</span>
+              <ScanLine className="mr-2 h-4 w-4" />
+              Scan ID
             </Button>
             <Button
               onClick={handleManualSearch}
@@ -168,11 +162,11 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               className="bg-medical-primary hover:bg-medical-primary/90"
             >
               {isLoading ? (
-                <Loader2 className="sm:mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
-                <Search className="sm:mr-2 h-4 w-4" />
+                <Search className="mr-2 h-4 w-4" />
               )}
-              <span className="hidden sm:inline">{t('search')}</span>
+              Search
             </Button>
           </div>
 
@@ -213,9 +207,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
         </CardContent>
       </Card>
 
-      {/* Search Results */}
-      {/* Note: Results are now automatically displayed in PatientProfile component */}
-      {/* This section is kept for manual search feedback */}
+      {/* Search Status */}
       <div className="space-y-3">
         {isLoading && hasScanned && (
           <Card>
@@ -227,52 +219,18 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
           </Card>
         )}
 
-        {!isLoading && !hasScanned && nationalId && searchResults?.patients?.length === 0 && (
+        {!isLoading && hasScanned && error && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">No patient found with this National ID</p>
+              <p className="text-muted-foreground mb-2">No patient found with this National ID</p>
+              <p className="text-sm text-muted-foreground mb-4">Would you like to register this patient?</p>
               <Button variant="outline" onClick={onAddNew} className="mt-2">
                 <Plus className="mr-2 h-4 w-4" />
                 Register New Patient
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {!isLoading && !hasScanned && searchResults?.patients?.length === 1 && (
-          <Card className="cursor-pointer transition-colors hover:bg-accent border-2 border-medical-primary">
-            <CardHeader
-              onClick={() => handleResultClick(searchResults.patients[0])}
-              className="pb-3 cursor-pointer"
-            >
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg truncate text-medical-primary">
-                    {searchResults.patients[0].name}
-                  </CardTitle>
-                  <CardDescription>
-                    National ID: {searchResults.patients[0].national_id}
-                  </CardDescription>
-                </div>
-                <div className="text-right text-sm">
-                  <div className="font-medium">
-                    {String(searchResults.patients[0].gender) === '0' || searchResults.patients[0].gender === 'male' ? 'Male' :
-                     String(searchResults.patients[0].gender) === '1' || searchResults.patients[0].gender === 'female' ? 'Female' : 'Other'}
-                  </div>
-                  <div className="text-muted-foreground">
-                    ID Match Found
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-        )}
-
-        {searchResults && !hasScanned && searchResults.patients?.length > 0 && (
-          <p className="text-sm text-muted-foreground text-center">
-            {t('showingResults', { count: searchResults.patients.length, total: searchResults.total })}
-          </p>
         )}
       </div>
 

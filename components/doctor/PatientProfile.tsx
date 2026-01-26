@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { User, Calendar, Edit, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
+import { User, Calendar, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -256,12 +256,12 @@ export function PatientProfile({
               </div>
             </div>
             <div className="flex gap-2 sm:shrink-0">
-              {onEdit && (
+              {/* {onEdit && (
                 <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 sm:flex-none min-h-[44px]">
                   <Edit className="mr-2 h-4 w-4" />
                   <span className="hidden sm:inline">{tCommon('edit')}</span>
                 </Button>
-              )}
+              )} */}
               <Button
                 size="sm"
                 onClick={() => setIsVisitDialogOpen(true)}
@@ -349,6 +349,14 @@ export function PatientProfile({
                       {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
                     </CardDescription>
                   </div>
+                                    <Button
+                    size="sm"
+                    onClick={() => setIsVisitDialogOpen(true)}
+                    className="bg-medical-primary hover:bg-medical-primary/90"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('createVisit')}
+                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="max-h-[500px] overflow-y-auto">
@@ -817,7 +825,7 @@ export function PatientProfile({
       <VisitDialog
         open={isVisitDialogOpen}
         onOpenChange={setIsVisitDialogOpen}
-        patientId={String(patient.socialSecurityNumber)}
+        patientId={String(patient.id)}
         onSuccess={() => {
           setIsVisitDialogOpen(false);
         }}

@@ -123,11 +123,8 @@ export function AddPatientDialog({
 
   const onSubmit = (data: CreatePatientFormData) => {
     console.log('📝 Creating patient with data:', data);
-    
-    createPatient({
-      ...data,
-      job: data.job || '',
-    }, {
+
+    createPatient(data, {
       onSuccess: (response) => {
         console.log('✅ Patient created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;

@@ -189,6 +189,7 @@
     "searchSubtitle": "Find and manage your patients",
     "addNewPatient": "Add New Patient",
     "scanID": "Scan ID",
+    "createVisit": "Create Visit",
     "search": "Search by Name or National ID",
     "searchPlaceholder": "Search patients...",
     "today": "Today",

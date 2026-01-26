@@ -29,7 +29,6 @@ import { NationalIdSearch } from '@/components/doctor/NationalIdSearch';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
-import { VisitForm } from '@/components/doctor/VisitForm';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
 import { useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
@@ -141,10 +140,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   const handleNewPatientCreated = (patient: any) => {
     setSelectedPatient(patient);
-    setCurrentView('profile');
-  };
-
-  const handleVisitCreated = () => {
     setCurrentView('profile');
   };
 
@@ -545,11 +540,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <Button variant="outline" onClick={() => setCurrentView('profile')} className="">
               ← {t('backToProfile')}
             </Button>
-            <VisitForm
-              patientId={String(selectedPatient.id)}
-              onSuccess={handleVisitCreated}
-              onCancel={() => setCurrentView('profile')}
-            />
             </div>
           )}
 
