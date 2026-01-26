@@ -1,5 +1,6 @@
 'use client';
 
+
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Search, Calendar, Plus, Filter, X } from 'lucide-react';
@@ -94,13 +95,6 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           <h2 className="text-2xl font-bold text-medical-primary">{t('patientSearch')}</h2>
           <p className="text-sm text-muted-foreground">{t('searchSubtitle')}</p>
         </div>
-        <Button
-          onClick={onAddNew}
-          className="bg-medical-primary hover:bg-medical-primary/90"
-        >
-          <Plus className="sm:mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">{t('addNewPatient')}</span>
-        </Button>
       </div>
 
       {/* Primary Search */}
@@ -298,7 +292,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">{t('noPatients')}</p>
+              <p className="hidden sm:block text-muted-foreground">{t('noPatients')}</p>
               <Button variant="outline" onClick={onAddNew} className="mt-4">
                 <Plus className="sm:mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{t('addNewPatient')}</span>

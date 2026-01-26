@@ -153,8 +153,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               variant="outline"
               className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
             >
-              <ScanLine className="mr-2 h-4 w-4" />
-              Scan ID
+              <ScanLine className="h-4 w-4" />
             </Button>
             <Button
               onClick={handleManualSearch}
@@ -162,11 +161,10 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               className="bg-medical-primary hover:bg-medical-primary/90"
             >
               {isLoading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Search className="mr-2 h-4 w-4" />
+                <Search className="h-4 w-4" />
               )}
-              Search
             </Button>
           </div>
 

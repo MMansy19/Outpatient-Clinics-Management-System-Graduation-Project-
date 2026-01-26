@@ -13,7 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { ThemeToggle } from '@/components/shared/ThemeToggle';
+// import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import {
   Table,
@@ -25,7 +25,6 @@ import {
 } from '@/components/ui/table';
 
 import { NationalIdSearch } from '@/components/doctor/NationalIdSearch';
-// import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
@@ -57,8 +56,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [registrationSource, setRegistrationSource] = useState<
     'scan' | 'manual'
   >('manual');
-  const [showDebug, setShowDebug] = useState(false);
-
   const {
     data: allVisits,
     isLoading: loadingAllVisits,
@@ -186,50 +183,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   return (
     <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
-        {/* Debug Panel */}
-        {(loadingAllPatients || loadingAllVisits) && (
-          <Card className="bg-blue-50 border-blue-200">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-blue-800">
-                Debug Information
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-xs space-y-2">
-              <div>
-                <strong>Loading States:</strong> Patients:{' '}
-                {String(loadingAllPatients)}, Visits: {String(loadingAllVisits)}
-              </div>
-              {patientsError && (
-                <div className="text-red-600">
-                  <strong>Patients Error:</strong>{' '}
-                  {String(patientsError.message)}
-                </div>
-              )}
-              {visitsError && (
-                <div className="text-red-600">
-                  <strong>Visits Error:</strong> {String(visitsError.message)}
-                </div>
-              )}
-              <div className="flex gap-2 mt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => refetchPatients()}
-                >
-                  Refresh Patients
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => refetchVisits()}
-                >
-                  Refresh Visits
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
@@ -251,17 +204,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </Button>
             <Button
               onClick={() => {
-                refetchPatients();
-                refetchVisits();
-              }}
-              variant="outline"
-              className="sm:flex-none "
-            >
-              🔄
-              <span className="hidden sm:inline">Refresh All</span>
-            </Button>
-            <Button
-              onClick={() => {
                 setIsRegistrationSheetOpen(true);
               }}
               variant="outline"
@@ -271,7 +213,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <span className="hidden sm:inline">Add Patient</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
-            <ThemeToggle />
+            {/* <ThemeToggle /> */}
           </div>
         </div>
 
@@ -595,37 +537,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           onOpenChange={setIsVoiceRecorderOpen}
           onTranscriptionComplete={handleVoiceTranscription}
         />
-
-        {/* Debug Section - Shows Raw API Data */}
-        {(allPatients || allVisits) && (
-          <Card className="border-dashed border-2 mt-4">
-            <CardHeader
-              className="cursor-pointer"
-              onClick={() => setShowDebug(!showDebug)}
-            >
-              <CardTitle className="text-sm flex items-center justify-between">
-                Debug: Raw API Data (Click to {showDebug ? 'Hide' : 'Show'})
-                <span className="text-xs">{showDebug ? '▼' : '▶'}</span>
-              </CardTitle>
-            </CardHeader>
-            {showDebug && (
-              <CardContent className="space-y-4">
-                <div>
-                  <h4 className="font-bold mb-2">Patients Response:</h4>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
-                    {JSON.stringify(allPatients, null, 2)}
-                  </pre>
-                </div>
-                <div>
-                  <h4 className="font-bold mb-2">Visits Response:</h4>
-                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
-                    {JSON.stringify(allVisits, null, 2)}
-                  </pre>
-                </div>
-              </CardContent>
-            )}
-          </Card>
-        )}
       </div>
     </AuthGuard>
   );
