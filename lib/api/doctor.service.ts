@@ -8,6 +8,8 @@ import type {
 import type {
   ScanNationalIdResponse,
 } from '@/types/ocr';
+import type { Lab } from '@/types/entities/Lab';
+import type { Scan } from '@/types/entities/Scan';
 
 /**
  * Doctor API Service
@@ -344,12 +346,12 @@ export const doctorApi = {
 
   /**
    * Get Patient Details
-   * 
+   *
    * Retrieves complete patient information.
-   * 
+   *
    * **Authentication Required:** Yes (DOCTOR role)
    * **Endpoint:** GET /api/v1/doctor/patients/:patientId
-   * 
+   *
    * @param {string} patientId - Patient UUID
    * @returns {Promise<Patient>} Complete patient details
    * @throws {AxiosError} When request fails or patient not found
@@ -357,6 +359,250 @@ export const doctorApi = {
   getPatient: async (patientId: string): Promise<unknown> => {
     const response = await apiClient.get<unknown>(`/doctor/patients/${patientId}`);
     return response.data;
+  },
+
+  // ============================================================================
+  // Get All Visits (for dashboard)
+  // ============================================================================
+
+  /**
+   * Get All Visits
+   *
+   * Retrieves all visits for the authenticated doctor.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/visits
+   *
+   * @param {Object} params - Query parameters
+   * @param {number} [params.page] - Page number (default: 1)
+   * @param {number} [params.limit] - Items per page (default: 10)
+   * @returns {Promise<any>} Paginated visits list
+   * @throws {AxiosError} When request fails
+   */
+  getAllVisits: async (params?: { page?: number; limit?: number }): Promise<unknown> => {
+    const queryParams = new URLSearchParams();
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const response = await apiClient.get<unknown>(`/doctor/visits?${queryParams.toString()}`);
+    return response.data;
+  },
+
+  /**
+   * Get All Patients
+   *
+   * Retrieves all patients for the authenticated doctor.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/patients
+   *
+   * @returns {Promise<any[]>} Array of patients
+   * @throws {AxiosError} When request fails
+   */
+  getAllPatients: async (): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(`/doctor/patients`);
+    return response.data;
+  },
+
+  // ============================================================================
+  // Lab Management
+  // ============================================================================
+
+  /**
+   * Get Patient Labs
+   *
+   * Retrieves all lab records for a specific patient.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/labs
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @returns {Promise<any[]>} Array of patient labs
+   * @throws {AxiosError} When request fails
+   */
+  getPatientLabs: async (socialSecurityNumber: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(
+      `/doctor/patient/${socialSecurityNumber}/labs`
+    );
+    return response.data;
+  },
+
+  /**
+   * Create Lab
+   *
+   * Creates a new lab record for a patient.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** POST /api/v1/doctor/lab/{socialSecurityNumber}
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {Object} data - Lab creation data
+   * @param {string} data.name - Lab name
+   * @param {string} data.comments - Lab comments
+   * @returns {Promise<any>} Created lab details
+   * @throws {AxiosError} When request fails
+   */
+  createLab: async (
+    socialSecurityNumber: string,
+    data: { name: string; comments: string }
+  ): Promise<unknown> => {
+    const response = await apiClient.post<unknown>(
+      `/doctor/lab/${socialSecurityNumber}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Get Lab by ID
+   *
+   * Retrieves detailed information for a specific lab.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/lab/:labId
+   *
+   * @param {string} labId - Lab UUID
+   * @returns {Promise<any>} Lab details
+   * @throws {AxiosError} When request fails or lab not found
+   */
+  getLab: async (labId: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/doctor/lab/${labId}`);
+    return response.data;
+  },
+
+  /**
+   * Update Lab
+   *
+   * Updates an existing lab record.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** PATCH /api/v1/doctor/lab/:labId
+   *
+   * @param {string} labId - Lab UUID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<any>} Updated lab
+   * @throws {AxiosError} When request fails
+   */
+  updateLab: async (labId: string, data: Partial<Lab>): Promise<unknown> => {
+    const response = await apiClient.patch<unknown>(`/doctor/lab/${labId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete Lab (Soft Delete)
+   *
+   * Marks a lab as deleted (soft delete).
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** DELETE /api/v1/doctor/lab/:labId
+   *
+   * @param {string} labId - Lab UUID
+   * @returns {Promise<void>} No content on success
+   * @throws {AxiosError} When request fails
+   */
+  deleteLab: async (labId: string): Promise<void> => {
+    await apiClient.delete(`/doctor/lab/${labId}`);
+  },
+
+  // ============================================================================
+  // Scan Management
+  // ============================================================================
+
+  /**
+   * Get Patient Scans
+   *
+   * Retrieves all scan records for a specific patient.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/scans
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @returns {Promise<any[]>} Array of patient scans
+   * @throws {AxiosError} When request fails
+   */
+  getPatientScans: async (socialSecurityNumber: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(
+      `/doctor/patient/${socialSecurityNumber}/scans`
+    );
+    return response.data;
+  },
+
+  /**
+   * Create Scan
+   *
+   * Creates a new scan record for a patient.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** POST /api/v1/doctor/scan/{socialSecurityNumber}
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {Object} data - Scan creation data
+   * @param {string} data.name - Scan name
+   * @param {string} data.comments - Scan comments
+   * @param {string} data.type - Scan type
+   * @returns {Promise<any>} Created scan details
+   * @throws {AxiosError} When request fails
+   */
+  createScan: async (
+    socialSecurityNumber: string,
+    data: { name: string; comments: string; type: string }
+  ): Promise<unknown> => {
+    const response = await apiClient.post<unknown>(
+      `/doctor/scan/${socialSecurityNumber}`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Get Scan by ID
+   *
+   * Retrieves detailed information for a specific scan.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** GET /api/v1/doctor/scan/:scanId
+   *
+   * @param {string} scanId - Scan UUID
+   * @returns {Promise<any>} Scan details
+   * @throws {AxiosError} When request fails or scan not found
+   */
+  getScan: async (scanId: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/doctor/scan/${scanId}`);
+    return response.data;
+  },
+
+  /**
+   * Update Scan
+   *
+   * Updates an existing scan record.
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** PATCH /api/v1/doctor/scan/:scanId
+   *
+   * @param {string} scanId - Scan UUID
+   * @param {Object} data - Fields to update
+   * @returns {Promise<any>} Updated scan
+   * @throws {AxiosError} When request fails
+   */
+  updateScan: async (scanId: string, data: Partial<Scan>): Promise<unknown> => {
+    const response = await apiClient.patch<unknown>(`/doctor/scan/${scanId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete Scan (Soft Delete)
+   *
+   * Marks a scan as deleted (soft delete).
+   *
+   * **Authentication Required:** Yes (DOCTOR role)
+   * **Endpoint:** DELETE /api/v1/doctor/scan/:scanId
+   *
+   * @param {string} scanId - Scan UUID
+   * @returns {Promise<void>} No content on success
+   * @throws {AxiosError} When request fails
+   */
+  deleteScan: async (scanId: string): Promise<void> => {
+    await apiClient.delete(`/doctor/scan/${scanId}`);
   },
 };
 

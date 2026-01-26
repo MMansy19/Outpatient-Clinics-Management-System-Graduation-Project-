@@ -14,6 +14,14 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell,
+} from '@/components/ui/table';
 
 import { PatientSearch } from '@/components/doctor/PatientSearch';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
@@ -22,7 +30,7 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
-import { useGetRecentVisits } from '@/lib/api/queries/useVisits';
+import { useGetRecentVisits, useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
 import { formatDate } from '@/lib/utils/formatDate';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -31,14 +39,17 @@ interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
 }
 
-type View = 'dashboard' | 'search' | 'profile' | 'newVisit';
+type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients';
 
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('doctor');
-  const [currentView, setCurrentView] = useState<View>('dashboard');
+  const [currentView, setCurrentView] = useState<View>('visits');
   const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
     null
+  );
+  const [selectedPatientNationalId, setSelectedPatientNationalId] = useState<string | undefined>(
+    undefined
   );
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
@@ -51,15 +62,63 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [patientsCreated, setPatientsCreated] = useState(0);
 
   const { data: recentVisits, isLoading } = useGetRecentVisits(5);
+  const { data: allVisits, isLoading: loadingAllVisits } = useGetAllVisits({ page: 1, limit: 50 });
+  const { data: allPatients, isLoading: loadingAllPatients } = useGetAllPatients();
 
-  const handleSelectPatient = (patientId: number) => {
+  // Calculate statistics
+  const calculateStats = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(today.getDate() - today.getDay()); // Start of this week (Sunday)
+
+    // Today's patients (registered today)
+    const todaysPatients = Array.isArray(allPatients)
+      ? allPatients.filter((p: any) => {
+          const patientDate = new Date(p.createdAt || p.dateOfBirth);
+          return patientDate >= today;
+        }).length
+      : allPatients && typeof allPatients === 'object' && 'items' in allPatients && Array.isArray((allPatients as any).items)
+        ? (allPatients as { items: any[] }).items.filter((p: any) => {
+            const patientDate = new Date(p.createdAt || p.dateOfBirth);
+            return patientDate >= today;
+          }).length
+        : 0;
+
+    // Pending visits (visits without diagnosis or recent visits)
+    const pendingVisits = allVisits?.items?.filter((visit: any) => {
+      const visitDate = new Date(visit.createdAt);
+      // Consider visits from last 7 days as "pending documentation"
+      const weekAgo = new Date();
+      weekAgo.setDate(now.getDate() - 7);
+      return visitDate >= weekAgo;
+    }).length || 0;
+
+    // This week's visits
+    const thisWeeksVisits = allVisits?.items?.filter((visit: any) => {
+      const visitDate = new Date(visit.createdAt);
+      return visitDate >= thisWeekStart;
+    }).length || 0;
+
+    return {
+      todaysPatients,
+      pendingVisits,
+      thisWeeksVisits,
+    };
+  };
+
+  const stats = calculateStats();
+
+  const handleSelectPatient = (patientId: number, socialSecurityNumber?: string) => {
     setSelectedPatientId(patientId);
+    setSelectedPatientNationalId(socialSecurityNumber);
     setCurrentView('profile');
   };
 
-  const handleNewPatientCreated = (patientId: number) => {
+  const handleNewPatientCreated = (patientId: number, socialSecurityNumber?: string) => {
     setPatientsCreated((prev) => prev + 1);
     setSelectedPatientId(patientId);
+    setSelectedPatientNationalId(socialSecurityNumber);
     setCurrentView('profile');
   };
 
@@ -118,14 +177,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               variant="outline"
               className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
             >
-              <Mic className="mr-2 h-5 w-5" />
-              Voice to Text
+              <Mic className="md:mr-2 h-5 w-5" />
+              <span className='hidden md:inline'>Voice to Text</span>
             </Button>
             <ThemeToggle />
           </div>
         </div>
 
-        {currentView === 'dashboard' && (
           <>
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -137,9 +195,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Users className="h-4 w-4 text-medical-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{patientsCreated}</div>
+                  <div className="text-2xl font-bold">{stats.todaysPatients}</div>
                   <p className="text-xs text-muted-foreground">
-                    Patients registered this session
+                    Patients registered today
                   </p>
                 </CardContent>
               </Card>
@@ -152,9 +210,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Activity className="h-4 w-4 text-medical-secondary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {recentVisits?.length || 0}
-                  </div>
+                  <div className="text-2xl font-bold">{stats.pendingVisits}</div>
                   <p className="text-xs text-muted-foreground">
                     {t('awaitingDocumentation')}
                   </p>
@@ -169,9 +225,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Calendar className="h-4 w-4 text-medical-info" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">
-                    {recentVisits?.length || 0}
-                  </div>
+                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
                   <p className="text-xs text-muted-foreground">
                     {t('totalThisWeek')}
                   </p>
@@ -210,59 +264,159 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 </Button>
               </CardContent>
             </Card>
+        {/* Navigation Tabs */}
+        <div className="flex gap-2 border-b">
+          <Button
+            variant={currentView === 'visits' ? 'default' : 'ghost'}
+            onClick={() => setCurrentView('visits')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary"
+          >
+            {t('allVisits')}
+          </Button>
+          <Button
+            variant={currentView === 'patients' ? 'default' : 'ghost'}
+            onClick={() => setCurrentView('patients')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary"
+          >
+            {t('allPatients')}
+          </Button>
+          {/* <Button
+            variant={currentView === 'search' ? 'default' : 'ghost'}
+            onClick={() => setCurrentView('search')}
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary"
+          >
+            {t('searchPatients')}
+          </Button> */}
+        </div>
 
             {/* Recent Visits */}
             <Card>
-              <CardHeader>
-                <CardTitle>{t('recentVisits')}</CardTitle>
-                <CardDescription>
-                  {t('recentVisitsDescription')}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="max-h-[500px] overflow-y-auto">
-                {isLoading ? (
-                  <div className="space-y-2">
-                    <div className="skeleton h-16 w-full" />
-                    <div className="skeleton h-16 w-full" />
-                  </div>
-                ) : recentVisits && recentVisits.length > 0 ? (
-                  <div className="space-y-3">
-                    {recentVisits.map((visit) => (
-                      <div
+           {currentView === 'visits' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('allVisits')}</CardTitle>
+              <CardDescription>
+                {t('allVisitsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingAllVisits ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : allVisits && allVisits.items && allVisits.items.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Patient Name</TableHead>
+                      <TableHead>Diagnoses</TableHead>
+                      <TableHead>Doctor</TableHead>
+                      <TableHead>Visit Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allVisits.items.map((visit) => (
+                      <TableRow
                         key={visit.id}
-                        className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent cursor-pointer"
-                        onClick={() => handleSelectPatient(visit.patient_id)}
+                        className="cursor-pointer hover:bg-muted/50"
                       >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">
-                            {visit.patient.name}
-                          </p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {visit.chief_complaint}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0">
-                          <p className="text-sm font-medium whitespace-nowrap">
-                            {formatDate(visit.created_at)}
-                          </p>
-                          <p className="text-xs text-muted-foreground line-clamp-2 max-w-[180px]">
-                            {visit.diagnosis}
-                          </p>
-                        </div>
-                      </div>
+                        <TableCell className="font-medium">
+                          {visit?.patient?.name}
+                        </TableCell>
+                        <TableCell className="max-w-[300px]">
+                          <div className="truncate" title={visit?.diagnoses}>
+                            {visit?.diagnoses}
+                          </div>
+                        </TableCell>
+                        <TableCell>{visit?.doctor?.name}</TableCell>
+                        <TableCell>
+                          {new Date(visit?.createdAt).toLocaleDateString()}
+                        </TableCell>
+                      </TableRow>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-muted-foreground">
-                      {t('noRecentVisits')}
-                    </p>
-                  </div>
-                )}
-              </CardContent>
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {t('noVisitsFound')}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {currentView === 'patients' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('allPatients')}</CardTitle>
+              <CardDescription>
+                {t('allPatientsDescription')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingAllPatients ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : allPatients && (Array.isArray(allPatients) ? allPatients.length > 0 : allPatients.items?.length > 0) ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Gender</TableHead>
+                      <TableHead>Date of Birth</TableHead>
+                      <TableHead>Social Security Number</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead>Job</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {(Array.isArray(allPatients) ? allPatients : allPatients.items).map((patient: any) => (
+                      <TableRow
+                        key={patient.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleSelectPatient(patient.id, patient.socialSecurityNumber)}
+                      >
+                        <TableCell className="font-medium">{patient.name}</TableCell>
+                        <TableCell>
+                          {patient.gender === 0 ? 'Male' : 'Female'}
+                        </TableCell>
+                        <TableCell>
+                          {new Date(patient.dateOfBirth).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-sm">
+                            {patient.socialSecurityNumber}
+                          </div>
+                        </TableCell>
+                        <TableCell className="max-w-[250px]">
+                          <div className="truncate" title={patient.address}>
+                            {patient.address}
+                          </div>
+                        </TableCell>
+                        <TableCell>{patient.job}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {t('noPatientsFound')}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
             </Card>
           </>
-        )}
 
         {currentView === 'search' && (
           <PatientSearch
@@ -271,23 +425,52 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           />
         )}
 
+
         {currentView === 'profile' && selectedPatientId && (
-          <div className="space-y-4">
-            <Button
-              variant="outline"
-              onClick={() => setCurrentView('dashboard')}
-            >
-              ← {t('backToDashboard')}
-            </Button>
+            <div className="space-y-4">
             <PatientProfile
-              patientId={String(selectedPatientId)}
+              patient={{
+              id: selectedPatientId,
+              name:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)?.name ?? '',
+              gender:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)?.gender,
+              dateOfBirth:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)?.dateOfBirth,
+              socialSecurityNumber:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)
+                ?.socialSecurityNumber,
+              address:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)?.address,
+              job:
+                (Array.isArray(allPatients)
+                ? allPatients
+                : allPatients?.items
+                )?.find((p: any) => p.id === selectedPatientId)?.job,
+              }}
+              socialSecurityNumber={selectedPatientNationalId}
               onNewVisit={handleNewVisit}
             />
-          </div>
-        )}
-
-        {currentView === 'newVisit' && selectedPatientId && (
-          <div className="space-y-4">
+            </div>
+          )}
+          
+          {currentView === 'newVisit' && selectedPatientId && (
+            <div className="space-y-4">
             <Button variant="outline" onClick={() => setCurrentView('profile')}>
               ← {t('backToProfile')}
             </Button>
@@ -296,36 +479,36 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               onSuccess={handleVisitCreated}
               onCancel={() => setCurrentView('profile')}
             />
+            </div>
+          )}
+
+          <AddPatientDialog
+            open={isAddPatientOpen}
+            onOpenChange={setIsAddPatientOpen}
+            onSuccess={handleNewPatientCreated}
+            prefilledData={scannedData}
+            dataSource={registrationSource}
+          />
+
+          <PatientRegistrationSheet
+            open={isRegistrationSheetOpen}
+            onOpenChange={setIsRegistrationSheetOpen}
+            onSelectScanId={handleScanOption}
+            onSelectManualEntry={handleManualOption}
+          />
+
+          <NationalIdScanner
+            open={isScannerOpen}
+            onClose={() => setIsScannerOpen(false)}
+            onScanComplete={handleScanComplete}
+          />
+
+          <VoiceRecorderDialog
+            open={isVoiceRecorderOpen}
+            onOpenChange={setIsVoiceRecorderOpen}
+            onTranscriptionComplete={handleVoiceTranscription}
+          />
           </div>
-        )}
-
-        <AddPatientDialog
-          open={isAddPatientOpen}
-          onOpenChange={setIsAddPatientOpen}
-          onSuccess={handleNewPatientCreated}
-          prefilledData={scannedData}
-          dataSource={registrationSource}
-        />
-
-        <PatientRegistrationSheet
-          open={isRegistrationSheetOpen}
-          onOpenChange={setIsRegistrationSheetOpen}
-          onSelectScanId={handleScanOption}
-          onSelectManualEntry={handleManualOption}
-        />
-
-        <NationalIdScanner
-          open={isScannerOpen}
-          onClose={() => setIsScannerOpen(false)}
-          onScanComplete={handleScanComplete}
-        />
-
-        <VoiceRecorderDialog
-          open={isVoiceRecorderOpen}
-          onOpenChange={setIsVoiceRecorderOpen}
-          onTranscriptionComplete={handleVoiceTranscription}
-        />
-      </div>
     </AuthGuard>
   );
 }

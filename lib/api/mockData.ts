@@ -13,7 +13,7 @@ import { MedicationFrequency } from '@/types/entities/Medication';
 import { UserRole } from '@/types/entities/User';
 import type { SearchFilters } from '@/types/entities/Visit';
 // Storage keys
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
   USERS: 'mock_users',
   PATIENTS: 'mock_patients',
   CLINICS: 'mock_clinics',
@@ -24,7 +24,7 @@ const STORAGE_KEYS = {
 };
 
 // Helper to get data from localStorage
-const getStorageData = <T>(key: string, defaultData: T): T => {
+export const getStorageData = <T>(key: string, defaultData: T): T => {
   if (typeof window === 'undefined') return defaultData;
   const stored = localStorage.getItem(key);
   return stored ? JSON.parse(stored) : defaultData;
@@ -96,7 +96,7 @@ const initClinics = (): Clinic[] => [
 ];
 
 // Initialize mock users
-const initUsers = () => [
+export const initUsers = () => [
   {
     id: 1,
     global_id: 'DOC001',

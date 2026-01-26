@@ -36,7 +36,6 @@ export function VoiceRecorderDialog({
   onOpenChange,
   onTranscriptionComplete,
 }: VoiceRecorderDialogProps) {
-  const t = useTranslations('voice');
   const tCommon = useTranslations('common');
 
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
@@ -79,7 +78,7 @@ export function VoiceRecorderDialog({
         mediaRecorderRef.current.stop();
       }
     };
-  }, []);
+  }, [audioUrl, isRecording]);
 
   const startRecording = async () => {
     try {
@@ -210,11 +209,12 @@ export function VoiceRecorderDialog({
 
       setTranscription(result.transcription);
       toast.success('Transcription complete!');
-    } catch (err: any) {
+    } catch (err) {
       console.error('Transcription error:', err);
       const errorMessage =
-        err?.response?.data?.message ||
-        err?.message ||
+        (err as { response?: { data?: { message?: string } }; message?: string })
+          ?.response?.data?.message ||
+        (err as { message?: string })?.message ||
         'Failed to transcribe audio';
       setError(errorMessage);
       toast.error(errorMessage);

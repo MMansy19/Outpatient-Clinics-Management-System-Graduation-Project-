@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
-import type { CreateVisitDto, CreateVisitResponse } from '@/lib/api/types';
+import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse, VisitResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
-import { mockVisitsAPI } from '@/lib/api/mockData';
+import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
 
 /**
@@ -16,6 +16,7 @@ import { useAuthStore } from '@/stores/authStore';
 const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 const VISITS_KEY = ['visits'];
+const PATIENTS_KEY = ['patients'];
 
 export const useGetPatientVisits = (patientId: number): UseQueryResult<VisitWithRelations[], Error> => {
   return useQuery({
@@ -147,6 +148,84 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
       }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/visits/recent?limit=${limit}`);
       return response.data;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+/**
+ * Get All Visits
+ *
+ * Retrieves all visits for the authenticated doctor with pagination.
+ *
+ * @param {Object} params - Query parameters
+ * @param {number} [params.page] - Page number (default: 1)
+ * @param {number} [params.limit] - Items per page (default: 10)
+ * @returns {UseQueryResult} Query result with paginated visits
+ *
+ * @example
+ * ```typescript
+ * const { data, isLoading, error } = useGetAllVisits({ page: 1, limit: 20 });
+ *
+ * if (isLoading) return <LoadingSpinner />;
+ * if (error) return <ErrorAlert error={error} />;
+ *
+ * return (
+ *   <div>
+ *     {data.items.map(visit => (
+ *       <VisitCard key={visit.id} visit={visit} />
+ *     ))}
+ *     <Pagination page={data.page} totalPages={data.totalPages} />
+ *   </div>
+ * );
+ * ```
+ */
+export const useGetAllVisits = (params?: { page?: number; limit?: number }): UseQueryResult<PaginatedVisitsResponse, Error> => {
+  return useQuery<PaginatedVisitsResponse>({
+    queryKey: [...VISITS_KEY, 'all', params?.page || 1, params?.limit || 10],
+    queryFn: async (): Promise<PaginatedVisitsResponse> => {
+      if (USE_MOCK_DATA) {
+        // For mock data, return recent visits
+        const visits = await mockVisitsAPI.getRecentVisits(params?.limit || 10);
+        // Transform VisitWithRelations[] to VisitResponse[]
+        const items: VisitResponse[] = visits.map((visit) => ({
+          id: visit.global_id,
+          diagnoses: visit.diagnosis,
+          doctor: {
+            id: visit.doctor.id.toString(),
+            name: visit.doctor.name,
+          },
+          patient: {
+            id: visit.patient.id.toString(),
+            name: visit.patient.name,
+          },
+          createdAt: visit.created_at.toISOString(),
+        }));
+        return {
+          items,
+          page: 1,
+          totalPages: 1,
+          totalItems: 10,
+        };
+      }
+      const response = await doctorApi.getAllVisits(params);
+      return response as PaginatedVisitsResponse;
+    },
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
+export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
+  return useQuery<unknown[]>({
+    queryKey: [...PATIENTS_KEY, 'all'],
+    queryFn: async (): Promise<unknown[]> => {
+      if (USE_MOCK_DATA) {
+        // For mock data, get patients from mock API
+        const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
+        return users.filter((user: any) => user.role === 'patient');
+      }
+      const response = await doctorApi.getAllPatients();
+      return response;
     },
     staleTime: 2 * 60 * 1000,
   });

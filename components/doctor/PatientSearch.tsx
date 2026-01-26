@@ -30,7 +30,7 @@ import { Gender } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 
 interface PatientSearchProps {
-  onSelectPatient: (patientId: number) => void;
+  onSelectPatient: (patientId: number, nationalId?: string) => void;
   onAddNew: () => void;
 }
 
@@ -294,7 +294,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           </div>
         )}
 
-        {!isLoading && searchResults?.patients.length === 0 && (
+        {!isLoading && searchResults?.patients?.length === 0 && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
@@ -307,11 +307,11 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           </Card>
         )}
 
-        {searchResults?.patients.map((patient) => (
+        {searchResults?.patients?.map((patient) => (
           <Card
             key={patient.id}
             className="cursor-pointer transition-colors hover:bg-accent"
-            onClick={() => onSelectPatient(patient.id)}
+            onClick={() => onSelectPatient(patient.id, patient.national_id)}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-4">
@@ -341,7 +341,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           </Card>
         ))}
 
-        {searchResults && searchResults.patients.length > 0 && (
+        {searchResults && searchResults.patients?.length > 0 && (
           <p className="text-sm text-muted-foreground text-center">
             {t('showingResults', { count: searchResults.patients.length, total: searchResults.total })}
           </p>

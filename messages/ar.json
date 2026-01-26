@@ -221,6 +221,11 @@
     "newVisit": "زيارة جديدة",
     "editPatient": "تعديل بيانات المريض",
     "demographicInfo": "البيانات الديموغرافية",
+    "allVisits": "جميع الزيارات",
+    "allVisitsDescription": "جميع زيارات هذا المريض",
+    "allPatients": "جميع زيارات هذا المريض",
+    "noPatientsFound": "لم يتم العثور على مرضى",
+    "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
     "addPatient": {
       "title": "إضافة مريض جديد",
       "selectMethod": "اختر طريقة التسجيل",
