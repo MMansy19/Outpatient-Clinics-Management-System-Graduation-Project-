@@ -14,7 +14,8 @@
     "required": "Required",
     "optional": "Optional",
     "male": "Male",
-    "female": "Female"
+    "female": "Female",
+    "viewImage": "View Image"
   },
   "nav": {
     "home": "Home",
