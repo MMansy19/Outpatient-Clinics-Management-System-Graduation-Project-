@@ -145,14 +145,24 @@ export function PatientProfile({
               <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
                 <User className="h-7 w-7 md:h-8 md:w-8 text-medical-primary" />
               </div>
-              <div className="min-w-0 flex-1">
+               <div className="min-w-0 flex-1">
                 <CardTitle className="text-xl md:text-2xl truncate">{patient.name}</CardTitle>
-                <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
+                <CardDescription className="flex flex-row justify-between items-center gap-2 sm:gap-4">
+                <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
                   <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patient.socialSecurityNumber}</span>
-                  <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'} className="w-fit max-w-full px-2 py-1 text-xs sm:text-sm">
+                  <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
                     {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
                   </Badge>
-                </CardDescription>
+
+                </div>  
+              <div className="min-w-16">
+                <div className='flex flex-row gap-2 items-center'>
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
+                </div>
+                         <p className="font-medium truncate">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
+           </div>
+                </CardDescription>  
               </div>
             </div>
             <div className="flex gap-2 sm:shrink-0">
@@ -165,26 +175,14 @@ export function PatientProfile({
               <Button
                 size="sm"
                 onClick={() => setIsVisitDialogOpen(true)}
-                className="bg-medical-primary hover:bg-medical-primary/90 flex-1 sm:flex-none min-h-[44px]"
+                className="bg-medical-primary hover:bg-medical-primary/90 hidden sm:flex-none min-h-[44px]"
               >
                 <Activity className="mr-2 h-4 w-4" />
                 <span className="hidden sm:inline">{t('newVisit')}</span>
-                <span className="sm:hidden">Visit</span>
               </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="max-h-[300px] overflow-y-auto">
-          <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-              <div className="min-w-0">
-                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
-                <p className="font-medium truncate">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
       </Card>
 
       {/* Latest Vitals */}
@@ -228,7 +226,7 @@ export function PatientProfile({
       )}
 
       {/* Patient Data Tabs */}
-      <div className="w-full">
+      <div className="w-full min-h-[400px]">
         {/* Desktop Tabs */}
         <Tabs defaultValue="visits" className="w-full hidden md:block">
           <TabsList className="grid w-full grid-cols-4">
@@ -261,14 +259,6 @@ export function PatientProfile({
                       {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
                     </CardDescription>
                   </div>
-                  <Button
-                    size="sm"
-                    onClick={() => setIsVisitDialogOpen(true)}
-                    className="bg-medical-primary hover:bg-medical-primary/90"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    {t('newVisit')}
-                  </Button>
                 </div>
               </CardHeader>
               <CardContent className="max-h-[500px] overflow-y-auto">
@@ -769,7 +759,7 @@ export function PatientProfile({
         <Button
           size="lg"
           onClick={() => setIsVisitDialogOpen(true)}
-          className="h-14 w-14 rounded-full shadow-lg bg-medical-primary hover:bg-medical-primary/90"
+          className="h-14 w-12 rounded-full shadow-lg bg-medical-primary hover:bg-medical-primary/90"
         >
           <Plus className="h-6 w-6" />
         </Button>

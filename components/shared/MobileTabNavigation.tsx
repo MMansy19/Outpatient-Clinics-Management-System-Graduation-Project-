@@ -25,8 +25,8 @@ export function MobileTabNavigation({
   className = '',
 }: MobileTabNavigationProps) {
   return (
-    <div className={`md:hidden border-b bg-card sticky top-0 z-10 ${className}`}>
-      <div className="flex overflow-x-auto scrollbar-hide">
+    <div className={`md:hidden border-b bg-card sticky top-0 z-10  ${className}`}>
+      <div className="flex min-h-10 h-10">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = currentTab === tab.value;
