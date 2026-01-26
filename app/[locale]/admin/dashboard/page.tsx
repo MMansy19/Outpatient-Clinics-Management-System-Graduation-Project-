@@ -31,7 +31,6 @@ import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { adminApi } from '@/lib/api/admin.service';
 import { useQuery } from '@tanstack/react-query';
 import { useLogout } from '@/lib/api/queries/useAuth';
-import { deleteCookie } from 'cookies-next';
 import {
   DropdownMenu,
   DropdownMenuContent,
