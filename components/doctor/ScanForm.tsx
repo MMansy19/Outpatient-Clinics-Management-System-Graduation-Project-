@@ -114,6 +114,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
       submitLabel={t('createScan')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField

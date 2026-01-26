@@ -93,6 +93,7 @@ export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }:
       submitLabel={t('createLab')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField

@@ -89,6 +89,7 @@ export function VisitDialog({
       submitLabel={t('saveVisit')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField

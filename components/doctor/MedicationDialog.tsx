@@ -88,6 +88,7 @@ export function MedicationDialog({
       submitLabel={t('addMedication')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         {/* Medication Name */}

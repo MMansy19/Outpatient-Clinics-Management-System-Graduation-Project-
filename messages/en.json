@@ -247,6 +247,8 @@
     "addMedication": "Add Medication",
     "addLab": "Add Lab",
     "addScan": "Add Scan",
+    "comments": "Comments",
+    "optionalComments": "Optional comments or notes...",
     "allVisits": "Visits",
     "allVisitsDescription": "All visits for this doctor",
     "noVisitsDescription": "No visits found for this doctor",

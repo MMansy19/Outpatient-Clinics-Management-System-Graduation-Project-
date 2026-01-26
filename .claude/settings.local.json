@@ -13,7 +13,13 @@
       "Bash(ls:*)",
       "Bash(grep -n \"onNewVisit\" D:WORKProjectsGPGP-Frontendapp[locale]doctordashboardpage.tsx)",
       "Bash(grep:*)",
-      "Bash(tail:*)"
+      "Bash(tail:*)",
+      "Bash(lsof:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(npm run dev)"
     ]
   }
 }

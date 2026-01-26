@@ -283,6 +283,7 @@ export function PatientProfile({
                       <TableRow>
                         <TableHead>Date</TableHead>
                         <TableHead>Doctor</TableHead>
+                        <TableHead>Speciality</TableHead>
                         <TableHead>Diagnoses</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -291,6 +292,7 @@ export function PatientProfile({
                         <TableRow key={index}>
                           <TableCell>{formatDate(visit.createdAt)}</TableCell>
                           <TableCell>Dr. {visit.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{visit.doctor?.speciality || 'N/A'}</TableCell>
                           <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
                         </TableRow>
                       ))}

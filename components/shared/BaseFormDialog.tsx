@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { FormProvider } from 'react-hook-form';
 
 interface BaseFormDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface BaseFormDialogProps {
   className?: string;
   hideFooter?: boolean;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  form?: any;
 }
 
 const sizeClasses = {
@@ -49,6 +51,7 @@ export function BaseFormDialog({
   className = '',
   hideFooter = false,
   size = 'md',
+  form,
 }: BaseFormDialogProps) {
   const handleCancel = () => {
     if (onCancel) {
@@ -76,7 +79,7 @@ export function BaseFormDialog({
 
         <form onSubmit={onSubmit} className="flex-1 overflow-hidden">
           <div className="overflow-y-auto py-4 pr-2 -mr-2">
-            {children}
+            {form ? <FormProvider {...form}>{children}</FormProvider> : children}
           </div>
 
           {!hideFooter && (
