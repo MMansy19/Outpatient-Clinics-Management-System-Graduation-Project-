@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Search } from 'lucide-react';
+import { Users, Activity, Calendar, Search, Mic } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -21,9 +21,11 @@ import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistratio
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
+import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
 import { useGetRecentVisits } from '@/lib/api/queries/useVisits';
 import { formatDate } from '@/lib/utils/formatDate';
 import { EnrichedScanData } from '@/types/ocr';
+import { toast } from 'sonner';
 
 interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
@@ -35,12 +37,17 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('doctor');
   const [currentView, setCurrentView] = useState<View>('dashboard');
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(null);
+  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
+    null
+  );
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false);
   const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
-  const [registrationSource, setRegistrationSource] = useState<'scan' | 'manual'>('manual');
+  const [registrationSource, setRegistrationSource] = useState<
+    'scan' | 'manual'
+  >('manual');
   const [patientsCreated, setPatientsCreated] = useState(0);
 
   const { data: recentVisits, isLoading } = useGetRecentVisits(5);
@@ -51,7 +58,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   };
 
   const handleNewPatientCreated = (patientId: number) => {
-    setPatientsCreated(prev => prev + 1);
+    setPatientsCreated((prev) => prev + 1);
     setSelectedPatientId(patientId);
     setCurrentView('profile');
   };
@@ -84,16 +91,38 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     setIsAddPatientOpen(true);
   };
 
+  // Voice Recorder Handler
+  const handleVoiceTranscription = (transcription: string) => {
+    toast.success('Transcription copied to clipboard!');
+    // Copy to clipboard
+    navigator.clipboard.writeText(transcription);
+
+    // You can also show a modal or use the transcription in a form
+    console.log('Transcription:', transcription);
+  };
+
   return (
     <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
       <div className="container mx-auto space-y-6 p-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold text-medical-primary">{t('dashboard')}</h1>
+            <h1 className="text-3xl font-bold text-medical-primary">
+              {t('dashboard')}
+            </h1>
             <p className="text-muted-foreground">{t('dashboardSubtitle')}</p>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={() => setIsVoiceRecorderOpen(true)}
+              variant="outline"
+              className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
+            >
+              <Mic className="mr-2 h-5 w-5" />
+              Voice to Text
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
 
         {currentView === 'dashboard' && (
@@ -102,34 +131,50 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t('todayPatients')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    {t('todayPatients')}
+                  </CardTitle>
                   <Users className="h-4 w-4 text-medical-primary" />
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">{patientsCreated}</div>
-                  <p className="text-xs text-muted-foreground">Patients registered this session</p>
+                  <p className="text-xs text-muted-foreground">
+                    Patients registered this session
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t('pendingVisits')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    {t('pendingVisits')}
+                  </CardTitle>
                   <Activity className="h-4 w-4 text-medical-secondary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{recentVisits?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground">{t('awaitingDocumentation')}</p>
+                  <div className="text-2xl font-bold">
+                    {recentVisits?.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('awaitingDocumentation')}
+                  </p>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                  <CardTitle className="text-sm font-medium">{t('thisWeek')}</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    {t('thisWeek')}
+                  </CardTitle>
                   <Calendar className="h-4 w-4 text-medical-info" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{recentVisits?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground">{t('totalThisWeek')}</p>
+                  <div className="text-2xl font-bold">
+                    {recentVisits?.length || 0}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('totalThisWeek')}
+                  </p>
                 </CardContent>
               </Card>
             </div>
@@ -139,7 +184,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <CardHeader>
                 <CardTitle>{t('quickActions')}</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-4 md:grid-cols-2">
+              <CardContent className="grid gap-4 md:grid-cols-3">
                 <Button
                   onClick={() => setCurrentView('search')}
                   className="h-20 bg-medical-primary hover:bg-medical-primary/90"
@@ -155,6 +200,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Users className="mr-2 h-5 w-5" />
                   {t('addNewPatient')}
                 </Button>
+                <Button
+                  onClick={() => setIsVoiceRecorderOpen(true)}
+                  variant="outline"
+                  className="h-20 border-medical-secondary text-medical-secondary hover:bg-medical-secondary/10"
+                >
+                  <Mic className="mr-2 h-5 w-5" />
+                  Voice Notes
+                </Button>
               </CardContent>
             </Card>
 
@@ -162,7 +215,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <Card>
               <CardHeader>
                 <CardTitle>{t('recentVisits')}</CardTitle>
-                <CardDescription>{t('recentVisitsDescription')}</CardDescription>
+                <CardDescription>
+                  {t('recentVisitsDescription')}
+                </CardDescription>
               </CardHeader>
               <CardContent className="max-h-[500px] overflow-y-auto">
                 {isLoading ? (
@@ -179,19 +234,29 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                         onClick={() => handleSelectPatient(visit.patient_id)}
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium truncate">{visit.patient.name}</p>
-                          <p className="text-sm text-muted-foreground line-clamp-2">{visit.chief_complaint}</p>
+                          <p className="font-medium truncate">
+                            {visit.patient.name}
+                          </p>
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {visit.chief_complaint}
+                          </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-medium whitespace-nowrap">{formatDate(visit.created_at)}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-2 max-w-[180px]">{visit.diagnosis}</p>
+                          <p className="text-sm font-medium whitespace-nowrap">
+                            {formatDate(visit.created_at)}
+                          </p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 max-w-[180px]">
+                            {visit.diagnosis}
+                          </p>
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-8">
-                    <p className="text-muted-foreground">{t('noRecentVisits')}</p>
+                    <p className="text-muted-foreground">
+                      {t('noRecentVisits')}
+                    </p>
                   </div>
                 )}
               </CardContent>
@@ -208,7 +273,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
         {currentView === 'profile' && selectedPatientId && (
           <div className="space-y-4">
-            <Button variant="outline" onClick={() => setCurrentView('dashboard')}>
+            <Button
+              variant="outline"
+              onClick={() => setCurrentView('dashboard')}
+            >
               ← {t('backToDashboard')}
             </Button>
             <PatientProfile
@@ -250,6 +318,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           open={isScannerOpen}
           onClose={() => setIsScannerOpen(false)}
           onScanComplete={handleScanComplete}
+        />
+
+        <VoiceRecorderDialog
+          open={isVoiceRecorderOpen}
+          onOpenChange={setIsVoiceRecorderOpen}
+          onTranscriptionComplete={handleVoiceTranscription}
         />
       </div>
     </AuthGuard>
