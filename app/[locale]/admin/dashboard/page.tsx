@@ -56,7 +56,13 @@ interface StatsItem {
 }
 
 // Enhanced Stats Card Component
-const EnhancedStatsCard = ({ stat, index }: { stat: StatsItem; index: number }) => {
+const EnhancedStatsCard = ({
+  stat,
+  index,
+}: {
+  stat: StatsItem;
+  index: number;
+}) => {
   const [isVisible, setIsVisible] = useState(false);
   const Icon = stat.icon;
 
@@ -123,51 +129,11 @@ const EnhancedStatsCard = ({ stat, index }: { stat: StatsItem; index: number }) 
               />
             </div>
           </div>
-
-          {/* {stat.progress !== undefined && (
-            <div className="mt-4">
-              <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Progress
-                </span>
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  {Math.round(stat.progress)}%
-                </span>
-              </div>
-              <div className="h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-1000 ease-out ${stat.color.replace('text-', 'bg-')}`}
-                  style={{ width: isVisible ? `${stat.progress}%` : '0%' }}
-                />
-              </div>
-            </div>
-          )} */}
         </div>
       </div>
     </div>
   );
 };
-
-// Logout Button Component
-const LogoutButton = ({
-  onLogout,
-  loading,
-}: {
-  onLogout: () => void;
-  loading: boolean;
-}) => (
-  <button
-    onClick={onLogout}
-    disabled={loading}
-    className="group relative flex items-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-300 border border-red-200 dark:border-red-800 disabled:opacity-50 disabled:cursor-not-allowed overflow-hidden"
-  >
-    <div className="absolute inset-0 bg-gradient-to-r from-red-500/0 via-red-500/10 to-red-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-    <LogOut className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300 relative z-10" />
-    <span className="font-medium text-sm relative z-10">
-      {loading ? 'Logging out...' : 'Logout'}
-    </span>
-  </button>
-);
 
 export default function AdminDashboard({ params }: AdminDashboardProps) {
   const { locale } = use(params);
@@ -178,12 +144,11 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   // Use the logout hook
   const { mutate: logout, isPending: loggingOut } = useLogout();
 
-  // Fetch real data with auto-refetch
   const { data: clinics, refetch: refetchClinics } = useQuery({
     queryKey: ['clinics'],
     queryFn: () => adminApi.getClinics(),
-    staleTime: 30 * 1000, // 30 seconds
-    refetchInterval: 60 * 1000, // Refetch every minute
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
   });
 
   const { data: doctorsData, refetch: refetchDoctors } = useQuery({
@@ -207,8 +172,6 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     refetchInterval: 60 * 1000,
   });
 
-  // Extract data safely
-
   // Calculate daily and weekly visits
   const { dailyVisits, weeklyVisits } = useMemo(() => {
     const visits = visitsData?.items || [];
@@ -230,7 +193,6 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     return { dailyVisits: daily, weeklyVisits: weekly };
   }, [visitsData?.items]);
 
-  // Refetch all data when tab changes or on manual trigger
   const refreshAllData = useCallback(() => {
     refetchClinics();
     refetchDoctors();
@@ -238,12 +200,10 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     refetchVisits();
   }, [refetchClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
-  // Auto-refresh on tab change
   useEffect(() => {
     refreshAllData();
   }, [activeTab, refreshAllData]);
 
-  // Calculate stats from real data
   const stats = useMemo(
     () => [
       {
@@ -263,7 +223,9 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
         color: 'text-medical-secondary',
         bgColor: 'bg-medical-secondary/10',
         progress: doctorsData?.items?.length
-          ? (doctorsData?.items?.filter((d) => d.isApproved).length / doctorsData?.items?.length) * 100
+          ? (doctorsData?.items?.filter((d) => d.isApproved).length /
+              doctorsData?.items?.length) *
+            100
           : 0,
       },
       {
@@ -310,7 +272,9 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
         color: 'text-yellow-600',
         bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
         progress: doctorsData?.items?.length
-          ? (doctorsData?.items?.filter((d) => !d.isApproved).length / doctorsData?.items?.length) * 100
+          ? (doctorsData?.items?.filter((d) => !d.isApproved).length /
+              doctorsData?.items?.length) *
+            100
           : 0,
       },
       {
@@ -334,15 +298,22 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     ]
   );
 
-  const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        router.push(`/${locale}/login`);
-      },
-      onError: (error) => {
-        console.error('Logout failed:', error);
-      },
-    });
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+
+      await new Promise<void>((resolve) => {
+        logout(undefined, {
+          onSettled: () => resolve(),
+        });
+      });
+
+      window.location.replace(`/${locale}/login`);
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.replace(`/${locale}/login`);
+    }
   };
 
   const managementSections = [
@@ -380,7 +351,17 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
               <div className="flex items-center gap-3">
                 <CreateDoctorDialog />
                 <ThemeToggle />
-                <LogoutButton onLogout={handleLogout} loading={loggingOut} />
+                <Button
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  variant="outline"
+                  className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  <span className="font-medium">
+                    {loggingOut ? 'Logging out...' : 'Logout'}
+                  </span>
+                </Button>
               </div>
             </div>
           </div>
