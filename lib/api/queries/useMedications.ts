@@ -10,6 +10,7 @@ import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
+import { mockMedicalHistoryAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 
 /**
  * Query Key Factory for Medications
@@ -27,16 +28,21 @@ const medicationsKeys = {
 // ============================================================================
 
 /**
+ * Toggle between mock data and real backend API
+ */
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
+/**
  * Get Patient Medications
  *
  * Retrieves all medications for a specific patient.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {number} patientId - Patient's numeric ID
  * @returns {UseQueryResult} Query result with medications array
  *
  * @example
  * ```typescript
- * const { data: medications, isLoading, error } = useGetPatientMedications('29512011234567');
+ * const { data: medications, isLoading, error } = useGetPatientMedications(1);
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -47,12 +53,17 @@ const medicationsKeys = {
  * ```
  */
 export const useGetPatientMedications = (
-  socialSecurityNumber: string
+  patientId: number
 ): UseQueryResult<unknown[], Error> => {
   return useQuery({
-    queryKey: medicationsKeys.patient(socialSecurityNumber),
-    queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
-    enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
+    queryKey: medicationsKeys.patient(patientId.toString()),
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        return await mockMedicalHistoryAPI.getPatientMedications(patientId);
+      }
+      return await doctorApi.getPatientMedications(patientId.toString());
+    },
+    enabled: !!patientId, // Only run when patientId is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });

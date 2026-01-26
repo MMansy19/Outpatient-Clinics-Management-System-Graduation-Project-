@@ -7,6 +7,12 @@ import {
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Lab } from '@/types/entities/Lab';
+import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+
+/**
+ * Toggle between mock data and real backend API
+ */
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 /**
  * Query Key Factory for Labs
@@ -15,7 +21,7 @@ import type { Lab } from '@/types/entities/Lab';
  */
 const labsKeys = {
   all: ['labs'] as const,
-  patient: (socialSecurityNumber: string) => [...labsKeys.all, 'patient', socialSecurityNumber] as const,
+  patient: (patientId: string) => [...labsKeys.all, 'patient', patientId] as const,
   detail: (id: string) => [...labsKeys.all, id] as const,
 };
 
@@ -28,12 +34,12 @@ const labsKeys = {
  *
  * Retrieves all lab records for a specific patient.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {number} patientId - Patient's numeric ID
  * @returns {UseQueryResult} Query result with labs array
  *
  * @example
  * ```typescript
- * const { data: labs, isLoading, error } = useGetPatientLabs('29512011234567');
+ * const { data: labs, isLoading, error } = useGetPatientLabs(1);
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -44,12 +50,17 @@ const labsKeys = {
  * ```
  */
 export const useGetPatientLabs = (
-  socialSecurityNumber: string
+  patientId: number
 ): UseQueryResult<unknown[], Error> => {
   return useQuery({
-    queryKey: labsKeys.patient(socialSecurityNumber),
-    queryFn: () => doctorApi.getPatientLabs(socialSecurityNumber),
-    enabled: !!socialSecurityNumber,
+    queryKey: labsKeys.patient(patientId.toString()),
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        return await mockMedicalHistoryAPI.getPatientLabs(patientId);
+      }
+      return await doctorApi.getPatientLabs(patientId.toString());
+    },
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

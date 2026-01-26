@@ -7,6 +7,12 @@ import {
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Scan } from '@/types/entities/Scan';
+import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+
+/**
+ * Toggle between mock data and real backend API
+ */
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 /**
  * Query Key Factory for Scans
@@ -15,7 +21,7 @@ import type { Scan } from '@/types/entities/Scan';
  */
 const scansKeys = {
   all: ['scans'] as const,
-  patient: (socialSecurityNumber: string) => [...scansKeys.all, 'patient', socialSecurityNumber] as const,
+  patient: (patientId: string) => [...scansKeys.all, 'patient', patientId] as const,
   detail: (id: string) => [...scansKeys.all, id] as const,
 };
 
@@ -28,12 +34,12 @@ const scansKeys = {
  *
  * Retrieves all scan records for a specific patient.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {number} patientId - Patient's numeric ID
  * @returns {UseQueryResult} Query result with scans array
  *
  * @example
  * ```typescript
- * const { data: scans, isLoading, error } = useGetPatientScans('29512011234567');
+ * const { data: scans, isLoading, error } = useGetPatientScans(1);
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -44,12 +50,17 @@ const scansKeys = {
  * ```
  */
 export const useGetPatientScans = (
-  socialSecurityNumber: string
+  patientId: number
 ): UseQueryResult<unknown[], Error> => {
   return useQuery({
-    queryKey: scansKeys.patient(socialSecurityNumber),
-    queryFn: () => doctorApi.getPatientScans(socialSecurityNumber),
-    enabled: !!socialSecurityNumber,
+    queryKey: scansKeys.patient(patientId.toString()),
+    queryFn: async () => {
+      if (USE_MOCK_DATA) {
+        return await mockMedicalHistoryAPI.getPatientScans(patientId);
+      }
+      return await doctorApi.getPatientScans(patientId.toString());
+    },
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

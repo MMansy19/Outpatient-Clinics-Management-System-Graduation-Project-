@@ -68,11 +68,10 @@ export function PatientProfile({
   const [isScanFormOpen, setIsScanFormOpen] = useState(false);
   const [isMedicationFormOpen, setIsMedicationFormOpen] = useState(false);
 
-  // Fetch additional data using socialSecurityNumber
-  const nationalId =  String(patient?.national_id || '');
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(nationalId);
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(nationalId);
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(nationalId);
+  // Fetch additional data using patient ID
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(Number(patient.id));
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(Number(patient.id));
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(Number(patient.id));
 
   if (loadingVisits) {
     return (
@@ -492,13 +491,13 @@ export function PatientProfile({
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        socialSecurityNumber={nationalId}
+        socialSecurityNumber={String(patient?.national_id || '')}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        socialSecurityNumber={nationalId}
+        socialSecurityNumber={String(patient?.national_id || '')}
       />
 
       {/* Medication Form */}
