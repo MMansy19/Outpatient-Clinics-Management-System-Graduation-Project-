@@ -12,7 +12,6 @@ import {
   LogOut,
   UserCheck,
   Clock,
-  ChevronDown,
   Stethoscope,
   UserRound,
   ClipboardList,
@@ -315,12 +314,12 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
     }
   };
 
-  const managementSections = [
-    { key: 'clinics', label: t('clinics'), icon: Building2 },
-    { key: 'doctors', label: t('doctors'), icon: Stethoscope },
-    { key: 'patients', label: t('patients'), icon: UserRound },
-    { key: 'visits', label: t('visits'), icon: ClipboardList },
-  ];
+  // const managementSections = [
+  //   { key: 'clinics', label: t('clinics'), icon: Building2 },
+  //   { key: 'doctors', label: t('doctors'), icon: Stethoscope },
+  //   { key: 'patients', label: t('patients'), icon: UserRound },
+  //   { key: 'visits', label: t('visits'), icon: ClipboardList },
+  // ];
 
   return (
     <AuthGuard allowedRoles={[Role.SUPER_ADMIN, Role.ADMIN]} locale={locale}>
