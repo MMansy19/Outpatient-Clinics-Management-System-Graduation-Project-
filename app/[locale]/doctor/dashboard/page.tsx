@@ -2,7 +2,7 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Mic } from 'lucide-react';
+import { Users, Activity, Calendar, Mic, Plus } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ import {
   TableCell,
 } from '@/components/ui/table';
 
-import { PatientSearch } from '@/components/doctor/PatientSearch';
+import { NationalIdSearch } from '@/components/doctor/NationalIdSearch';
 // import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
@@ -232,9 +232,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <Button
               onClick={() => setIsVoiceRecorderOpen(true)}
               variant="outline"
-              className="flex-1 sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10 min-h-[44px]"
+              className="sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10"
             >
-              <Mic className="md:mr-2 h-5 w-5" />
+              <Mic className="sm:mr-2 h-5 w-5" />
               <span className="hidden sm:inline">Voice to Text</span>
             </Button>
             <Button
@@ -243,7 +243,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 refetchVisits();
               }}
               variant="outline"
-              className="flex-1 sm:flex-none min-h-[44px]"
+              className="sm:flex-none "
             >
               🔄 
               <span className="hidden sm:inline">Refresh All</span>
@@ -253,9 +253,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 setIsRegistrationSheetOpen(true);
               }}
               variant="outline"
-              className="flex-1 sm:flex-none min-h-[44px]"
+              className="sm:flex-none "
             >
-              +
+              <Plus className="sm:mr-2 h-5 w-5" />
               <span className="hidden sm:inline">Add Patient</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
@@ -506,14 +506,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </Card>
         )}
         {currentView === 'search' && (
-          <Card>
-            <CardContent>
-              <PatientSearch
-                onSelectPatient={handleSelectPatient}
-                onAddNew={() => setIsRegistrationSheetOpen(true)}
-              />
-            </CardContent>
-          </Card>
+          <NationalIdSearch
+            onSelectPatient={handleSelectPatient}
+            onAddNew={() => setIsRegistrationSheetOpen(true)}
+          />
         )}
 
 
@@ -522,19 +518,31 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <Button
               variant="outline"
               onClick={() => setCurrentView('patients')}
-              className="min-h-[44px]"
+              className=""
             >
               ← {t('backToPatients')}
             </Button>
             <PatientProfile
               patient={selectedPatient}
+              onEdit={() => {
+                // If it's a new scanned patient, open registration dialog
+                if (selectedPatient?.isNewPatient) {
+                  setScannedData(selectedPatient.scannedData || null);
+                  setRegistrationSource('scan');
+                  setIsAddPatientOpen(true);
+                } else {
+                  // If it's an existing patient, open edit dialog (if available)
+                  // For now, just show a toast or navigate to edit view
+                  toast.info('Edit patient feature coming soon');
+                }
+              }}
             />
           </div>
         )}
 
           {currentView === 'newVisit' && selectedPatient && (
             <div className="space-y-4">
-            <Button variant="outline" onClick={() => setCurrentView('profile')} className="min-h-[44px]">
+            <Button variant="outline" onClick={() => setCurrentView('profile')} className="">
               ← {t('backToProfile')}
             </Button>
             <VisitForm

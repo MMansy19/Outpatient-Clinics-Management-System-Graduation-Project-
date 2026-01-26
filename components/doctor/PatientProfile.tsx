@@ -42,13 +42,15 @@ import { Gender } from '@/types/entities/Patient';
 
 interface PatientProfileProps {
   patient: {
-    id: number | string;
+    id: number | string | null;
     name: string;
     gender: Gender;
     dateOfBirth: string;
     socialSecurityNumber: string;
     address?: string;
     job?: string;
+    isNewPatient?: boolean;
+    scannedData?: any;
   };
   onEdit?: () => void;
 }
@@ -124,6 +126,80 @@ export function PatientProfile({
     );
   }
 
+  // Check if this is a scanned but unregistered patient
+  const isNewScannedPatient = patient.isNewPatient && (patient.id === null || patient.id === undefined);
+
+  if (isNewScannedPatient) {
+    return (
+      <div className="space-y-6 pb-20 md:pb-6">
+        {/* New Patient Alert */}
+        <Card className="border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+          <CardContent className="py-6">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center shrink-0">
+                <ScanLine className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2 text-blue-900 dark:text-blue-100">
+                  Patient Not Registered
+                </h3>
+                <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
+                  This National ID was scanned but the patient is not yet registered in the system. You can register them now or view the scanned information below.
+                </p>
+                <Button
+                  onClick={onEdit}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Register New Patient
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Scanned Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Scanned Information</CardTitle>
+            <CardDescription>
+              Information extracted from National ID card
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                <p className="text-lg">{patient.name}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">National ID</p>
+                <p className="text-lg font-mono">{patient.socialSecurityNumber}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                <p className="text-lg">
+                  {String(patient.gender) === '0' || patient.gender === 'male' ? 'Male' :
+                   String(patient.gender) === '1' || patient.gender === 'female' ? 'Female' : 'Other'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Age</p>
+                <p className="text-lg">{calculateAge(patient.dateOfBirth)} years</p>
+              </div>
+              {patient.address && (
+                <div className="space-y-2 md:col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">Address</p>
+                  <p className="text-lg">{patient.address}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   const latestVisit = visits?.[0];
   const latestVitals = latestVisit?.vitals;
 
@@ -137,6 +213,20 @@ export function PatientProfile({
 
   return (
     <div className="space-y-6 pb-20 md:pb-6">
+      {/* Scanned Patient Notification */}
+      {patient.scannedData && (
+        <Card className="border border-green-500 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <ScanLine className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <p className="text-sm text-green-700 dark:text-green-300">
+                <span className="font-medium">Patient found via National ID scan</span> - Information verified from ID card
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Card */}
       <Card className="sticky top-0 z-10 md:static md:top-auto">
         <CardHeader>
@@ -150,8 +240,8 @@ export function PatientProfile({
                 <CardDescription className="flex flex-row justify-between items-center gap-2 sm:gap-4">
                 <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
                   <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patient.socialSecurityNumber}</span>
-                  <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
-                    {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
+                  <Badge variant={String(patient.gender) === '0' || patient.gender === 'male' ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
+                    {String(patient.gender) === '0' || patient.gender === 'male' ? tPatient('male') : tPatient('female')}
                   </Badge>
 
                 </div>  
