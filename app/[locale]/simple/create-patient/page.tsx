@@ -21,11 +21,10 @@ type Gender = 'male' | 'female';
 type BloodType = '' | 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';
 
 interface PatientData {
-  firstName: string;
-  lastName: string;
-  socialSecurityNumber: string;
-  location: string;
+  name: string;
+  nationalId: string;
   birthDate: string;
+  address: string;
   phone: string;
   gender: Gender;
   bloodType: BloodType;
@@ -37,13 +36,11 @@ export default function CreatePatientPage() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
   const [patientData, setPatientData] = useState<PatientData>({
-    firstName: 'Ahmed',
-    lastName: 'Mohamed Hassan',
-    socialSecurityNumber: '29512011234567',
-    location: 'Cairo, Egypt',
+    name: 'Ahmed Mohamed Hassan',
+    nationalId: '29512011234567',
     birthDate: '1995-01-12',
+    address: 'Cairo, Egypt',
     phone: '',
     gender: 'male',
     bloodType: '',
@@ -51,20 +48,14 @@ export default function CreatePatientPage() {
   });
 
   const handleSave = async () => {
-    // Validate form first
-    if (!validateForm()) {
-      console.log('⚠️ Form validation failed');
-      return;
-    }
-
     setSaving(true);
 
     // TODO: Replace with actual API call
     // await authApi.createPatient({
-    //   firstName: patientData.firstName,
-    //   lastName: patientData.lastName,
-    //   socialSecurityNumber: patientData.socialSecurityNumber,
-    //   address: patientData.location,
+    //   firstName: patientData.name.split(' ')[0],
+    //   lastName: patientData.name.split(' ').slice(1).join(' '),
+    //   socialSecurityNumber: patientData.nationalId,
+    //   address: patientData.address,
     //   job: patientData.job,
     //   language: 1,
     // });
@@ -80,44 +71,10 @@ export default function CreatePatientPage() {
 
   const updateField = (field: keyof PatientData, value: string) => {
     setPatientData((prev) => ({ ...prev, [field]: value }));
-    // Clear validation error when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
-      });
-    }
-  };
-
-  const validateField = (value: string): string | null => {
-    if (!value || value.trim() === '') {
-      return 'This field is required';
-    }
-    return null;
-  };
-
-  const validateForm = (): boolean => {
-    const errors: Record<string, string> = {};
-
-    // Validate firstName
-    const firstNameError = validateField(patientData.firstName || '');
-    if (firstNameError) errors.firstName = firstNameError;
-
-    // Validate lastName
-    const lastNameError = validateField(patientData.lastName || '');
-    if (lastNameError) errors.lastName = lastNameError;
-
-    // Validate socialSecurityNumber
-    const ssnError = validateField(patientData.socialSecurityNumber || '');
-    if (ssnError) errors.socialSecurityNumber = ssnError;
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
   };
 
   const isFormValid =
-    patientData.firstName && patientData.lastName && patientData.socialSecurityNumber && patientData.birthDate;
+    patientData.name && patientData.nationalId && patientData.birthDate;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-emerald-50">
@@ -187,79 +144,32 @@ export default function CreatePatientPage() {
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={patientData.firstName}
-                      onChange={(e) => updateField('firstName', e.target.value)}
-                      disabled={!editing}
-                      className={`w-full pl-11 pr-4 py-3 border-2 ${
-                        validationErrors.firstName
-                          ? 'border-red-300 focus:ring-2 focus:ring-red-500'
-                          : 'border-gray-200 focus:ring-2 focus:ring-blue-500'
-                      } rounded-xl focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all`}
-                    />
-                    {validationErrors.firstName && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {validationErrors.firstName}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                    <input
-                      type="text"
-                      value={patientData.lastName}
-                      onChange={(e) => updateField('lastName', e.target.value)}
-                      disabled={!editing}
-                      className={`w-full pl-11 pr-4 py-3 border-2 ${
-                        validationErrors.lastName
-                          ? 'border-red-300 focus:ring-2 focus:ring-red-500'
-                          : 'border-gray-200 focus:ring-2 focus:ring-blue-500'
-                      } rounded-xl focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all`}
-                    />
-                    {validationErrors.lastName && (
-                      <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                        <AlertCircle className="w-4 h-4" />
-                        {validationErrors.lastName}
-                      </p>
-                    )}
-                  </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="text"
+                    value={patientData.name}
+                    onChange={(e) => updateField('name', e.target.value)}
+                    disabled={!editing}
+                    className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900 transition-all"
+                  />
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Social Security Number
+                  National ID
                 </label>
                 <input
                   type="text"
-                  value={patientData.socialSecurityNumber}
+                  value={patientData.nationalId}
                   disabled
-                  className={`w-full px-4 py-3 border-2 ${
-                    validationErrors.socialSecurityNumber
-                      ? 'border-red-300'
-                      : 'border-gray-200'
-                  } rounded-xl bg-gray-50 text-gray-900 font-mono`}
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl bg-gray-50 text-gray-900 font-mono"
                 />
-                {validationErrors.socialSecurityNumber && (
-                  <p className="mt-2 text-sm text-red-600 flex items-center gap-1">
-                    <AlertCircle className="w-4 h-4" />
-                    {validationErrors.socialSecurityNumber}
-                  </p>
-                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -296,14 +206,14 @@ export default function CreatePatientPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Location
+                  Address
                 </label>
                 <div className="relative">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    value={patientData.location}
-                    onChange={(e) => updateField('location', e.target.value)}
+                    value={patientData.address}
+                    onChange={(e) => updateField('address', e.target.value)}
                     disabled={!editing}
                     className="w-full pl-11 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none disabled:bg-gray-50 disabled:text-gray-900"
                   />

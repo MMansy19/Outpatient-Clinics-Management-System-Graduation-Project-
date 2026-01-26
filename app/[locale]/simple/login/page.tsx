@@ -13,33 +13,84 @@ import {
   Shield,
   ArrowRight,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { useLogin } from '@/lib/api/hooks/useAuth';
+import { loginSchema, type LoginFormData } from '@/lib/schemas/auth.schemas';
+import { Role } from '@/lib/api/types';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [role, setRole] = useState<'doctor' | 'admin'>('doctor');
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'role' | 'credentials'>('role');
+
+  const { mutate: login, isPending } = useLogin();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    watch,
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  const emailValue = watch('email');
+  const passwordValue = watch('password');
 
   const handleRoleSelect = (selectedRole: 'doctor' | 'admin') => {
     setRole(selectedRole);
     setTimeout(() => setStep('credentials'), 300);
   };
 
-  const handleLogin = async () => {
-    setLoading(true);
+  const onSubmit = (data: LoginFormData) => {
+    login(data, {
+      onSuccess: (response) => {
+        console.log('✅ Login successful:', response);
 
-    setTimeout(() => {
-      setLoading(false);
-      if (role === 'admin') {
-        router.push('./simple/admin-dashboard');
-      } else {
-        router.push('./simple/doctor-dashboard');
-      }
-    }, 1500);
+        toast.success('Login successful', {
+          description: `Welcome back, ${response.name}!`,
+        });
+
+        switch (response.role) {
+          case Role.SUPER_ADMIN:
+          case Role.ADMIN:
+            router.push('/en/simple/admin-dashboard');
+            break;
+          case Role.DOCTOR:
+            router.push('/en/simple/doctor-dashboard');
+            break;
+          default:
+            router.push('/');
+        }
+      },
+      onError: (error: unknown) => {
+        console.error('❌ Login error:', error);
+
+        const errorMessage = extractErrorMessage(error);
+
+        toast.error('Login failed', {
+          description: errorMessage || 'Invalid email or password',
+        });
+      },
+    });
+  };
+
+  const extractErrorMessage = (error: unknown): string => {
+    if (error && typeof error === 'object' && 'response' in error) {
+      const axiosError = error as any;
+      return axiosError.response?.data?.message || 'An error occurred';
+    }
+    return 'An unexpected error occurred';
   };
 
   return (
@@ -119,7 +170,7 @@ export default function LoginPage() {
             </div>
           ) : (
             /* Credentials Form */
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
                   <div
@@ -147,6 +198,7 @@ export default function LoginPage() {
                 </button>
               </div>
 
+              {/* Email Field */}
               <div>
                 <label
                   htmlFor="email"
@@ -159,18 +211,28 @@ export default function LoginPage() {
                   <input
                     id="email"
                     type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    disabled={isPending}
+                    className={`w-full pl-12 pr-4 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
+                      errors.email
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-200'
+                    }`}
                     placeholder={
                       role === 'admin'
                         ? 'admin@hospital.com'
                         : 'doctor@hospital.com'
                     }
+                    {...register('email')}
                   />
                 </div>
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
+              {/* Password Field */}
               <div>
                 <label
                   htmlFor="password"
@@ -183,16 +245,20 @@ export default function LoginPage() {
                   <input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-12 pr-12 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                    disabled={isPending}
+                    className={`w-full pl-12 pr-12 py-3 border-2 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
+                      errors.password
+                        ? 'border-red-500 focus:ring-red-500'
+                        : 'border-gray-200'
+                    }`}
                     placeholder="••••••••"
-                    onKeyPress={(e) => e.key === 'Enter' && handleLogin()}
+                    {...register('password')}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    disabled={isPending}
                   >
                     {showPassword ? (
                       <EyeOff className="w-5 h-5" />
@@ -201,16 +267,22 @@ export default function LoginPage() {
                     )}
                   </button>
                 </div>
+                {errors.password && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {errors.password.message}
+                  </p>
+                )}
               </div>
 
+              {/* Login Button */}
               <button
-                onClick={handleLogin}
-                disabled={loading || !email || !password}
+                type="submit"
+                disabled={isPending || !emailValue || !passwordValue}
                 className="w-full py-4 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 group"
               >
-                {loading ? (
+                {isPending ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <Loader2 className="w-5 h-5 animate-spin" />
                     Signing in...
                   </>
                 ) : (
@@ -232,7 +304,7 @@ export default function LoginPage() {
                   </Link>
                 </p>
               </div>
-            </div>
+            </form>
           )}
         </div>
 

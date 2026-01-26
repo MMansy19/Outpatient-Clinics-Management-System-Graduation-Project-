@@ -16,9 +16,14 @@ import { adminApi } from '@/lib/api/admin.service';
 import type { VisitResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 
+interface EnhancedVisit extends VisitResponse {
+  patientName?: string;
+  doctorName?: string;
+}
+
 export function VisitTable() {
   const t = useTranslations('admin');
-  const [visits, setVisits] = useState<VisitResponse[]>([]);
+  const [visits, setVisits] = useState<EnhancedVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -30,7 +35,40 @@ export function VisitTable() {
       try {
         setLoading(true);
         const data = await adminApi.getVisits({ page, limit });
-        setVisits(data.items);
+
+        // Fetch patient and doctor names for each visit
+        const enhancedVisits = await Promise.all(
+          data.items.map(async (visit) => {
+            try {
+              const [patient, doctor] = await Promise.all([
+                adminApi.getPatientById(visit.patientId).catch(() => null),
+                adminApi.getDoctorById(visit.doctorId).catch(() => null),
+              ]);
+
+              return {
+                ...visit,
+                patientName: patient
+                  ? `${patient.firstName} ${patient.lastName}`
+                  : 'Unknown Patient',
+                doctorName: doctor
+                  ? `${doctor.firstName} ${doctor.lastName}`
+                  : 'Unknown Doctor',
+              };
+            } catch (error) {
+              console.error(
+                `Failed to fetch names for visit ${visit.id}:`,
+                error
+              );
+              return {
+                ...visit,
+                patientName: 'Unknown Patient',
+                doctorName: 'Unknown Doctor',
+              };
+            }
+          })
+        );
+
+        setVisits(enhancedVisits);
         setTotalPages(data.totalPages);
         setTotalItems(data.totalItems);
       } catch (error) {
@@ -93,31 +131,37 @@ export function VisitTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="min-w-[120px]">{t('visitId')}</TableHead>
-                <TableHead className="min-w-[120px]">{t('patientId')}</TableHead>
-                <TableHead className="min-w-[120px]">{t('doctorId')}</TableHead>
-                <TableHead className="min-w-[200px]">{t('diagnoses')}</TableHead>
-                <TableHead className="min-w-[150px]">{t('createdAt')}</TableHead>
+                <TableHead className="min-w-[150px]">
+                  {t('patientName')}
+                </TableHead>
+                <TableHead className="min-w-[150px]">
+                  {t('doctorName')}
+                </TableHead>
+                <TableHead className="min-w-[200px]">
+                  {t('diagnoses')}
+                </TableHead>
+                <TableHead className="min-w-[150px]">
+                  {t('createdAt')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8">
-                    <p className="text-muted-foreground">{t('noVisitsFound')}</p>
+                  <TableCell colSpan={4} className="text-center py-8">
+                    <p className="text-muted-foreground">
+                      {t('noVisitsFound')}
+                    </p>
                   </TableCell>
                 </TableRow>
               ) : (
                 visits.map((visit) => (
                   <TableRow key={visit.id}>
-                    <TableCell className="font-mono text-xs">
-                      {visit.id.substring(0, 8)}...
+                    <TableCell className="font-medium">
+                      {visit.patientName || 'Loading...'}
                     </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {visit.patient.id.substring(0, 8) || ''}...
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {visit.doctor.id.substring(0, 8) || ''}...
+                    <TableCell className="font-medium">
+                      {visit.doctorName || 'Loading...'}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>

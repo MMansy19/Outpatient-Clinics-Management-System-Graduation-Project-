@@ -322,3 +322,41 @@ export interface UpdateClinicDto {
   name?: string;
   speciality?: string;
 }
+
+/**
+ * Doctor By ID Response
+ */
+export interface DoctorByIdResponse {
+  id: string;
+  phone: string;
+  email: string;
+  speciality: string;
+  isApproved: boolean;
+  socialSecurityNumber: string;
+  gender: Gender;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+}
+
+/**
+ * Patient By ID Response
+ */
+export interface PatientByIdResponse {
+  id: string;
+  address: string;
+  job: string;
+  socialSecurityNumber: string;
+  gender: Gender;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+}
+
+/**
+ * Enhanced Visit Response with populated names
+ */
+export interface EnhancedVisitResponse extends VisitResponse {
+  patientName?: string;
+  doctorName?: string;
+}
