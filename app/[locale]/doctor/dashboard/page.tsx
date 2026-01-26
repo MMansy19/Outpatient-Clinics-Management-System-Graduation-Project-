@@ -2,7 +2,7 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Mic, RefreshCw, UserPlus } from 'lucide-react';
+import { Users, Activity, Calendar, Mic } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -238,11 +238,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <Button
               onClick={() => setIsVoiceRecorderOpen(true)}
               variant="outline"
-              className="flex-1 sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10 min-h-[44px] shadow-sm"
-              title="Voice to Text - Record and transcribe your notes"
+              className="flex-1 sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10 min-h-[44px]"
             >
-              <Mic className="h-5 w-5" />
-              <span className="hidden sm:inline sm:ml-2">Voice to Text</span>
+              <Mic className="md:mr-2 h-5 w-5" />
+              <span className="hidden sm:inline">Voice to Text</span>
             </Button>
             <Button
               onClick={() => {
@@ -250,23 +249,21 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 refetchVisits();
               }}
               variant="outline"
-              className="flex-1 sm:flex-none min-h-[44px] shadow-sm hover:border-medical-primary/50"
-              title="Refresh All Data"
+              className="flex-1 sm:flex-none min-h-[44px]"
             >
-              <RefreshCw className="h-5 w-5" />
-              <span className="hidden sm:inline sm:ml-2">Refresh</span>
-            </Button>
+              🔄 
+              <span className="hidden sm:inline">Refresh All</span>
+            </Button> 
             <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
               }}
               variant="outline"
-              className="flex-1 sm:flex-none min-h-[44px] shadow-sm border-medical-secondary hover:border-medical-secondary/50 hover:bg-medical-secondary/10"
-              title="Add New Patient"
+              className="flex-1 sm:flex-none min-h-[44px]"
             >
-              <UserPlus className="h-5 w-5" />
-              <span className="hidden sm:inline sm:ml-2">Add Patient</span>
-            </Button>
+              +
+              <span className="hidden sm:inline">Add Patient</span>
+            </Button>            
             <ThemeToggle />
           </div>
         </div>
@@ -532,7 +529,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               onClick={() => setCurrentView('patients')}
               className="min-h-[44px]"
             >
-              ← {t('backToDashboard')}
+              ← {t('backToPatients')}
             </Button>
             <PatientProfileEnhanced
               patientId={String(selectedPatientId)}
