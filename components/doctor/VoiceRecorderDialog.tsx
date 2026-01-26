@@ -37,6 +37,7 @@ export function VoiceRecorderDialog({
   onTranscriptionComplete,
 }: VoiceRecorderDialogProps) {
   const tCommon = useTranslations('common');
+  const t = useTranslations('voiceRecorder');
 
   const [activeTab, setActiveTab] = useState<'record' | 'upload'>('record');
   const [isRecording, setIsRecording] = useState(false);
@@ -117,8 +118,8 @@ export function VoiceRecorderDialog({
       setRecordingTime(0);
     } catch (err) {
       console.error('Error accessing microphone:', err);
-      setError('Failed to access microphone. Please grant permission.');
-      toast.error('Microphone access denied');
+      setError(t('microphoneAccessDenied'));
+      toast.error(t('microphoneError'));
     }
   };
 
@@ -169,14 +170,14 @@ export function VoiceRecorderDialog({
     ];
 
     if (!validTypes.some((type) => file.type.startsWith(type.split('/')[0]))) {
-      setError('Invalid file type. Please upload an audio or video file.');
+      setError(t('invalidFileType'));
       return;
     }
 
     // Validate file size (50MB max)
     const maxSize = 50 * 1024 * 1024;
     if (file.size > maxSize) {
-      setError('File is too large. Maximum size is 50MB.');
+      setError(t('fileTooLarge'));
       return;
     }
 
@@ -189,7 +190,7 @@ export function VoiceRecorderDialog({
     const fileToTranscribe = activeTab === 'record' ? audioBlob : selectedFile;
 
     if (!fileToTranscribe) {
-      toast.error('No audio to transcribe');
+      toast.error(t('noAudioToTranscribe'));
       return;
     }
 
@@ -208,14 +209,18 @@ export function VoiceRecorderDialog({
       const result = await asrApi.transcribe(file);
 
       setTranscription(result.transcription);
-      toast.success('Transcription complete!');
+      toast.success(t('transcriptionComplete'));
     } catch (err) {
       console.error('Transcription error:', err);
       const errorMessage =
-        (err as { response?: { data?: { message?: string } }; message?: string })
-          ?.response?.data?.message ||
+        (
+          err as {
+            response?: { data?: { message?: string } };
+            message?: string;
+          }
+        )?.response?.data?.message ||
         (err as { message?: string })?.message ||
-        'Failed to transcribe audio';
+        t('transcriptionFailed');
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -231,13 +236,10 @@ export function VoiceRecorderDialog({
   };
 
   const handleClose = () => {
-    if (isRecording) {
-      stopRecording();
-    }
     discardRecording();
     setSelectedFile(null);
-    setTranscription(null);
     setError(null);
+    setTranscription(null);
     setActiveTab('record');
     onOpenChange(false);
   };
@@ -245,17 +247,15 @@ export function VoiceRecorderDialog({
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Voice to Text</DialogTitle>
-          <DialogDescription>
-            Record audio or upload a file to transcribe
-          </DialogDescription>
+          <DialogTitle>{t('title')}</DialogTitle>
+          <DialogDescription>{t('description')}</DialogDescription>
         </DialogHeader>
 
         <Tabs
@@ -264,24 +264,24 @@ export function VoiceRecorderDialog({
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="record">
-              <Mic className="h-4 w-4 mr-2" />
-              Record
+              <Mic className="mr-2 h-4 w-4" />
+              {t('recordTab')}
             </TabsTrigger>
             <TabsTrigger value="upload">
-              <Upload className="h-4 w-4 mr-2" />
-              Upload File
+              <Upload className="mr-2 h-4 w-4" />
+              {t('uploadTab')}
             </TabsTrigger>
           </TabsList>
 
           {/* Record Tab */}
           <TabsContent value="record" className="space-y-4">
-            <div className="flex flex-col items-center justify-center py-8 space-y-6">
-              {/* Recording Controls */}
+            <div className="flex flex-col items-center space-y-6">
               {!audioBlob ? (
                 <>
+                  {/* Microphone Icon with Recording Animation */}
                   <div className="relative">
                     <div
-                      className={`w-32 h-32 rounded-full flex items-center justify-center ${
+                      className={`rounded-full p-8 transition-all ${
                         isRecording
                           ? 'bg-red-500/20 animate-pulse'
                           : 'bg-medical-primary/10'
@@ -308,7 +308,7 @@ export function VoiceRecorderDialog({
                         size="lg"
                       >
                         <Mic className="mr-2 h-5 w-5" />
-                        Start Recording
+                        {t('startRecording')}
                       </Button>
                     ) : (
                       <>
@@ -317,7 +317,9 @@ export function VoiceRecorderDialog({
                           variant="outline"
                           size="lg"
                         >
-                          {isPaused ? 'Resume' : 'Pause'}
+                          {isPaused
+                            ? t('resumeRecording')
+                            : t('pauseRecording')}
                         </Button>
                         <Button
                           onClick={stopRecording}
@@ -325,7 +327,7 @@ export function VoiceRecorderDialog({
                           size="lg"
                         >
                           <MicOff className="mr-2 h-5 w-5" />
-                          Stop
+                          {t('stopRecording')}
                         </Button>
                       </>
                     )}
@@ -339,7 +341,7 @@ export function VoiceRecorderDialog({
                       <div className="flex items-center gap-3">
                         <FileAudio className="h-8 w-8 text-medical-primary" />
                         <div>
-                          <p className="font-medium">Recording</p>
+                          <p className="font-medium">{t('recording')}</p>
                           <p className="text-sm text-muted-foreground">
                             {formatTime(recordingTime)}
                           </p>
@@ -364,7 +366,9 @@ export function VoiceRecorderDialog({
                       <Alert>
                         <Check className="h-4 w-4" />
                         <AlertDescription>
-                          <p className="font-medium mb-2">Transcription:</p>
+                          <p className="font-medium mb-2">
+                            {t('transcription')}
+                          </p>
                           <p className="text-sm">{transcription}</p>
                         </AlertDescription>
                       </Alert>
@@ -377,7 +381,7 @@ export function VoiceRecorderDialog({
                       variant="outline"
                       className="flex-1"
                     >
-                      Record Again
+                      {t('recordAgain')}
                     </Button>
                     {!transcription ? (
                       <Button
@@ -388,10 +392,10 @@ export function VoiceRecorderDialog({
                         {isTranscribing ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Transcribing...
+                            {t('transcribing')}
                           </>
                         ) : (
-                          'Transcribe'
+                          t('transcribe')
                         )}
                       </Button>
                     ) : (
@@ -400,7 +404,7 @@ export function VoiceRecorderDialog({
                         className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
                       >
                         <Check className="mr-2 h-4 w-4" />
-                        Use Text
+                        {t('useText')}
                       </Button>
                     )}
                   </div>
@@ -425,12 +429,12 @@ export function VoiceRecorderDialog({
                     className="hidden"
                   />
                   <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="font-medium mb-2">Upload Audio or Video</p>
+                  <p className="font-medium mb-2">{t('uploadAudioOrVideo')}</p>
                   <p className="text-sm text-muted-foreground">
-                    Click to browse or drag and drop
+                    {t('clickToBrowse')}
                   </p>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Supports MP3, WAV, M4A, MP4, WebM (Max 50MB)
+                    {t('supportedFormats')}
                   </p>
                 </div>
               ) : (
@@ -460,7 +464,7 @@ export function VoiceRecorderDialog({
                     <Alert>
                       <Check className="h-4 w-4" />
                       <AlertDescription>
-                        <p className="font-medium mb-2">Transcription:</p>
+                        <p className="font-medium mb-2">{t('transcription')}</p>
                         <p className="text-sm">{transcription}</p>
                       </AlertDescription>
                     </Alert>
@@ -476,10 +480,10 @@ export function VoiceRecorderDialog({
                         {isTranscribing ? (
                           <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Transcribing...
+                            {t('transcribing')}
                           </>
                         ) : (
-                          'Transcribe'
+                          t('transcribe')
                         )}
                       </Button>
                     ) : (
@@ -488,7 +492,7 @@ export function VoiceRecorderDialog({
                         className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
                       >
                         <Check className="mr-2 h-4 w-4" />
-                        Use Text
+                        {t('useText')}
                       </Button>
                     )}
                   </div>

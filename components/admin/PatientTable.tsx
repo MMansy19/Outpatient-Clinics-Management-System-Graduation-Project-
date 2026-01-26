@@ -128,9 +128,9 @@ export function PatientTable() {
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {patient.user.firstName} {patient.user.lastName}
                     </h3>
-                    <Badge variant="outline" className="mt-1 text-xs">
+                    {/* <Badge variant="outline" className="mt-1 text-xs">
                       {patient.user.gender}
-                    </Badge>
+                    </Badge> */}
                   </div>
                 </div>
 

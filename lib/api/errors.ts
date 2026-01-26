@@ -277,7 +277,7 @@ export const shouldRetry = (failureCount: number, error: unknown): boolean => {
  */
 export const getRetryDelay = (attemptIndex: number): number => {
   const baseDelay = 1000; // 1 second
-  const maxDelay = 30000; // 30 seconds
+  const maxDelay = 180000; // 30 seconds
   const delay = Math.min(baseDelay * Math.pow(2, attemptIndex), maxDelay);
   
   // Add random jitter (±25%) to prevent thundering herd

@@ -31,7 +31,10 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
-import { useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
+import {
+  useGetAllVisits,
+  useGetAllPatients,
+} from '@/lib/api/queries/useVisits';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
 
@@ -60,14 +63,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     data: allVisits,
     isLoading: loadingAllVisits,
     error: visitsError,
-    refetch: refetchVisits
+    refetch: refetchVisits,
   } = useGetAllVisits({ page: 1, limit: 50 });
 
   const {
     data: allPatients,
     isLoading: loadingAllPatients,
     error: patientsError,
-    refetch: refetchPatients
+    refetch: refetchPatients,
   } = useGetAllPatients();
 
   // Debug logging
@@ -75,14 +78,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     data: allPatients,
     isLoading: loadingAllPatients,
     error: patientsError,
-    hasData: !!allPatients
+    hasData: !!allPatients,
   });
 
   console.log('🔍 Visits Query State:', {
     data: allVisits,
     isLoading: loadingAllVisits,
     error: visitsError,
-    hasData: !!allVisits
+    hasData: !!allVisits,
   });
 
   // Calculate statistics
@@ -187,15 +190,19 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         {(loadingAllPatients || loadingAllVisits) && (
           <Card className="bg-blue-50 border-blue-200">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm text-blue-800">Debug Information</CardTitle>
+              <CardTitle className="text-sm text-blue-800">
+                Debug Information
+              </CardTitle>
             </CardHeader>
             <CardContent className="text-xs space-y-2">
               <div>
-                <strong>Loading States:</strong> Patients: {String(loadingAllPatients)}, Visits: {String(loadingAllVisits)}
+                <strong>Loading States:</strong> Patients:{' '}
+                {String(loadingAllPatients)}, Visits: {String(loadingAllVisits)}
               </div>
               {patientsError && (
                 <div className="text-red-600">
-                  <strong>Patients Error:</strong> {String(patientsError.message)}
+                  <strong>Patients Error:</strong>{' '}
+                  {String(patientsError.message)}
                 </div>
               )}
               {visitsError && (
@@ -204,10 +211,18 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 </div>
               )}
               <div className="flex gap-2 mt-2">
-                <Button size="sm" variant="outline" onClick={() => refetchPatients()}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => refetchPatients()}
+                >
                   Refresh Patients
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => refetchVisits()}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => refetchVisits()}
+                >
                   Refresh Visits
                 </Button>
               </div>
@@ -221,7 +236,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <h1 className="text-2xl md:text-3xl font-bold text-medical-primary">
               {t('dashboard')}
             </h1>
-            <p className="text-sm md:text-base text-muted-foreground">{t('dashboardSubtitle')}</p>
+            <p className="text-sm md:text-base text-muted-foreground">
+              {t('dashboardSubtitle')}
+            </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
@@ -230,7 +247,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               className="sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10"
             >
               <Mic className="sm:mr-2 h-5 w-5" />
-              <span className="hidden sm:inline">Voice to Text</span>
+              <span className="hidden sm:inline">{t('title')}</span>
             </Button>
             <Button
               onClick={() => {
@@ -240,9 +257,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               variant="outline"
               className="sm:flex-none "
             >
-              🔄 
+              🔄
               <span className="hidden sm:inline">Refresh All</span>
-            </Button> 
+            </Button>
             <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
@@ -316,8 +333,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </Card>
         </div>
 
-   
-
         {/* Navigation Tabs */}
         <div className="flex gap-2 border-b overflow-x-auto scrollbar-hide ">
           <Button
@@ -348,9 +363,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           <Card>
             <CardHeader>
               <CardTitle>{t('allVisits')}</CardTitle>
-              <CardDescription>
-                {t('allVisitsDescription')}
-              </CardDescription>
+              <CardDescription>{t('allVisitsDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingAllVisits ? (
@@ -377,22 +390,31 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                           className="cursor-pointer hover:bg-muted/50"
                         >
                           <TableCell className="font-medium">
-                            {visit?.patient?.name || visit?.patient_name || 'N/A'}
+                            {visit?.patient?.name ||
+                              visit?.patient_name ||
+                              'N/A'}
                           </TableCell>
                           <TableCell className="max-w-[300px]">
-                            <div className="truncate" title={visit?.diagnoses || visit?.diagnosis}>
-                              {visit?.diagnoses || visit?.diagnosis || 'No diagnosis'}
+                            <div
+                              className="truncate"
+                              title={visit?.diagnoses || visit?.diagnosis}
+                            >
+                              {visit?.diagnoses ||
+                                visit?.diagnosis ||
+                                'No diagnosis'}
                             </div>
                           </TableCell>
                           <TableCell>
-                            {visit?.doctor?.name || visit?.doctor_name || 'Dr. Unknown'}
+                            {visit?.doctor?.name ||
+                              visit?.doctor_name ||
+                              'Dr. Unknown'}
                           </TableCell>
                           <TableCell>
                             {visit?.created_at
                               ? new Date(visit.created_at).toLocaleDateString()
                               : visit?.createdAt
-                              ? new Date(visit.createdAt).toLocaleDateString()
-                              : 'N/A'}
+                                ? new Date(visit.createdAt).toLocaleDateString()
+                                : 'N/A'}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -401,9 +423,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {t('noVisitsFound')}
-                  </p>
+                  <p className="text-muted-foreground">{t('noVisitsFound')}</p>
                 </div>
               )}
             </CardContent>
@@ -414,9 +434,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           <Card>
             <CardHeader>
               <CardTitle>{t('allPatients')}</CardTitle>
-              <CardDescription>
-                {t('allPatientsDescription')}
-              </CardDescription>
+              <CardDescription>{t('allPatientsDescription')}</CardDescription>
             </CardHeader>
             <CardContent>
               {loadingAllPatients ? (
@@ -458,12 +476,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                 {patient.gender === 0
                                   ? 'Male'
                                   : patient.gender === 1
-                                  ? 'Female'
-                                  : 'Other'}
+                                    ? 'Female'
+                                    : 'Other'}
                               </TableCell>
                               <TableCell>
                                 {patient.dateOfBirth
-                                  ? new Date(patient.dateOfBirth).toLocaleDateString()
+                                  ? new Date(
+                                      patient.dateOfBirth
+                                    ).toLocaleDateString()
                                   : 'N/A'}
                               </TableCell>
                               <TableCell>
@@ -472,7 +492,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
-                                <div className="truncate" title={patient.address}>
+                                <div
+                                  className="truncate"
+                                  title={patient.address}
+                                >
                                   {patient.address || 'N/A'}
                                 </div>
                               </TableCell>
@@ -507,7 +530,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           />
         )}
 
-
         {currentView === 'profile' && selectedPatient && (
           <div className="space-y-4">
             <Button
@@ -535,69 +557,76 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </div>
         )}
 
-          {currentView === 'newVisit' && selectedPatient && (
-            <div className="space-y-4">
-            <Button variant="outline" onClick={() => setCurrentView('profile')} className="">
+        {currentView === 'newVisit' && selectedPatient && (
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentView('profile')}
+              className=""
+            >
               ← {t('backToProfile')}
             </Button>
-            </div>
-          )}
-
-          <AddPatientDialog
-            open={isAddPatientOpen}
-            onOpenChange={setIsAddPatientOpen}
-            onSuccess={handleNewPatientCreated}
-            prefilledData={scannedData}
-            dataSource={registrationSource}
-          />
-
-          <PatientRegistrationSheet
-            open={isRegistrationSheetOpen}
-            onOpenChange={setIsRegistrationSheetOpen}
-            onSelectScanId={handleScanOption}
-            onSelectManualEntry={handleManualOption}
-          />
-
-          <NationalIdScanner
-            open={isScannerOpen}
-            onClose={() => setIsScannerOpen(false)}
-            onScanComplete={handleScanComplete}
-          />
-
-          <VoiceRecorderDialog
-            open={isVoiceRecorderOpen}
-            onOpenChange={setIsVoiceRecorderOpen}
-            onTranscriptionComplete={handleVoiceTranscription}
-          />
-
-          {/* Debug Section - Shows Raw API Data */}
-          {(allPatients || allVisits) && (
-            <Card className="border-dashed border-2 mt-4">
-              <CardHeader className="cursor-pointer" onClick={() => setShowDebug(!showDebug)}>
-                <CardTitle className="text-sm flex items-center justify-between">
-                  Debug: Raw API Data (Click to {showDebug ? 'Hide' : 'Show'})
-                  <span className="text-xs">{showDebug ? '▼' : '▶'}</span>
-                </CardTitle>
-              </CardHeader>
-              {showDebug && (
-                <CardContent className="space-y-4">
-                  <div>
-                    <h4 className="font-bold mb-2">Patients Response:</h4>
-                    <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
-                      {JSON.stringify(allPatients, null, 2)}
-                    </pre>
-                  </div>
-                  <div>
-                    <h4 className="font-bold mb-2">Visits Response:</h4>
-                    <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
-                      {JSON.stringify(allVisits, null, 2)}
-                    </pre>
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          )}
           </div>
+        )}
+
+        <AddPatientDialog
+          open={isAddPatientOpen}
+          onOpenChange={setIsAddPatientOpen}
+          onSuccess={handleNewPatientCreated}
+          prefilledData={scannedData}
+          dataSource={registrationSource}
+        />
+
+        <PatientRegistrationSheet
+          open={isRegistrationSheetOpen}
+          onOpenChange={setIsRegistrationSheetOpen}
+          onSelectScanId={handleScanOption}
+          onSelectManualEntry={handleManualOption}
+        />
+
+        <NationalIdScanner
+          open={isScannerOpen}
+          onClose={() => setIsScannerOpen(false)}
+          onScanComplete={handleScanComplete}
+        />
+
+        <VoiceRecorderDialog
+          open={isVoiceRecorderOpen}
+          onOpenChange={setIsVoiceRecorderOpen}
+          onTranscriptionComplete={handleVoiceTranscription}
+        />
+
+        {/* Debug Section - Shows Raw API Data */}
+        {(allPatients || allVisits) && (
+          <Card className="border-dashed border-2 mt-4">
+            <CardHeader
+              className="cursor-pointer"
+              onClick={() => setShowDebug(!showDebug)}
+            >
+              <CardTitle className="text-sm flex items-center justify-between">
+                Debug: Raw API Data (Click to {showDebug ? 'Hide' : 'Show'})
+                <span className="text-xs">{showDebug ? '▼' : '▶'}</span>
+              </CardTitle>
+            </CardHeader>
+            {showDebug && (
+              <CardContent className="space-y-4">
+                <div>
+                  <h4 className="font-bold mb-2">Patients Response:</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
+                    {JSON.stringify(allPatients, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <h4 className="font-bold mb-2">Visits Response:</h4>
+                  <pre className="bg-gray-100 p-2 rounded text-xs overflow-auto max-h-60">
+                    {JSON.stringify(allVisits, null, 2)}
+                  </pre>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )}
+      </div>
     </AuthGuard>
   );
 }

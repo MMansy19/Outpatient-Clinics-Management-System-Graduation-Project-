@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useTranslations } from 'next-intl';
 import { toast, toastMessages } from '@/lib/utils/toast';
 import { Loader2, UserPlus } from 'lucide-react';
 
@@ -71,6 +72,7 @@ interface CreateDoctorDialogProps {
 }
 
 export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
+  const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
   const [loadingClinics, setLoadingClinics] = useState(false);
@@ -186,16 +188,14 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         {trigger || (
           <Button className="gap-2">
             <UserPlus className="h-4 w-4" />
-            Create Doctor
+            {t('createDoctor')}
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Doctor</DialogTitle>
-          <DialogDescription>
-            Add a new doctor to the system. All fields are required.
-          </DialogDescription>
+          <DialogTitle>{t('createDoctor')}</DialogTitle>
+          <DialogDescription>{t('createDoctorDescription')}</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -207,7 +207,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>First Name</FormLabel>
+                    <FormLabel>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -225,7 +225,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Last Name</FormLabel>
+                    <FormLabel>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -245,7 +245,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>National ID (14 digits)</FormLabel>
+                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="30202041234567"
@@ -268,11 +268,11 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="doctor@kasralainy.edu.eg"
+                      placeholder={t('emailPlaceholder')}
                       {...field}
                       disabled={isPending}
                     />
@@ -287,16 +287,16 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Phone Number</FormLabel>
+                  <FormLabel>{t('phoneNumber')}</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="+201012345678"
+                      placeholder={t('phonePlaceholder')}
                       {...field}
                       disabled={isPending}
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    Format: +201XXXXXXXXX
+                    {t('phoneFormat')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -309,7 +309,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="clinicId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Clinic</FormLabel>
+                  <FormLabel>{t('clinic')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -320,8 +320,8 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                         <SelectValue
                           placeholder={
                             loadingClinics
-                              ? 'Loading clinics...'
-                              : 'Select clinic'
+                              ? t('loadingClinics')
+                              : t('selectClinicRequired')
                           }
                         />
                       </SelectTrigger>
@@ -329,7 +329,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                     <SelectContent>
                       {clinics.length === 0 && !loadingClinics ? (
                         <SelectItem value="no-clinics" disabled>
-                          No clinics available
+                          {t('noClinicsAvailable')}
                         </SelectItem>
                       ) : (
                         clinics.map((clinic) => (
@@ -351,7 +351,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Medical Speciality</FormLabel>
+                  <FormLabel>{t('medicalSpeciality')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -359,7 +359,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select speciality" />
+                        <SelectValue placeholder={t('selectSpeciality')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
@@ -381,18 +381,17 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="StrongPassword123!"
+                      placeholder={t('passwordPlaceholder')}
                       {...field}
                       disabled={isPending}
                     />
                   </FormControl>
                   <FormDescription className="text-xs">
-                    Minimum 8 characters with uppercase, lowercase, number, and
-                    special character
+                    {t('passwordRequirements')}
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -405,7 +404,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="language"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Preferred Language</FormLabel>
+                  <FormLabel>{t('preferredLanguage')}</FormLabel>
                   <Select
                     onValueChange={(value) => field.onChange(parseInt(value))}
                     defaultValue={field.value?.toString()}
@@ -413,12 +412,12 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                   >
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select language" />
+                        <SelectValue placeholder={t('preferredLanguage')} />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="0">Arabic (العربية)</SelectItem>
-                      <SelectItem value="1">English</SelectItem>
+                      <SelectItem value="0">{t('arabic')}</SelectItem>
+                      <SelectItem value="1">{t('english')}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -434,16 +433,16 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 onClick={() => setOpen(false)}
                 disabled={isPending}
               >
-                Cancel
+                {t('cancel')}
               </Button>
               <Button type="submit" disabled={isPending || loadingClinics}>
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Creating...
+                    {t('creatingDoctor')}
                   </>
                 ) : (
-                  'Create Doctor'
+                  t('createDoctor')
                 )}
               </Button>
             </div>
