@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect, useMemo, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
+// import { useRouter } from 'next/navigation';
 import {
   Users,
   Building2,
@@ -138,7 +138,7 @@ const EnhancedStatsCard = ({
 export default function AdminDashboard({ params }: AdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('admin');
-  const router = useRouter();
+  // const router = useRouter();
   const [activeTab, setActiveTab] = useState('clinics');
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
