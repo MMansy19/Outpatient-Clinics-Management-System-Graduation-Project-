@@ -22,6 +22,7 @@ import {
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ClinicTable } from '@/components/admin/ClinicTable';
 import { DoctorTable } from '@/components/admin/DoctorTable';
@@ -378,6 +379,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
 
               <div className="flex items-center gap-3">
                 <CreateDoctorDialog />
+                <LanguageToggle locale={locale} variant="outline" size="icon" />
                 <ThemeToggle />
                 <LogoutButton onLogout={handleLogout} loading={loggingOut} />
               </div>

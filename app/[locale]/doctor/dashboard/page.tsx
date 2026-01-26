@@ -14,6 +14,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
+import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import {
   Table,
   TableHeader,
@@ -256,7 +257,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             >
               +
               <span className="hidden sm:inline">Add Patient</span>
-            </Button>            
+            </Button>
+            <LanguageToggle locale={locale} variant="outline" size="icon" />
             <ThemeToggle />
           </div>
         </div>
@@ -322,23 +324,23 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
    
 
         {/* Navigation Tabs */}
-        <div className="flex gap-2 border-b overflow-x-auto scrollbar-hide">
+        <div className="flex gap-2 border-b overflow-x-auto scrollbar-hide ">
           <Button
-            variant={currentView === 'visits' ? 'default' : 'ghost'}
+            variant={currentView === 'visits' ? 'default' : 'outline'}
             onClick={() => setCurrentView('visits')}
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
           >
             {t('allVisits')}
           </Button>
           <Button
-            variant={currentView === 'patients' ? 'default' : 'ghost'}
+            variant={currentView === 'patients' ? 'default' : 'outline'}
             onClick={() => setCurrentView('patients')}
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
           >
             {t('allPatients')}
           </Button>
           <Button
-            variant={currentView === 'search' ? 'default' : 'ghost'}
+            variant={currentView === 'search' ? 'default' : 'outline'}
             onClick={() => setCurrentView('search')}
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
           >
