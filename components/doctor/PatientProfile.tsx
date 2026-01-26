@@ -24,10 +24,14 @@ import { ScanForm } from '@/components/doctor/ScanForm';
 import { MedicationForm } from '@/components/doctor/MedicationForm';
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 import { Gender } from '@/types/entities/Patient';
+// import { Medication } from '@/types/entities/Medication';
+// import { Lab } from '@/types/entities/Lab';
+// import { Scan } from '@/types/entities/Scan';
 import { useState } from 'react';
 
 interface PatientProfileProps {
   patient: {
+    id: number | string;
     name: string;
     gender: Gender;
     birthdate: string;
@@ -36,7 +40,6 @@ interface PatientProfileProps {
     job?: string;
     phone_number?: string;
     email?: string;
-    [key: string]: any;
   };
   patientId: string | number;
   onEdit?: () => void;
@@ -58,7 +61,7 @@ export function PatientProfile({
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patient.patientId));
+  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patient.id));
 
   // Dialog states
   const [isLabFormOpen, setIsLabFormOpen] = useState(false);
@@ -452,9 +455,9 @@ export function PatientProfile({
                             {scan.comments}
                           </p>
                         )}
-                        {scan.photoUrl && (
+                        {scan.image_url && (
                           <a
-                            href={scan.photoUrl}
+                            href={scan.image_url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-xs text-medical-primary hover:underline mt-1 inline-block"
