@@ -178,7 +178,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     console.log('🔄 Dashboard mounted, refetching data...');
     refetchPatients();
     refetchVisits();
-  }, []);
+  }, [ refetchPatients, refetchVisits]);
 
   return (
     <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
