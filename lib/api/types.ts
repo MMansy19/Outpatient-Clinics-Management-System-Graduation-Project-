@@ -241,6 +241,8 @@ export interface VisitResponse {
   patientName?: string;
   doctorName?: string;
   createdAt: string; // ISO date string
+  patientID: string; 
+  doctorID: string; 
 }
 
 /**

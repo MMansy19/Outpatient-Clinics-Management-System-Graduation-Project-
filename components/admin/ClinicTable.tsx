@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Building2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 
 import {
@@ -29,7 +29,6 @@ import {
 import { adminApi } from '@/lib/api/admin.service';
 import type { ClinicResponse } from '@/lib/api/types';
 import { AddClinicDialog } from './AddClinicDialog';
-// import { EditClinicDialog } from './EditClinicDialog';
 
 export function ClinicTable() {
   const t = useTranslations('admin');
@@ -69,7 +68,7 @@ export function ClinicTable() {
       await adminApi.deleteClinic(id);
       toast.success(t('clinicDeleted') || 'Clinic deleted successfully');
       setDeletingClinicId(null);
-      loadClinics(); // Reload the clinics list
+      loadClinics();
     } catch (error) {
       console.error('Failed to delete clinic:', error);
       toast.error(t('clinicDeleteError') || 'Failed to delete clinic');
@@ -79,92 +78,118 @@ export function ClinicTable() {
   };
 
   const handleAddSuccess = () => {
-    loadClinics(); // Reload clinics after successful add
+    loadClinics();
   };
 
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <p className="text-muted-foreground">Loading clinics...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-medical-primary mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Loading clinics...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="relative flex-1 max-w-sm">
+      {/* Header Section */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder={t('searchClinics')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-11"
           />
         </div>
         <Button
           onClick={() => setIsAddDialogOpen(true)}
-          className="bg-medical-primary hover:bg-medical-primary/90"
+          className="bg-medical-primary hover:bg-medical-primary/90 h-11 whitespace-nowrap"
         >
           <Plus className="mr-2 h-4 w-4" />
-          {t('addClinic')}
+          <span className="hidden sm:inline">{t('addClinic')}</span>
+          <span className="sm:hidden">Add</span>
         </Button>
       </div>
 
-      <div className="rounded-md border overflow-hidden">
+      {/* Mobile Card View (< md) */}
+      <div className="md:hidden space-y-3">
+        {filteredClinics?.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">{t('noClinics')}</p>
+          </div>
+        ) : (
+          filteredClinics?.map((clinic, index) => (
+            <div
+              key={clinic.id}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+              style={{
+                animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`,
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-medical-primary/10 flex items-center justify-center">
+                  <Building2 className="h-5 w-5 text-medical-primary" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
+                    {clinic.name}
+                  </h3>
+
+                  <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-medical-secondary" />
+                      <span className="text-sm text-gray-600 dark:text-gray-400">
+                        {clinic.speciality}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View (>= md) */}
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[200px]">
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">
                   {t('clinicName')}
                 </TableHead>
-                <TableHead className="min-w-[150px]">
+                <TableHead className="font-semibold">
                   {t('speciality')}
                 </TableHead>
-                {/* <TableHead className="text-right min-w-[100px]">
-                  {t('actions')}
-                </TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredClinics?.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={3}
-                    className="text-center text-muted-foreground"
-                  >
-                    {t('noClinics')}
+                  <TableCell colSpan={2} className="text-center py-12">
+                    <Building2 className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">{t('noClinics')}</p>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredClinics?.map((clinic) => (
-                  <TableRow key={clinic.id}>
+                  <TableRow
+                    key={clinic.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                  >
                     <TableCell className="font-medium">{clinic.name}</TableCell>
-                    <TableCell>{clinic.speciality}</TableCell>
-                    <TableCell className="text-right">
-                      {/* <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => setEditingClinic(clinic)}
-                          >
-                            <Pencil className="mr-2 h-4 w-4" />
-                            {t('edit')}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => setDeletingClinicId(clinic.id)}
-                            className="text-destructive focus:text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            {t('delete')}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu> */}
+                    <TableCell>
+                      <div className="flex items-center gap-1.5">
+                        <Sparkles className="h-3.5 w-3.5 text-medical-secondary" />
+                        <span>{clinic.speciality}</span>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -179,15 +204,6 @@ export function ClinicTable() {
         onOpenChange={setIsAddDialogOpen}
         onSuccess={handleAddSuccess}
       />
-      {/* 
-      {editingClinic && (
-        <EditClinicDialog
-          clinic={editingClinic}
-          open={!!editingClinic}
-          onOpenChange={(open) => !open && setEditingClinic(null)}
-          onSuccess={handleEditSuccess}
-        />
-      )} */}
 
       <AlertDialog
         open={!!deletingClinicId}
@@ -212,6 +228,19 @@ export function ClinicTable() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }

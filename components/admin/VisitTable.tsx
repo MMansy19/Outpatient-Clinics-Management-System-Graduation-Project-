@@ -11,7 +11,15 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  User,
+  Stethoscope,
+  FileText,
+  Calendar,
+} from 'lucide-react';
 import { adminApi } from '@/lib/api/admin.service';
 import type { VisitResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
@@ -36,7 +44,6 @@ export function VisitTable() {
         setLoading(true);
         const data = await adminApi.getVisits({ page, limit });
 
-        // Fetch patient and doctor names for each visit
         const enhancedVisits = await Promise.all(
           data.items.map(async (visit) => {
             try {
@@ -117,30 +124,120 @@ export function VisitTable() {
 
   return (
     <div className="space-y-4">
+      {/* Stats Header */}
       <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-xl sm:text-2xl font-bold">{t('visits')}</h2>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            {t('totalRecords')}: {totalItems}
+        <div>
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">
+            {t('visits')}
+          </h2>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+            {t('totalRecords')}:{' '}
+            <span className="font-semibold">{totalItems}</span>
           </p>
         </div>
       </div>
 
-      <div className="medical-card overflow-hidden p-0">
+      {/* Mobile Card View (< md) */}
+      <div className="md:hidden space-y-3">
+        {visits.length === 0 ? (
+          <div className="text-center py-12 px-4">
+            <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">{t('noVisitsFound')}</p>
+          </div>
+        ) : (
+          visits.map((visit, index) => (
+            <div
+              key={visit.id}
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+              style={{
+                animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`,
+              }}
+            >
+              {/* Header */}
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                  <ClipboardList className="h-5 w-5 text-white" />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    <Calendar className="h-3 w-3" />
+                    {formatDate(visit.createdAt)}
+                  </div>
+                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                    Visit #{visit.id.slice(0, 8)}
+                  </h3>
+                </div>
+              </div>
+
+              {/* People Info */}
+              <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Patient
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {visit.patientName || 'Loading...'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                    <Stethoscope className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      Doctor
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {visit.doctorName || 'Loading...'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Diagnoses */}
+              {visit.diagnoses && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-start gap-2">
+                    <FileText className="h-4 w-4 text-medical-primary flex-shrink-0 mt-0.5" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                        Diagnoses
+                      </p>
+                      <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3">
+                        {visit.diagnoses}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop Table View (>= md) */}
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[150px]">
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">
                   {t('patientName')}
                 </TableHead>
-                <TableHead className="min-w-[150px]">
+                <TableHead className="font-semibold">
                   {t('doctorName')}
                 </TableHead>
-                <TableHead className="min-w-[200px]">
+                <TableHead className="font-semibold">
                   {t('diagnoses')}
                 </TableHead>
-                <TableHead className="min-w-[150px]">
+                <TableHead className="font-semibold">
                   {t('createdAt')}
                 </TableHead>
               </TableRow>
@@ -148,7 +245,8 @@ export function VisitTable() {
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={4} className="text-center py-12">
+                    <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {t('noVisitsFound')}
                     </p>
@@ -156,7 +254,10 @@ export function VisitTable() {
                 </TableRow>
               ) : (
                 visits.map((visit) => (
-                  <TableRow key={visit.id}>
+                  <TableRow
+                    key={visit.id}
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                  >
                     <TableCell className="font-medium">
                       {visit.patientName || 'Loading...'}
                     </TableCell>
@@ -177,10 +278,9 @@ export function VisitTable() {
         </div>
       </div>
 
-      {/* Pagination */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <p className="text-xs sm:text-sm text-muted-foreground">
-          {t('page')} {page} {t('of')} {totalPages}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+          {t('page')} {page} {t('of')} {totalPages} • {totalItems} total visits
         </p>
         <div className="flex items-center gap-2 justify-center sm:justify-end">
           <Button
@@ -188,21 +288,39 @@ export function VisitTable() {
             disabled={page === 1}
             variant="outline"
             size="sm"
+            className="h-9"
           >
             <ChevronLeft className="h-4 w-4" />
             <span className="hidden sm:inline ml-1">{t('previous')}</span>
           </Button>
+          <div className="px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 rounded-md">
+            {page} / {totalPages}
+          </div>
           <Button
             onClick={handleNextPage}
             disabled={page === totalPages}
             variant="outline"
             size="sm"
+            className="h-9"
           >
             <span className="hidden sm:inline mr-1">{t('next')}</span>
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </div>
+
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
     </div>
   );
 }
