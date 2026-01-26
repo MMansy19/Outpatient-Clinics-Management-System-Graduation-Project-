@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   User,
   Calendar,
@@ -9,8 +9,6 @@ import {
   Edit,
   Plus,
   X,
-  FileText,
-  Clock,
 } from 'lucide-react';
 
 interface PatientData {
@@ -67,7 +65,7 @@ export default function PatientProfile() {
   const [editingTranscript, setEditingTranscript] = useState<boolean>(false);
   const [showAddVisit, setShowAddVisit] = useState<boolean>(false);
   const [showAddMedication, setShowAddMedication] = useState<boolean>(false);
-  const audioRef = useRef<HTMLAudioElement>(null);
+  // const audioRef = useRef<HTMLAudioElement>(null);
 
   const patientData: PatientData = {
     name: 'Ahmed Mohamed Hassan',

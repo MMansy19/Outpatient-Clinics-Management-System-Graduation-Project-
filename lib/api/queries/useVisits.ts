@@ -3,7 +3,7 @@ import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse, VisitResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
-import type { User } from '@/types/entities/User';
+// import type { User } from '@/types/entities/User';
 import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
 
