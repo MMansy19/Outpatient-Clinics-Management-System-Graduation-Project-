@@ -6,7 +6,9 @@ import type {
   PaginationParams,
   ClinicResponse,
   CreateClinicDto,
-  UpdateClinicDto
+  UpdateClinicDto,
+  DoctorByIdResponse,
+  PatientByIdResponse
 } from './types';
 
 /**
@@ -73,6 +75,28 @@ export const adminApi = {
   },
 
   /**
+   * Get doctor by ID
+   * 
+   * @param id - Doctor ID 
+   * @returns Doctor details
+   */
+  getDoctorById: async (id: string): Promise<DoctorByIdResponse> => {
+    const response = await apiClient.get<DoctorByIdResponse>(`/admin/doctor/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get patient by ID
+   * 
+   * @param id - Patient ID 
+   * @returns Patient details
+   */
+  getPatientById: async (id: string): Promise<PatientByIdResponse> => {
+    const response = await apiClient.get<PatientByIdResponse>(`/admin/patient/${id}`);
+    return response.data;
+  },
+
+  /**
    * Get all clinics
    * 
    * @returns List of all clinics
@@ -128,16 +152,3 @@ export const adminApi = {
     return response.data;
   },
 };
-
-/**
- * React Query Hooks (Optional - for use with TanStack Query)
- * 
- * Example usage in components:
- * 
- * import { useQuery } from '@tanstack/react-query';
- * 
- * const { data, isLoading } = useQuery({
- *   queryKey: ['doctors', page, limit],
- *   queryFn: () => adminApi.getDoctors({ page, limit }),
- * });
- */
