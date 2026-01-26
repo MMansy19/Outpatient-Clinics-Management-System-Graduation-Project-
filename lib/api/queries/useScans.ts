@@ -120,7 +120,7 @@ export const useGetScan = (
 export const useCreateScan = (): UseMutationResult<
   unknown,
   Error,
-  { socialSecurityNumber: string; data: { name: string; comments: string; type: string } }
+  { socialSecurityNumber: string; data: { name: string; comments: string; type: string } | FormData }
 > => {
   const queryClient = useQueryClient();
 

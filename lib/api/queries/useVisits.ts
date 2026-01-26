@@ -193,11 +193,11 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
           diagnoses: visit.diagnosis,
           doctor: {
             id: visit.doctor.id.toString(),
-            name: visit.doctor.name,
+            name: visit.doctor?.name || '',
           },
           patient: {
             id: visit.patient.id.toString(),
-            name: visit.patient.name,
+            name: visit.patient?.name || '',
           },
           createdAt: visit.created_at.toISOString(),
         }));

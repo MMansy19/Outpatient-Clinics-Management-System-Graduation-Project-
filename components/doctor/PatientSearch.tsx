@@ -311,7 +311,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           <Card
             key={patient.id}
             className="cursor-pointer transition-colors hover:bg-accent"
-            onClick={() => onSelectPatient(patient.id, patient.national_id)}
+            onClick={() => onSelectPatient(Number(patient.id), String(patient.national_id))}
           >
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between gap-4">

@@ -14,7 +14,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-import { useGetPatient } from '@/lib/api/queries/usePatients';
+// import { useGetPatient } from '@/lib/api/queries/usePatients';
 import { useGetPatientVisits } from '@/lib/api/queries/useVisits';
 import { useGetPatientMedications } from '@/lib/api/queries/useMedications';
 import { useGetPatientLabs } from '@/lib/api/queries/useLabs';
@@ -27,9 +27,18 @@ import { Gender } from '@/types/entities/Patient';
 import { useState } from 'react';
 
 interface PatientProfileProps {
-  patientId?: string;
-  patient?: any;
-  socialSecurityNumber?: string;
+  patient: {
+    name: string;
+    gender: Gender;
+    birthdate: string;
+    national_id: string;
+    address?: string;
+    job?: string;
+    phone_number?: string;
+    email?: string;
+    [key: string]: any;
+  };
+  patientId: string | number;
   onEdit?: () => void;
   onNewVisit?: () => void;
   onNewMedication?: () => void;
@@ -38,9 +47,7 @@ interface PatientProfileProps {
 }
 
 export function PatientProfile({
-  patientId,
-  patient: patientProp,
-  socialSecurityNumber,
+  patient,
   onEdit,
   onNewVisit,
   onNewMedication,
@@ -51,44 +58,20 @@ export function PatientProfile({
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
-  const { data: patient, isLoading: loadingPatient } = useGetPatient(Number(patientId));
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patientId));
+  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patient.patientId));
 
   // Dialog states
   const [isLabFormOpen, setIsLabFormOpen] = useState(false);
   const [isScanFormOpen, setIsScanFormOpen] = useState(false);
   const [isMedicationFormOpen, setIsMedicationFormOpen] = useState(false);
 
-  // Track which tabs have been fetched
-  const [fetchedTabs, setFetchedTabs] = useState<Set<string>>(new Set(['visits']));
-
-  // Use patient prop if available, otherwise use fetched patient
-  const patientData = patientProp || patient;
-
   // Fetch additional data using socialSecurityNumber
-  const nationalId = socialSecurityNumber || String(patientData?.national_id || patientData?.socialSecurityNumber || '');
+  const nationalId =  String(patient?.national_id || '');
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(nationalId);
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(nationalId);
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(nationalId);
 
-  // Lazy load data for tabs
-  const shouldFetchMedications = fetchedTabs.has('medications');
-  const shouldFetchLabs = fetchedTabs.has('labs');
-  const shouldFetchScans = fetchedTabs.has('scans');
-
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(
-    shouldFetchMedications ? nationalId : ''
-  );
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(
-    shouldFetchLabs ? nationalId : ''
-  );
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(
-    shouldFetchScans ? nationalId : ''
-  );
-
-  // Handle tab change
-  const handleTabChange = (value: string) => {
-    setFetchedTabs(prev => new Set(prev).add(value));
-  };
-
-  if ((loadingPatient && !patientProp) || loadingVisits) {
+  if (loadingVisits) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-32 w-full" />
@@ -97,7 +80,7 @@ export function PatientProfile({
     );
   }
 
-  if (!patientData) {
+  if (!patient) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -121,11 +104,11 @@ export function PatientProfile({
           <User className="h-6 w-6 sm:h-8 sm:w-8 text-medical-primary" />
               </div>
               <div className="min-w-0 flex-1">
-          <CardTitle className="text-xl sm:text-2xl truncate">{patientData.name}</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl truncate">{patient.name}</CardTitle>
           <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
-            <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patientData.national_id || patientData.socialSecurityNumber}</span>
-            <Badge variant={patientData.gender === Gender.MALE || patientData.gender === 0 ? 'default' : 'secondary'} className="w-fit max-w-full px-2 py-1 text-xs sm:text-sm">
-              {patientData.gender === Gender.MALE || patientData.gender === 0 ? tPatient('male') : tPatient('female')}
+            <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patient.national_id}</span>
+            <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'} className="w-fit max-w-full px-2 py-1 text-xs sm:text-sm">
+              {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
             </Badge>
           </CardDescription>
               </div>
@@ -152,24 +135,24 @@ export function PatientProfile({
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <div>
                 <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
-                <p className="font-medium">{calculateAge(patientData.birthdate || patientData.dateOfBirth)} {tPatient('years')}</p>
+                <p className="font-medium">{calculateAge(patient.birthdate)} {tPatient('years')}</p>
               </div>
             </div>
-            {patientData.phone_number && (
+            {patient.phone_number && (
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">{tPatient('phone')}</p>
-                  <p className="font-medium">{patientData.phone_number}</p>
+                  <p className="font-medium">{patient.phone_number}</p>
                 </div>
               </div>
             )}
-            {patientData.email && (
+            {patient.email && (
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">{tPatient('email')}</p>
-                  <p className="font-medium">{patientData.email}</p>
+                  <p className="font-medium">{patient.email}</p>
                 </div>
               </div>
             )}
@@ -218,7 +201,7 @@ export function PatientProfile({
       )}
 
       {/* Patient Data Tabs - 4 Tabs */}
-      <Tabs defaultValue="visits" className="w-full" onValueChange={handleTabChange}>
+      <Tabs defaultValue="visits" className="w-full">
         <TabsList className="grid w-full grid-cols-4 md:w-auto">
           <TabsTrigger value="visits">
             <Activity className="mr-2 h-4 w-4" />
@@ -519,7 +502,7 @@ export function PatientProfile({
       {isMedicationFormOpen && (
         <Card>
           <MedicationForm
-            patientId={String(patientId || nationalId)}
+            patientId={String(patient?.national_id)}
             onSuccess={() => {
               setIsMedicationFormOpen(false);
             }}

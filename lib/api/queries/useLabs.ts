@@ -120,7 +120,7 @@ export const useGetLab = (
 export const useCreateLab = (): UseMutationResult<
   unknown,
   Error,
-  { socialSecurityNumber: string; data: { name: string; comments: string } }
+  { socialSecurityNumber: string; data: { name: string; comments: string } | FormData }
 > => {
   const queryClient = useQueryClient();
 

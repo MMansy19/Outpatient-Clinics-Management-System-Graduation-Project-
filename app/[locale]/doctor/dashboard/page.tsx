@@ -30,8 +30,7 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
-import { useGetRecentVisits, useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
-import { formatDate } from '@/lib/utils/formatDate';
+import { useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
 
@@ -59,9 +58,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [registrationSource, setRegistrationSource] = useState<
     'scan' | 'manual'
   >('manual');
-  const [patientsCreated, setPatientsCreated] = useState(0);
 
-  const { data: recentVisits, isLoading } = useGetRecentVisits(5);
   const { data: allVisits, isLoading: loadingAllVisits } = useGetAllVisits({ page: 1, limit: 50 });
   const { data: allPatients, isLoading: loadingAllPatients } = useGetAllPatients();
 
@@ -116,7 +113,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   };
 
   const handleNewPatientCreated = (patientId: number, socialSecurityNumber?: string) => {
-    setPatientsCreated((prev) => prev + 1);
     setSelectedPatientId(patientId);
     setSelectedPatientNationalId(socialSecurityNumber);
     setCurrentView('profile');
@@ -280,13 +276,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           >
             {t('allPatients')}
           </Button>
-          {/* <Button
+          <Button
             variant={currentView === 'search' ? 'default' : 'ghost'}
             onClick={() => setCurrentView('search')}
             className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary"
           >
             {t('searchPatients')}
-          </Button> */}
+          </Button>
         </div>
 
             {/* Recent Visits */}
@@ -317,7 +313,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {allVisits.items.map((visit) => (
+                    {allVisits?.items?.map((visit: any) => (
                       <TableRow
                         key={visit.id}
                         className="cursor-pointer hover:bg-muted/50"
@@ -364,47 +360,58 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <div className="skeleton h-16 w-full" />
                   <div className="skeleton h-16 w-full" />
                 </div>
-              ) : allPatients && (Array.isArray(allPatients) ? allPatients.length > 0 : allPatients.items?.length > 0) ? (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Gender</TableHead>
-                      <TableHead>Date of Birth</TableHead>
-                      <TableHead>Social Security Number</TableHead>
-                      <TableHead>Address</TableHead>
-                      <TableHead>Job</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(Array.isArray(allPatients) ? allPatients : allPatients.items).map((patient: any) => (
-                      <TableRow
-                        key={patient.id}
-                        className="cursor-pointer hover:bg-muted/50"
-                        onClick={() => handleSelectPatient(patient.id, patient.socialSecurityNumber)}
-                      >
-                        <TableCell className="font-medium">{patient.name}</TableCell>
-                        <TableCell>
-                          {patient.gender === 0 ? 'Male' : 'Female'}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(patient.dateOfBirth).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-mono text-sm">
-                            {patient.socialSecurityNumber}
-                          </div>
-                        </TableCell>
-                        <TableCell className="max-w-[250px]">
-                          <div className="truncate" title={patient.address}>
-                            {patient.address}
-                          </div>
-                        </TableCell>
-                        <TableCell>{patient.job}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
+              ) : allPatients ? (
+                (() => {
+                  const patientsList = Array.isArray(allPatients) ? allPatients : (allPatients as any)?.items;
+                  return patientsList && patientsList.length > 0 ? (
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Gender</TableHead>
+                          <TableHead>Date of Birth</TableHead>
+                          <TableHead>Social Security Number</TableHead>
+                          <TableHead>Address</TableHead>
+                          <TableHead>Job</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {patientsList.map((patient: any) => (
+                          <TableRow
+                            key={patient.id}
+                            className="cursor-pointer hover:bg-muted/50"
+                            onClick={() => handleSelectPatient(patient.id, patient.socialSecurityNumber)}
+                          >
+                            <TableCell className="font-medium">{patient.name}</TableCell>
+                            <TableCell>
+                              {patient.gender === 0 ? 'Male' : 'Female'}
+                            </TableCell>
+                            <TableCell>
+                              {new Date(patient.dateOfBirth).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <div className="font-mono text-sm">
+                                {patient.socialSecurityNumber}
+                              </div>
+                            </TableCell>
+                            <TableCell className="max-w-[250px]">
+                              <div className="truncate" title={patient.address}>
+                                {patient.address}
+                              </div>
+                            </TableCell>
+                            <TableCell>{patient.job}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-muted-foreground">
+                        {t('noPatientsFound')}
+                      </p>
+                    </div>
+                  );
+                })()
               ) : (
                 <div className="text-center py-8">
                   <p className="text-muted-foreground">
@@ -427,47 +434,30 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
 
         {currentView === 'profile' && selectedPatientId && (
-            <div className="space-y-4">
+          <div className="space-y-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentView('patients')}
+            >
+              ← {t('backToDashboard')}
+            </Button>
             <PatientProfile
-              patient={{
-              id: selectedPatientId,
-              name:
+              patientId={String(selectedPatientId)}
+              patient={
                 (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)?.name ?? '',
-              gender:
-                (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)?.gender,
-              dateOfBirth:
-                (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)?.dateOfBirth,
-              socialSecurityNumber:
-                (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)
-                ?.socialSecurityNumber,
-              address:
-                (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)?.address,
-              job:
-                (Array.isArray(allPatients)
-                ? allPatients
-                : allPatients?.items
-                )?.find((p: any) => p.id === selectedPatientId)?.job,
-              }}
-              socialSecurityNumber={selectedPatientNationalId}
+                  ? allPatients
+                  : (allPatients as any)?.items
+                )?.find(
+                  (p: any) =>
+                    p.id === selectedPatientId ||
+                    p.national_id === selectedPatientNationalId ||
+                    p.socialSecurityNumber === selectedPatientNationalId
+                )
+              }
               onNewVisit={handleNewVisit}
             />
-            </div>
-          )}
+          </div>
+        )}
           
           {currentView === 'newVisit' && selectedPatientId && (
             <div className="space-y-4">
@@ -475,7 +465,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToProfile')}
             </Button>
             <VisitForm
-              patientId={selectedPatientId}
+              patientId={String(selectedPatientId)}
               onSuccess={handleVisitCreated}
               onCancel={() => setCurrentView('profile')}
             />

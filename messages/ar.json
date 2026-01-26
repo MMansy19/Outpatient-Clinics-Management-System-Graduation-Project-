@@ -181,6 +181,7 @@
   },
   "doctor": {
     "dashboard": "لوحة التحكم",
+    "visits": "الزيارات",
     "dashboardSubtitle": "إدارة مرضاك وسير العمل السريري",
     "patients": "المرضى",
     "patientSearch": "البحث عن المرضى",
@@ -208,7 +209,7 @@
     "recentVisits": "الزيارات الأخيرة",
     "recentVisitsDescription": "آخر مقابلات المرضى",
     "noRecentVisits": "لا توجد زيارات حديثة",
-    "backToDashboard": "العودة للوحة التحكم",
+    "backToPatients": "العودة لقائمة المرضى",
     "backToProfile": "العودة للملف الشخصي",
     "patientProfile": "ملف المريض",
     "patientName": "اسم المريض",
@@ -221,6 +222,19 @@
     "newVisit": "زيارة جديدة",
     "editPatient": "تعديل بيانات المريض",
     "demographicInfo": "البيانات الديموغرافية",
+    "backToDashboard": "العودة للوحة التحكم",
+    "totalMedications": "إجمالي الأدوية",
+    "totalLabs": "إجمالي نتائج المختبر",
+    "totalScans": "إجمالي الأشعة",
+    "noMedicationsYet": "لم يتم تسجيل أي أدوية بعد",
+    "noLabsYet": "لا توجد نتائج مختبر بعد",
+    "noScansYet": "لم يتم تسجيل أي أشعة بعد",
+    "addFirstMedication": "إضافة أول دواء",
+    "addFirstLab": "إضافة أول تحليل",
+    "addFirstScan": "إضافة أول أشعة",
+    "addMedication": "إضافة دواء",
+    "addLab": "إضافة تحليل",
+    "addScan": "إضافة أشعة",
     "allVisits": "جميع الزيارات",
     "allVisitsDescription": "جميع زيارات هذا المريض",
     "allPatients": "جميع زيارات هذا المريض",
@@ -347,7 +361,10 @@
     "visitCreateError": "فشل إنشاء الزيارة. حاول مرة أخرى.",
     "saving": "جاري الحفظ...",
     "saveVisit": "حفظ الزيارة",
-    "generateDiagnosis": "توليد تشخيص تفريقي"
+    "generateDiagnosis": "توليد تشخيص تفريقي",
+    "createVisit": "إنشاء زيارة",
+    "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض"
+    
   },
   "medication": {
     "addMedication": "إضافة دواء",

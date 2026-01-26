@@ -439,16 +439,23 @@ export const doctorApi = {
    * @param {Object} data - Lab creation data
    * @param {string} data.name - Lab name
    * @param {string} data.comments - Lab comments
+   * @param {File} [data.image] - Optional lab image
    * @returns {Promise<any>} Created lab details
    * @throws {AxiosError} When request fails
    */
   createLab: async (
     socialSecurityNumber: string,
-    data: { name: string; comments: string }
+    data: { name: string; comments: string; image?: File } | FormData
   ): Promise<unknown> => {
+    const isFormData = data instanceof FormData;
     const response = await apiClient.post<unknown>(
       `/doctor/lab/${socialSecurityNumber}`,
-      data
+      data,
+      {
+        headers: isFormData ? {
+          'Content-Type': 'multipart/form-data',
+        } : undefined,
+      }
     );
     return response.data;
   },
@@ -540,16 +547,23 @@ export const doctorApi = {
    * @param {string} data.name - Scan name
    * @param {string} data.comments - Scan comments
    * @param {string} data.type - Scan type
+   * @param {File} [data.image] - Optional scan image
    * @returns {Promise<any>} Created scan details
    * @throws {AxiosError} When request fails
    */
   createScan: async (
     socialSecurityNumber: string,
-    data: { name: string; comments: string; type: string }
+    data: { name: string; comments: string; type: string; image?: File } | FormData
   ): Promise<unknown> => {
+    const isFormData = data instanceof FormData;
     const response = await apiClient.post<unknown>(
       `/doctor/scan/${socialSecurityNumber}`,
-      data
+      data,
+      {
+        headers: isFormData ? {
+          'Content-Type': 'multipart/form-data',
+        } : undefined,
+      }
     );
     return response.data;
   },
