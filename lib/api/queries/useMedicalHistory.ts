@@ -14,9 +14,8 @@ export const useGetPatientLabs = (socialSecurityNumber: string): UseQueryResult<
     queryKey: [...HISTORY_KEY, 'labs', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        // For mock data, we'll use a mock ID (number)
-        const mockPatientId = 1;
-        return await mockMedicalHistoryAPI.getPatientLabs(mockPatientId);
+        // For mock data, pass the socialSecurityNumber directly
+        return await mockMedicalHistoryAPI.getPatientLabs(socialSecurityNumber);
       }
       // Backend endpoint: /doctor/patient/{socialSecurityNumber}/labs
       const response = await apiClient.get<Lab[]>(`/doctor/patient/${socialSecurityNumber}/labs`);
@@ -32,9 +31,8 @@ export const useGetPatientScans = (socialSecurityNumber: string): UseQueryResult
     queryKey: [...HISTORY_KEY, 'scans', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        // For mock data, we'll use a mock ID (number)
-        const mockPatientId = 1;
-        return await mockMedicalHistoryAPI.getPatientScans(mockPatientId);
+        // For mock data, pass the socialSecurityNumber directly
+        return await mockMedicalHistoryAPI.getPatientScans(socialSecurityNumber);
       }
       // Backend endpoint: /doctor/patient/{socialSecurityNumber}/scans
       const response = await apiClient.get<Scan[]>(`/doctor/patient/${socialSecurityNumber}/scans`);
@@ -50,9 +48,8 @@ export const useGetPatientMedications = (socialSecurityNumber: string): UseQuery
     queryKey: [...HISTORY_KEY, 'medications', socialSecurityNumber],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
-        // For mock data, we'll use a mock ID (number)
-        const mockPatientId = 1;
-        return await mockMedicalHistoryAPI.getPatientMedications(mockPatientId);
+        // For mock data, pass the socialSecurityNumber directly
+        return await mockMedicalHistoryAPI.getPatientMedications(socialSecurityNumber);
       }
       // Backend endpoint: /doctor/patient/{socialSecurityNumber}/medications
       const response = await apiClient.get<Medication[]>(`/doctor/patient/${socialSecurityNumber}/medications`);

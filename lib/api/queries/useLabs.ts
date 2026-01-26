@@ -50,25 +50,25 @@ const labsKeys = {
  * ```
  */
 export const useGetPatientLabs = (
-  patientId: number
+  socialSecurityNumber: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientLabs called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientLabs called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: labsKeys.patient(patientId.toString()),
+    queryKey: labsKeys.patient(socialSecurityNumber),
     queryFn: async () => {
-      console.log('🔍 useGetPatientLabs - queryFn executing for patientId:', patientId);
+      console.log('🔍 useGetPatientLabs - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientLabs - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientLabs(patientId);
+        const result = await mockMedicalHistoryAPI.getPatientLabs(socialSecurityNumber);
         console.log('🔍 useGetPatientLabs - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientLabs - using real API');
-      return await doctorApi.getPatientLabs(patientId.toString());
+      return await doctorApi.getPatientLabs(socialSecurityNumber);
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

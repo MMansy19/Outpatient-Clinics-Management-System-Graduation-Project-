@@ -29,7 +29,7 @@ import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistratio
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { VisitForm } from '@/components/doctor/VisitForm';
-import { PatientProfileEnhanced } from '@/components/doctor/PatientProfileEnhanced';
+import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
 import { useGetAllVisits, useGetAllPatients } from '@/lib/api/queries/useVisits';
 import { EnrichedScanData } from '@/types/ocr';
@@ -45,12 +45,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('doctor');
   const [currentView, setCurrentView] = useState<View>('visits');
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
-    null
-  );
-  const [selectedPatientNationalId, setSelectedPatientNationalId] = useState<string | undefined>(
-    undefined
-  );
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isAddPatientOpen, setIsAddPatientOpen] = useState(false);
@@ -138,15 +133,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   const stats = calculateStats();
 
-  const handleSelectPatient = (patientId: number, socialSecurityNumber?: string) => {
-    setSelectedPatientId(patientId);
-    setSelectedPatientNationalId(socialSecurityNumber);
+  const handleSelectPatient = (patient: any) => {
+    setSelectedPatient(patient);
     setCurrentView('profile');
   };
 
-  const handleNewPatientCreated = (patientId: number, socialSecurityNumber?: string) => {
-    setSelectedPatientId(patientId);
-    setSelectedPatientNationalId(socialSecurityNumber);
+  const handleNewPatientCreated = (patient: any) => {
+    setSelectedPatient(patient);
     setCurrentView('profile');
   };
 
@@ -459,7 +452,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                             <TableRow
                               key={patient.id}
                               className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => handleSelectPatient(patient.id, patient.socialSecurityNumber)}
+                              onClick={() => handleSelectPatient(patient)}
                             >
                               <TableCell className="font-medium">
                                 {patient.name || 'Unknown'}
@@ -522,7 +515,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         )}
 
 
-        {currentView === 'profile' && selectedPatientId && (
+        {currentView === 'profile' && selectedPatient && (
           <div className="space-y-4">
             <Button
               variant="outline"
@@ -531,30 +524,19 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             >
               ← {t('backToPatients')}
             </Button>
-            <PatientProfileEnhanced
-              patientId={String(selectedPatientId)}
-              patient={
-                (Array.isArray(allPatients)
-                  ? allPatients
-                  : (allPatients as any)?.items
-                )?.find(
-                  (p: any) =>
-                    p.id === selectedPatientId ||
-                    p.national_id === selectedPatientNationalId ||
-                    p.socialSecurityNumber === selectedPatientNationalId
-                )
-              }
+            <PatientProfile
+              patient={selectedPatient}
             />
           </div>
         )}
 
-          {currentView === 'newVisit' && selectedPatientId && (
+          {currentView === 'newVisit' && selectedPatient && (
             <div className="space-y-4">
             <Button variant="outline" onClick={() => setCurrentView('profile')} className="min-h-[44px]">
               ← {t('backToProfile')}
             </Button>
             <VisitForm
-              patientId={String(selectedPatientId)}
+              patientId={String(selectedPatient.id)}
               onSuccess={handleVisitCreated}
               onCancel={() => setCurrentView('profile')}
             />

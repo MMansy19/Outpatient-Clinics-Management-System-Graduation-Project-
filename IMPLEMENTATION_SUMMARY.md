@@ -8,7 +8,7 @@ This document provides a complete summary of all enhancements made to the doctor
 ### Components Created: 17 total
 ✅ 7 Reusable UI Components (BaseFormDialog, EntityListItem, QuickActionCard, etc.)
 ✅ 8 Dialog-based Forms (VisitDialog, MedicationDialog, LabForm, etc.)
-✅ 2 Enhanced Pages (PatientProfileEnhanced, DoctorDashboard)
+✅ 2 Enhanced Pages (PatientProfile, DoctorDashboard)
 
 ### Hooks Created: 5 total
 ✅ useFormState - Form state management

@@ -10,7 +10,7 @@ interface UsePatientDataOptions {
   enabled?: boolean;
 }
 
-export function usePatientData(patientId: number, options: UsePatientDataOptions = {}) {
+export function usePatientData(socialSecurityNumber: string, options: UsePatientDataOptions = {}) {
   const { enabled = true } = options;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   enabled; // used for conditional logic in the future
@@ -20,28 +20,28 @@ export function usePatientData(patientId: number, options: UsePatientDataOptions
     isLoading: loadingVisits,
     error: visitsError,
     refetch: refetchVisits,
-  } = useGetPatientVisits(patientId);
+  } = useGetPatientVisits(socialSecurityNumber);
 
   const {
     data: medications,
     isLoading: loadingMedications,
     error: medicationsError,
     refetch: refetchMedications,
-  } = useGetPatientMedications(patientId);
+  } = useGetPatientMedications(socialSecurityNumber);
 
   const {
     data: labs,
     isLoading: loadingLabs,
     error: labsError,
     refetch: refetchLabs,
-  } = useGetPatientLabs(patientId);
+  } = useGetPatientLabs(socialSecurityNumber);
 
   const {
     data: scans,
     isLoading: loadingScans,
     error: scansError,
     refetch: refetchScans,
-  } = useGetPatientScans(patientId);
+  } = useGetPatientScans(socialSecurityNumber);
 
   const isLoading = loadingVisits || loadingMedications || loadingLabs || loadingScans;
 

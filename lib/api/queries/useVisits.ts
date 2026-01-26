@@ -19,17 +19,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
-export const useGetPatientVisits = (patientId: number): UseQueryResult<VisitWithRelations[], Error> => {
+export const useGetPatientVisits = (socialSecurityNumber: string): UseQueryResult<VisitWithRelations[], Error> => {
+  console.log('🔍 useGetPatientVisits called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+
   return useQuery({
-    queryKey: [...VISITS_KEY, 'patient', patientId],
+    queryKey: [...VISITS_KEY, 'patient', socialSecurityNumber],
     queryFn: async () => {
+      console.log('🔍 useGetPatientVisits - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+
       if (USE_MOCK_DATA) {
-        return await mockVisitsAPI.getPatientVisits(patientId);
+        console.log('🔍 useGetPatientVisits - using mock data');
+        const result = await mockVisitsAPI.getPatientVisits(socialSecurityNumber);
+        console.log('🔍 useGetPatientVisits - mock result:', result);
+        return result;
       }
-      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/visits/patient/${patientId}`);
+      console.log('🔍 useGetPatientVisits - using real API');
+      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${socialSecurityNumber}/visits`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };

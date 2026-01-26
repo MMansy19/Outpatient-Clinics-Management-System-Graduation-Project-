@@ -39,6 +39,9 @@ export function VisitDialog({
   patientId,
   onSuccess,
 }: VisitDialogProps) {
+  // Note: patientId prop is actually the socialSecurityNumber (National ID as string)
+  // This naming is for API consistency - the field in CreateVisitDto is called 'patientId'
+  // but it represents the socialSecurityNumber
   const t = useTranslations('visit');
   const tCommon = useTranslations('common');
   const { mutate: createVisit } = useCreateVisit();

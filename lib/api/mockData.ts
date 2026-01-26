@@ -341,29 +341,40 @@ const initMedications = (): Medication[] => [
 // Initialize all mock data (only if not already initialized)
 export const initMockData = () => {
   if (typeof window === 'undefined') return;
-  
+
+  console.log('🔍 initMockData - Starting initialization...');
+
   // Only initialize if data doesn't exist
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+    console.log('🔍 initMockData - Initializing USERS');
     setStorageData(STORAGE_KEYS.USERS, initUsers());
   }
   if (!localStorage.getItem(STORAGE_KEYS.PATIENTS)) {
+    console.log('🔍 initMockData - Initializing PATIENTS');
     setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
   }
   if (!localStorage.getItem(STORAGE_KEYS.CLINICS)) {
+    console.log('🔍 initMockData - Initializing CLINICS');
     setStorageData(STORAGE_KEYS.CLINICS, initClinics());
   }
   if (!localStorage.getItem(STORAGE_KEYS.VISITS)) {
+    console.log('🔍 initMockData - Initializing VISITS');
     setStorageData(STORAGE_KEYS.VISITS, initVisits());
   }
   if (!localStorage.getItem(STORAGE_KEYS.LABS)) {
+    console.log('🔍 initMockData - Initializing LABS');
     setStorageData(STORAGE_KEYS.LABS, initLabs());
   }
   if (!localStorage.getItem(STORAGE_KEYS.SCANS)) {
+    console.log('🔍 initMockData - Initializing SCANS');
     setStorageData(STORAGE_KEYS.SCANS, initScans());
   }
   if (!localStorage.getItem(STORAGE_KEYS.MEDICATIONS)) {
+    console.log('🔍 initMockData - Initializing MEDICATIONS');
     setStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
   }
+
+  console.log('🔍 initMockData - Initialization complete!');
 };
 
 // Reset all mock data (for testing/development)
@@ -652,13 +663,18 @@ export const mockDoctorsAPI = {
 
 // Mock Visits API
 export const mockVisitsAPI = {
-  async getPatientVisits(patientId: number): Promise<VisitWithRelations[]> {
+  async getPatientVisits(socialSecurityNumber: string): Promise<VisitWithRelations[]> {
+    console.log('🔍 mockVisitsAPI.getPatientVisits called with SSN:', socialSecurityNumber);
     await delay();
+
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const visits = getStorageData(STORAGE_KEYS.VISITS, initVisits());
     const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
     const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
     const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    
+
     const patientVisits = visits.filter((v: Visit) => v.patient_id === patientId);
     const patient = patients.find((p: Patient) => p.id === patientId);
     
@@ -792,11 +808,33 @@ export const mockVisitsAPI = {
   },
 };
 
+// Helper function to get patientId from socialSecurityNumber
+async function getPatientIdFromSSN(socialSecurityNumber: string): Promise<number> {
+  // Try to find the patient by SSN
+  const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+  const patient = patients.find((p: Patient) => String(p.national_id) === socialSecurityNumber);
+
+  if (patient) {
+    console.log('🔍 Found patient by SSN:', patient);
+    return patient.id;
+  }
+
+  // Fallback: try to extract ID from SSN (for demo purposes)
+  // The SSN format is YYMMDDXXXXXXX where the middle digits might indicate something
+  // For demo, we'll use a simple mapping
+  console.log('⚠️ Could not find patient by SSN, using fallback mapping');
+  const lastDigit = parseInt(socialSecurityNumber.slice(-1));
+  return (lastDigit % 3) + 1; // Distribute across 1-3
+}
+
 // Mock Medical History API
 export const mockMedicalHistoryAPI = {
-  async getPatientLabs(patientId: number): Promise<Lab[]> {
-    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs called with patientId:', patientId);
+  async getPatientLabs(socialSecurityNumber: string): Promise<Lab[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const labs = getStorageData(STORAGE_KEYS.LABS, initLabs());
     console.log('🔍 mockMedicalHistoryAPI.getPatientLabs - all labs:', labs);
     const filtered = labs.filter((l: Lab) => l.patient_id === patientId);
@@ -804,9 +842,12 @@ export const mockMedicalHistoryAPI = {
     return filtered;
   },
 
-  async getPatientScans(patientId: number): Promise<Scan[]> {
-    console.log('🔍 mockMedicalHistoryAPI.getPatientScans called with patientId:', patientId);
+  async getPatientScans(socialSecurityNumber: string): Promise<Scan[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const scans = getStorageData(STORAGE_KEYS.SCANS, initScans());
     console.log('🔍 mockMedicalHistoryAPI.getPatientScans - all scans:', scans);
     const filtered = scans.filter((s: Scan) => s.patient_id === patientId);
@@ -814,9 +855,12 @@ export const mockMedicalHistoryAPI = {
     return filtered;
   },
 
-  async getPatientMedications(patientId: number): Promise<Medication[]> {
-    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications called with patientId:', patientId);
+  async getPatientMedications(socialSecurityNumber: string): Promise<Medication[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const medications = getStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
     console.log('🔍 mockMedicalHistoryAPI.getPatientMedications - all medications:', medications);
     const filtered = medications.filter((m: Medication) => m.patient_id === patientId);

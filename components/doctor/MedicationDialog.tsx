@@ -30,14 +30,14 @@ import type { CreateMedicationDto } from '@/lib/api/types';
 interface MedicationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  patientId: string;
+  socialSecurityNumber: string;
   onSuccess?: (medicationId: string) => void;
 }
 
 export function MedicationDialog({
   open,
   onOpenChange,
-  patientId,
+  socialSecurityNumber,
   onSuccess,
 }: MedicationDialogProps) {
   const t = useTranslations('medication');
@@ -47,7 +47,7 @@ export function MedicationDialog({
   const form = useForm<CreateMedicationDto>({
     resolver: zodResolver(medicationSchema),
     defaultValues: {
-      patientId,
+      patientId: socialSecurityNumber,
       name: '',
       dosage: 1,
       period: 7,

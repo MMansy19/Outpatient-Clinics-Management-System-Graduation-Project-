@@ -53,25 +53,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  * ```
  */
 export const useGetPatientMedications = (
-  patientId: number
+  socialSecurityNumber: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientMedications called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: medicationsKeys.patient(patientId.toString()),
+    queryKey: medicationsKeys.patient(socialSecurityNumber),
     queryFn: async () => {
-      console.log('🔍 useGetPatientMedications - queryFn executing for patientId:', patientId);
+      console.log('🔍 useGetPatientMedications - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientMedications - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientMedications(patientId);
+        const result = await mockMedicalHistoryAPI.getPatientMedications(socialSecurityNumber);
         console.log('🔍 useGetPatientMedications - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientMedications - using real API');
-      return await doctorApi.getPatientMedications(patientId.toString());
+      return await doctorApi.getPatientMedications(socialSecurityNumber);
     },
-    enabled: !!patientId, // Only run when patientId is provided
+    enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });

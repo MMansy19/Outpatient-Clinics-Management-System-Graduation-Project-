@@ -179,8 +179,8 @@ This document outlines the comprehensive enhancements made to the doctor screens
   - Responsive button sizing
   - Sticky positioning for mobile headers
 
-#### PatientProfileEnhanced
-- **Location**: `components/doctor/PatientProfileEnhanced.tsx`
+#### PatientProfile
+- **Location**: `components/doctor/PatientProfile.tsx`
 - **Enhancements**:
   - **Desktop**: Tabs at top, traditional layout
   - **Mobile**: Bottom tab navigation, full-screen cards

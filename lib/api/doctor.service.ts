@@ -121,25 +121,25 @@ export const doctorApi = {
 
   /**
    * Get Patient Visits
-   * 
+   *
    * Retrieves all visits for a specific patient.
-   * 
+   *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/visit/patient/:patientId
-   * 
-   * @param {string} patientId - Patient UUID
+   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/visits
+   *
+   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
    * @returns {Promise<Visit[]>} Array of patient visits
    * @throws {AxiosError} When request fails
-   * 
+   *
    * @example
    * ```typescript
-   * const visits = await doctorApi.getPatientVisits("patient-uuid");
+   * const visits = await doctorApi.getPatientVisits("29512011234567");
    * visits.forEach(visit => console.log(visit.diagnoses));
    * ```
    */
-  getPatientVisits: async (patientId: string): Promise<unknown[]> => {
+  getPatientVisits: async (socialSecurityNumber: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/visit/patient/${patientId}`
+      `/doctor/patient/${socialSecurityNumber}/visits`
     );
     return response.data;
   },
