@@ -2,7 +2,6 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Camera,
@@ -13,15 +12,12 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
-import { scanAndEnrichNationalId } from '@/lib/api/nationalId.service';
-import { OCRProcessingError } from '@/types/ocr';
 
 interface ExtractedData {
-  firstName: string;
-  lastName: string;
-  location: string;
-  socialSecurityNumber: string;
+  name: string;
+  nationalId: string;
   birthDate: string;
+  address: string;
   photo?: string;
 }
 
@@ -58,48 +54,29 @@ export default function ScanIdPage() {
     setError(null);
 
     try {
-      // Call backend OCR service via nationalId.service
-      const enrichedData = await scanAndEnrichNationalId(selectedImage);
+      // TODO: Replace with actual API call
+      // const response = await fetch('/api/v1/extract-id', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ image: selectedImage }),
+      // });
+      // const data = await response.json();
 
-      // Extract birthdate from the enriched data
-      const birthDate = extractBirthdateFromId(enrichedData.socialSecurityNumber);
-
-      setExtractedData({
-        firstName: enrichedData.firstName,
-        lastName: enrichedData.lastName,
-        location: enrichedData.location,
-        socialSecurityNumber: enrichedData.socialSecurityNumber,
-        birthDate: birthDate,
-        photo: selectedImage,
-      });
-
-      setUploading(false);
+      // Simulate API call
+      setTimeout(() => {
+        setExtractedData({
+          name: 'Ahmed Mohamed Hassan',
+          nationalId: '29512011234567',
+          birthDate: '12/01/1995',
+          address: 'Cairo, Egypt',
+          photo: selectedImage,
+        });
+        setUploading(false);
+      }, 2000);
     } catch (err) {
-      console.error('Upload error:', err);
-      if (err instanceof OCRProcessingError) {
-        setError(err.message);
-      } else {
-        setError('Failed to extract data. Please try again.');
-      }
+      setError('Failed to extract data. Please try again.');
       setUploading(false);
     }
-  };
-
-  const extractBirthdateFromId = (id: string): string => {
-    // Extract birthdate from Egyptian National ID
-    // Format: YYMMDDGGXSSS
-    const year = parseInt(id.substring(0, 2));
-    const month = parseInt(id.substring(2, 4));
-    const day = parseInt(id.substring(4, 6));
-
-    // Determine century (19xx or 20xx)
-    const fullYear = year > 30 ? 1900 + year : 2000 + year;
-
-    // Format as MM/DD/YYYY
-    const monthStr = month.toString().padStart(2, '0');
-    const dayStr = day.toString().padStart(2, '0');
-
-    return `${monthStr}/${dayStr}/${fullYear}`;
   };
 
   const handleContinue = () => {
@@ -205,11 +182,10 @@ export default function ScanIdPage() {
             <div className="bg-white rounded-2xl p-6 shadow-lg animate-slide-up">
               {/* Image Preview */}
               <div className="aspect-video bg-gray-100 rounded-xl mb-4 overflow-hidden">
-                <Image
+                <img
                   src={selectedImage}
                   alt="ID"
-                  fill
-                  className="object-contain"
+                  className="w-full h-full object-contain"
                 />
               </div>
 
@@ -290,37 +266,31 @@ export default function ScanIdPage() {
                 </h3>
 
                 <div className="space-y-3">
+                  <div className="p-4 bg-blue-50 rounded-xl">
+                    <p className="text-xs text-gray-600 mb-1">Full Name</p>
+                    <p className="font-semibold text-gray-900 text-lg">
+                      {extractedData.name}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-gray-50 rounded-xl">
+                    <p className="text-xs text-gray-600 mb-1">National ID</p>
+                    <p className="font-semibold text-gray-900">
+                      {extractedData.nationalId}
+                    </p>
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 bg-blue-50 rounded-xl">
-                      <p className="text-xs text-gray-600 mb-1">First Name</p>
-                      <p className="font-semibold text-gray-900">
-                        {extractedData.firstName}
+                    <div className="p-4 bg-gray-50 rounded-xl">
+                      <p className="text-xs text-gray-600 mb-1">Birth Date</p>
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {extractedData.birthDate}
                       </p>
                     </div>
-                    <div className="p-4 bg-blue-50 rounded-xl">
-                      <p className="text-xs text-gray-600 mb-1">Last Name</p>
-                      <p className="font-semibold text-gray-900">
-                        {extractedData.lastName}
+                    <div className="p-4 bg-gray-50 rounded-xl">
+                      <p className="text-xs text-gray-600 mb-1">Address</p>
+                      <p className="font-semibold text-gray-900 text-sm">
+                        {extractedData.address}
                       </p>
                     </div>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-xs text-gray-600 mb-1">Social Security Number</p>
-                    <p className="font-semibold text-gray-900">
-                      {extractedData.socialSecurityNumber}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-xs text-gray-600 mb-1">Location</p>
-                    <p className="font-semibold text-gray-900">
-                      {extractedData.location}
-                    </p>
-                  </div>
-                  <div className="p-4 bg-gray-50 rounded-xl">
-                    <p className="text-xs text-gray-600 mb-1">Birth Date</p>
-                    <p className="font-semibold text-gray-900 text-sm">
-                      {extractedData.birthDate}
-                    </p>
                   </div>
                 </div>
               </div>

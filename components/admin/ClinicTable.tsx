@@ -122,9 +122,9 @@ export function ClinicTable() {
                 <TableHead className="min-w-[150px]">
                   {t('speciality')}
                 </TableHead>
-                <TableHead className="text-right min-w-[100px]">
+                {/* <TableHead className="text-right min-w-[100px]">
                   {t('actions')}
-                </TableHead>
+                </TableHead> */}
               </TableRow>
             </TableHeader>
             <TableBody>
