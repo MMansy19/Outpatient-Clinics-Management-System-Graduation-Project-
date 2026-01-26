@@ -236,14 +236,10 @@ export interface PatientResponse {
 export interface VisitResponse {
   id: string;
   diagnoses: string;
-  doctor:{
-    id: string;
-    name: string;
-  }
-  patient:{
-    id: string;
-    name: string;
-  }
+  patientId: string;
+  doctorId: string;
+  patientName?: string;
+  doctorName?: string;
   createdAt: string; // ISO date string
 }
 
@@ -357,10 +353,6 @@ export interface PatientByIdResponse {
  * Enhanced Visit Response with populated names
  */
 export interface EnhancedVisitResponse extends VisitResponse {
-        id: string;
-        diagoses: string;
-        patientId?: string;
-        doctorId?: string;
-        createdAt: string; // ISO date string
-
+  patientName?: string;
+  doctorName?: string;
 }

@@ -41,8 +41,8 @@ export function VisitTable() {
           data.items.map(async (visit) => {
             try {
               const [patient, doctor] = await Promise.all([
-                adminApi.getPatientById(visit.id).catch(() => null),
-                adminApi.getDoctorById(visit.id).catch(() => null),
+                adminApi.getPatientById(visit.patientId).catch(() => null),
+                adminApi.getDoctorById(visit.doctorId).catch(() => null),
               ]);
 
               return {

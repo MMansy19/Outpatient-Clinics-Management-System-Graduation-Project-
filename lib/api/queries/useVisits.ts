@@ -192,16 +192,8 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
         const items: VisitResponse[] = visits.map((visit) => ({
           id: visit.global_id,
           diagnoses: visit.diagnosis,
-          doctor: {
-            id: visit.doctor.id.toString(),
-            name: 
-            // visit.doctor?.name ||
-            '',
-          },
-          patient: {
-            id: visit.patient.id.toString(),
-            name: visit.patient?.name || '',
-          },
+          doctorId: visit.doctor.id.toString(),
+          patientId: visit.patient.id.toString(),
           createdAt: visit.created_at.toISOString(),
         }));
         return {
