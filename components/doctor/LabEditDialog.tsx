@@ -13,73 +13,56 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateScan } from '@/lib/api/queries/useScans';
+import { useUpdateLab } from '@/lib/api/queries/useLabs';
 import { useFormState } from '@/src/hooks/useFormState';
 
-const scanTypes = [
-  'X-Ray',
-  'MRI',
-  'CT Scan',
-  'Ultrasound',
-  'Mammography',
-  'Bone Scan',
-  'Nuclear Scan',
-  'Other',
-];
-
-const scanSchema = z.object({
-  name: z.string().min(1, 'Scan name is required'),
-  type: z.string().min(1, 'Scan type is required'),
+const labSchema = z.object({
+  name: z.string().min(1, 'Lab name is required'),
   comments: z.string().optional(),
-  image: z.instanceof(File).optional(),
 });
 
-type ScanFormData = z.infer<typeof scanSchema>;
+type LabFormData = z.infer<typeof labSchema>;
 
-interface ScanFormProps {
+interface LabEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  socialSecurityNumber: string;
+  lab: {
+    id: string;
+    name: string;
+    comments?: string;
+    result_url?: string;
+  };
   onSuccess?: () => void;
 }
 
-export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }: ScanFormProps) {
+export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDialogProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
-  const form = useForm<ScanFormData>({
-    resolver: zodResolver(scanSchema),
+  const form = useForm<LabFormData>({
+    resolver: zodResolver(labSchema),
     defaultValues: {
-      name: '',
-      type: '',
-      comments: '',
+      name: lab.name || '',
+      comments: lab.comments || '',
     },
   });
 
-  const createScanMutation = useCreateScan();
+  const updateLabMutation = useUpdateLab();
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
       onSuccess?.();
     },
-    successMessage: 'Scan created successfully',
+    successMessage: 'Lab updated successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
 
-  const handleSubmit = (data: ScanFormData) => {
+  const handleSubmit = (data: LabFormData) => {
     const formData = new FormData();
     formData.append('name', data.name);
-    formData.append('type', data.type);
     if (data.comments) {
       formData.append('comments', data.comments);
     }
@@ -89,10 +72,11 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
 
     execute(() => {
       return new Promise((resolve, reject) => {
-        createScanMutation.mutate(
+        updateLabMutation.mutate(
           {
-            socialSecurityNumber,
-            data: formData,
+            labId: lab.id,
+            data: formData as any,
+            socialSecurityNumber: '',
           },
           {
             onSuccess: resolve,
@@ -107,11 +91,11 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
     <BaseFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t('createNewScan')}
-      description={t('createScanDescription')}
+      title={t('editLab')}
+      description={t('editLabDescription')}
       isPending={isPending}
       onSubmit={form.handleSubmit(handleSubmit)}
-      submitLabel={t('createScan')}
+      submitLabel={t('updateLab')}
       cancelLabel={tCommon('cancel')}
       size="lg"
     >
@@ -121,35 +105,10 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('scanName')}</FormLabel>
+              <FormLabel>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Chest X-Ray, Brain MRI" {...field} />
+                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t('scanType')}</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder={t('selectScanType')} />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {scanTypes.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
               <FormMessage />
             </FormItem>
           )}
@@ -174,7 +133,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
         />
 
         <ImageUploadField
-          label="Scan Image"
+          label="Lab Image (Optional)"
           onImageSelect={setSelectedImage}
           maxSizeMB={5}
         />

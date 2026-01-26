@@ -9,7 +9,11 @@
       "Bash(npx eslint:*)",
       "Bash(npx tsc:*)",
       "Bash(git checkout:*)",
-      "Bash(pnpm dev --port 3001)"
+      "Bash(pnpm dev --port 3001)",
+      "Bash(ls:*)",
+      "Bash(grep -n \"onNewVisit\" D:WORKProjectsGPGP-Frontendapp[locale]doctordashboardpage.tsx)",
+      "Bash(grep:*)",
+      "Bash(tail:*)"
     ]
   }
 }

@@ -55,12 +55,20 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 export const useGetPatientMedications = (
   patientId: number
 ): UseQueryResult<unknown[], Error> => {
+  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+
   return useQuery({
     queryKey: medicationsKeys.patient(patientId.toString()),
     queryFn: async () => {
+      console.log('🔍 useGetPatientMedications - queryFn executing for patientId:', patientId);
+
       if (USE_MOCK_DATA) {
-        return await mockMedicalHistoryAPI.getPatientMedications(patientId);
+        console.log('🔍 useGetPatientMedications - using mock data');
+        const result = await mockMedicalHistoryAPI.getPatientMedications(patientId);
+        console.log('🔍 useGetPatientMedications - mock result:', result);
+        return result;
       }
+      console.log('🔍 useGetPatientMedications - using real API');
       return await doctorApi.getPatientMedications(patientId.toString());
     },
     enabled: !!patientId, // Only run when patientId is provided

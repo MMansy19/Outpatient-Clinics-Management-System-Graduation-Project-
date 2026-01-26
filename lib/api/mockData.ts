@@ -795,20 +795,32 @@ export const mockVisitsAPI = {
 // Mock Medical History API
 export const mockMedicalHistoryAPI = {
   async getPatientLabs(patientId: number): Promise<Lab[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs called with patientId:', patientId);
     await delay();
     const labs = getStorageData(STORAGE_KEYS.LABS, initLabs());
-    return labs.filter((l: Lab) => l.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs - all labs:', labs);
+    const filtered = labs.filter((l: Lab) => l.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs - filtered result:', filtered);
+    return filtered;
   },
 
   async getPatientScans(patientId: number): Promise<Scan[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans called with patientId:', patientId);
     await delay();
     const scans = getStorageData(STORAGE_KEYS.SCANS, initScans());
-    return scans.filter((s: Scan) => s.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans - all scans:', scans);
+    const filtered = scans.filter((s: Scan) => s.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans - filtered result:', filtered);
+    return filtered;
   },
 
   async getPatientMedications(patientId: number): Promise<Medication[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications called with patientId:', patientId);
     await delay();
     const medications = getStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
-    return medications.filter((m: Medication) => m.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications - all medications:', medications);
+    const filtered = medications.filter((m: Medication) => m.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications - filtered result:', filtered);
+    return filtered;
   },
 };

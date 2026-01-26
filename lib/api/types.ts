@@ -356,3 +356,8 @@ export interface EnhancedVisitResponse extends VisitResponse {
   patientName?: string;
   doctorName?: string;
 }
+
+export interface UpdateVisitDto {
+  diagnoses?: string;
+  clinicId?: string;
+}

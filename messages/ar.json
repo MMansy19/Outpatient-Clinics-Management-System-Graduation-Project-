@@ -226,6 +226,16 @@
     "totalMedications": "إجمالي الأدوية",
     "totalLabs": "إجمالي نتائج المختبر",
     "totalScans": "إجمالي الأشعة",
+    "createLab": "إنشاء تحليل",
+    "createLabDescription": "إضافة نتيجة تحليل مختبر جديدة",
+    "createNewLab": "تحليل جديد",
+    "labName": "اسم التحليل",
+    "scanName": "اسم الأشعة",
+    "scanType": "نوع الأشعة",
+    "selectScanType": "اختر نوع الأشعة",
+    "createScan": "إنشاء أشعة",
+    "createScanDescription": "إضافة دراسة تصويرية جديدة",
+    "createNewScan": "أشعة جديدة",
     "noMedicationsYet": "لم يتم تسجيل أي أدوية بعد",
     "noLabsYet": "لا توجد نتائج مختبر بعد",
     "noScansYet": "لم يتم تسجيل أي أشعة بعد",
@@ -236,8 +246,9 @@
     "addLab": "إضافة تحليل",
     "addScan": "إضافة أشعة",
     "allVisits": "جميع الزيارات",
-    "allVisitsDescription": "جميع زيارات هذا المريض",
-    "allPatients": "جميع زيارات هذا المريض",
+    "allVisitsDescription": "جميع زيارات هذا الدكتور",
+    "noVisitsDescription": "لم يتم العثور على زيارات لهذا الدكتور",
+    "allPatients": "جميع المرضى",
     "noPatientsFound": "لم يتم العثور على مرضى",
     "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
     "addPatient": {
@@ -363,8 +374,9 @@
     "saveVisit": "حفظ الزيارة",
     "generateDiagnosis": "توليد تشخيص تفريقي",
     "createVisit": "إنشاء زيارة",
+    "visitDescription": "توثيق زيارة سريرية جديدة لهذا المريض",
     "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض"
-    
+
   },
   "medication": {
     "addMedication": "إضافة دواء",

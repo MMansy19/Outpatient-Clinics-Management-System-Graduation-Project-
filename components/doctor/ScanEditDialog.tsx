@@ -23,7 +23,7 @@ import {
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useCreateScan } from '@/lib/api/queries/useScans';
+import { useUpdateScan } from '@/lib/api/queries/useScans';
 import { useFormState } from '@/src/hooks/useFormState';
 
 const scanTypes = [
@@ -41,37 +41,42 @@ const scanSchema = z.object({
   name: z.string().min(1, 'Scan name is required'),
   type: z.string().min(1, 'Scan type is required'),
   comments: z.string().optional(),
-  image: z.instanceof(File).optional(),
 });
 
 type ScanFormData = z.infer<typeof scanSchema>;
 
-interface ScanFormProps {
+interface ScanEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  socialSecurityNumber: string;
+  scan: {
+    id: string;
+    name: string;
+    type: string;
+    comments?: string;
+    image_url?: string;
+  };
   onSuccess?: () => void;
 }
 
-export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }: ScanFormProps) {
+export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEditDialogProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
     resolver: zodResolver(scanSchema),
     defaultValues: {
-      name: '',
-      type: '',
-      comments: '',
+      name: scan.name || '',
+      type: scan.type || '',
+      comments: scan.comments || '',
     },
   });
 
-  const createScanMutation = useCreateScan();
+  const updateScanMutation = useUpdateScan();
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
       onSuccess?.();
     },
-    successMessage: 'Scan created successfully',
+    successMessage: 'Scan updated successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
@@ -89,10 +94,11 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
 
     execute(() => {
       return new Promise((resolve, reject) => {
-        createScanMutation.mutate(
+        updateScanMutation.mutate(
           {
-            socialSecurityNumber,
-            data: formData,
+            scanId: scan.id,
+            data: formData as any,
+            socialSecurityNumber: '', // Required but not used in edit
           },
           {
             onSuccess: resolve,
@@ -107,11 +113,11 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
     <BaseFormDialog
       open={open}
       onOpenChange={onOpenChange}
-      title={t('createNewScan')}
-      description={t('createScanDescription')}
+      title={t('editScan')}
+      description={t('editScanDescription')}
       isPending={isPending}
       onSubmit={form.handleSubmit(handleSubmit)}
-      submitLabel={t('createScan')}
+      submitLabel={t('updateScan')}
       cancelLabel={tCommon('cancel')}
       size="lg"
     >
@@ -174,7 +180,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
         />
 
         <ImageUploadField
-          label="Scan Image"
+          label="Scan Image (Optional)"
           onImageSelect={setSelectedImage}
           maxSizeMB={5}
         />

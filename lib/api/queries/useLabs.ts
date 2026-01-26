@@ -52,12 +52,20 @@ const labsKeys = {
 export const useGetPatientLabs = (
   patientId: number
 ): UseQueryResult<unknown[], Error> => {
+  console.log('🔍 useGetPatientLabs called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+
   return useQuery({
     queryKey: labsKeys.patient(patientId.toString()),
     queryFn: async () => {
+      console.log('🔍 useGetPatientLabs - queryFn executing for patientId:', patientId);
+
       if (USE_MOCK_DATA) {
-        return await mockMedicalHistoryAPI.getPatientLabs(patientId);
+        console.log('🔍 useGetPatientLabs - using mock data');
+        const result = await mockMedicalHistoryAPI.getPatientLabs(patientId);
+        console.log('🔍 useGetPatientLabs - mock result:', result);
+        return result;
       }
+      console.log('🔍 useGetPatientLabs - using real API');
       return await doctorApi.getPatientLabs(patientId.toString());
     },
     enabled: !!patientId,

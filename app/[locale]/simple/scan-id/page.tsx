@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
+import Image from 'next/image';
 
 interface ExtractedData {
   name: string;
@@ -182,10 +183,12 @@ export default function ScanIdPage() {
             <div className="bg-white rounded-2xl p-6 shadow-lg animate-slide-up">
               {/* Image Preview */}
               <div className="aspect-video bg-gray-100 rounded-xl mb-4 overflow-hidden">
-                <img
+                <Image
                   src={selectedImage}
                   alt="ID"
                   className="w-full h-full object-contain"
+                  width={600}
+                  height={400}
                 />
               </div>
 
