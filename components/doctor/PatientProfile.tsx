@@ -904,7 +904,7 @@ export function PatientProfile({
       <MedicationDialog
         open={isMedicationDialogOpen}
         onOpenChange={setIsMedicationDialogOpen}
-        socialSecurityNumber={String(patient.socialSecurityNumber)}
+        patientId={String(patient.id)}
         onSuccess={() => {
           setIsMedicationDialogOpen(false);
         }}
