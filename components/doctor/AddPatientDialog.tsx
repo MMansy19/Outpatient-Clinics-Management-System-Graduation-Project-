@@ -70,6 +70,8 @@ export function AddPatientDialog({
       lastName: '',
       language: Language.ENGLISH,
       socialSecurityNumber: '',
+      address: '',
+      job: '',
     },
   });
 
@@ -109,23 +111,13 @@ export function AddPatientDialog({
   }, [nationalId]);
 
   const onSubmit = (data: CreatePatientFormData) => {
-    // Build request object, excluding empty address and job
-    const submitData: Record<string, unknown> = {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      language: data.language,
-      socialSecurityNumber: data.socialSecurityNumber,
+    // Ensure address and job are always present (empty string if undefined)
+    const submitData = {
+      ...data,
+      address: data.address ?? '',
+      job: data.job ?? '',
     };
-
-    // Only include address and job if they have values
-    if (data.address && data.address.trim()) {
-      submitData.address = data.address;
-    }
-    if (data.job && data.job.trim()) {
-      submitData.job = data.job;
-    }
-
-    createPatient(submitData as CreatePatientFormData, {
+    createPatient(submitData, {
       onSuccess: (response) => {
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         toast.success(

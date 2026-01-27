@@ -71,9 +71,9 @@ export interface CreatePatientDto {
   firstName: string;
   lastName: string;
   language: Language;
-  socialSecurityNumber: string;
-  address?: string;
-  job?: string;
+  socialSecurityNumber: string; // 14 digits
+  address: string;
+  job: string;
 }
 
 export interface CreateUserResponse {
