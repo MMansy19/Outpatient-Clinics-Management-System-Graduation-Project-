@@ -492,7 +492,6 @@
     "actions": "Actions",
     "type": "Type",
     "name": "Name",
-    
     "patientName": "Patient Name",
     "visitDate": "Visit Date",
     "gender": "Gender",
