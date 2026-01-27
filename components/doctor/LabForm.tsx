@@ -4,6 +4,7 @@ import React from 'react';
 import { useTranslations } from 'next-intl';
 import { BaseFormDialog } from '@/components/shared/BaseFormDialog';
 import { ImageUploadField } from '@/components/shared/ImageUploadField';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
 import {
   FormControl,
   FormField,
@@ -12,7 +13,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -117,10 +117,11 @@ export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }:
             <FormItem>
               <FormLabel>{t('comments')}</FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
-                  {...field}
+                  rows={4}
                 />
               </FormControl>
               <FormMessage />

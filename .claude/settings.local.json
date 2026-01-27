@@ -1,25 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find:*)",
-      "Bash(pnpm run build)",
-      "Bash(pnpm tsc:*)",
-      "Bash(dir:*)",
-      "Bash(npm run build)",
-      "Bash(npx eslint:*)",
-      "Bash(npx tsc:*)",
-      "Bash(git checkout:*)",
-      "Bash(pnpm dev --port 3001)",
-      "Bash(ls:*)",
-      "Bash(grep -n \"onNewVisit\" D:WORKProjectsGPGP-Frontendapp[locale]doctordashboardpage.tsx)",
-      "Bash(grep:*)",
-      "Bash(tail:*)",
-      "Bash(lsof:*)",
-      "Bash(netstat:*)",
-      "Bash(findstr:*)",
-      "Bash(taskkill:*)",
-      "Bash(powershell -Command:*)",
-      "Bash(npm run dev)"
+      "Bash(tree:*)",
+      "Bash(pnpm add:*)",
+      "Bash(pnpm tsc --noEmit)",
+      "Bash(curl:*)",
+      "Bash(test:*)"
     ]
   }
 }

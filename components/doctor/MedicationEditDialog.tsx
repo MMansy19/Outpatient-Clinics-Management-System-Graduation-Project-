@@ -24,7 +24,7 @@ import {
 
 import { useUpdateMedication } from '@/lib/api/queries/useMedications';
 import { useFormState } from '@/src/hooks/useFormState';
-import { medicationSchema, COMMON_PERIODS, COMMON_DOSAGES } from '@/lib/schemas/medicationSchema';
+import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationEditDialogProps {
@@ -49,6 +49,12 @@ export function MedicationEditDialog({
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
   const { mutate: updateMedication } = useUpdateMedication();
+
+  // Helper function to create translation function for medication namespace
+  const getMedicationT = (key: string) => t(key);
+
+  const periodOptions = getLocalizedPeriodOptions(getMedicationT);
+  const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<Partial<CreateMedicationDto>>({
     resolver: zodResolver(medicationSchema),
@@ -130,7 +136,7 @@ export function MedicationEditDialog({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMON_DOSAGES.map((dosageOption) => (
+                  {dosageOptions.map((dosageOption) => (
                     <SelectItem key={dosageOption.value} value={dosageOption.value.toString()}>
                       {dosageOption.label}
                     </SelectItem>
@@ -160,7 +166,7 @@ export function MedicationEditDialog({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMON_PERIODS.map((periodOption) => (
+                  {periodOptions.map((periodOption) => (
                     <SelectItem key={periodOption.value} value={periodOption.value.toString()}>
                       {periodOption.label}
                     </SelectItem>
@@ -190,7 +196,6 @@ export function MedicationEditDialog({
                   value={field.value || ''}
                 />
               </FormControl>
-              <FormDescription>{t('frequencyDescription')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

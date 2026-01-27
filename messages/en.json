@@ -15,7 +15,10 @@
     "optional": "Optional",
     "male": "Male",
     "female": "Female",
-    "viewImage": "View Image"
+    "viewImage": "View Image",
+    "unknown": "Unknown",
+    "other": "Other",
+    "totalPatients": "Total Patients"
   },
   "nav": {
     "home": "Home",
@@ -187,15 +190,13 @@
     "visits": "Visits",
     "dashboardSubtitle": "Manage your patients and clinical workflow",
     "patients": "Patients",
-    "patientSearch": "Patient Search",
-    "searchSubtitle": "Find and manage your patients",
     "addNewPatient": "Add New Patient",
     "scanID": "Scan ID",
     "createVisit": "Create Visit",
     "search": "Search by Name or National ID",
     "searchPlaceholder": "Search patients...",
     "today": "Today",
-    "thisWeek": "This Week",
+    "thisWeek": "Visits this week",
     "thisMonth": "This Month",
     "customRange": "Custom Range",
     "noVisitsFound": "No visits found",
@@ -209,7 +210,6 @@
     "patientsSeenToday": "Patients seen today",
     "pendingVisits": "All Visits",
     "awaitingDocumentation": "Awaiting documentation",
-    "totalThisWeek": "Total this week",
     "quickActions": "Quick Actions",
     "searchPatients": "Search Patients",
     "recentVisits": "Recent Visits",
@@ -260,6 +260,7 @@
     "allPatients": "Patients",
     "noPatientsFound": "No patients found",
     "allPatientsDescription": "All patients registered under this doctor",
+    "uploadScanImage": "Upload Scan Image",
     "addPatient": {
       "title": "Add New Patient",
       "selectMethod": "Choose Registration Method",
@@ -313,6 +314,7 @@
     "address": "Address",
     "age": "Age",
     "years": "years",
+    "days": "days",
     "patientCreated": "Patient registered successfully",
     "patientCreateError": "Failed to register patient. Please try again.",
     "patientUpdated": "Patient information updated",
@@ -332,7 +334,22 @@
     "medications": "Medications",
     "noHistory": "No medical history recorded",
     "weightTrend": "Weight Trend",
-    "bpTrend": "Blood Pressure Trend"
+    "bpTrend": "Blood Pressure Trend",
+    "notRegistered": "Patient Not Registered",
+    "registerNew": "Register New Patient",
+    "scannedInfo": "Scanned Information",
+    "foundViaScan": "Patient found via National ID scan",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "John",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Doe",
+    "job": "Job/Occupation",
+    "jobPlaceholder": "Engineer",
+    "addressPlaceholder": "123 Main Street, Cairo",
+    "selectLanguage": "Select language",
+    "unknownPatient": "Unknown Patient",
+    "noDiagnosis": "No diagnosis",
+    "editComingSoon": "Edit patient feature coming soon"
   },
   "visit": {
     "newVisit": "New Visit",
@@ -384,13 +401,21 @@
     "generateDiagnosis": "Generate Differential Diagnosis",
     "createVisit": "Create Visit",
     "visitDescription": "Document a new clinical visit for this patient",
-    "visitDescreption": "Document a new clinical visit for this patient"
+    "visitDescreption": "Document a new clinical visit for this patient",
+    "networkError": "Network Error",
+    "networkErrorDescription": "Please check your internet connection and try again",
+    "diagnosesTreatmentPlan": "Diagnosis & Treatment Plan",
+    "enterDiagnosesTreatmentPlan":"Enter diagnosis and treatment plan"
   },
   "medication": {
     "addMedication": "Add Medication",
     "medicationCreated": "Medication added successfully",
     "medicationCreateError": "Failed to add medication",
     "medicationDescription": "Prescribe medication for this visit",
+    "editMedication": "Edit Medication",
+    "editMedicationDescription": "Update medication details",
+    "updateMedication": "Update Medication",
+    "medicationUpdated": "Medication updated successfully",
     "name": "Medication Name",
     "namePlaceholder": "Enter medication name (e.g., Amoxicillin)",
     "dosage": "Dosage",
@@ -398,17 +423,89 @@
     "dosageDescription": "Strength per dose (e.g., 500mg)",
     "frequency": "Frequency",
     "frequencyPlaceholder": "e.g., Once daily, Twice daily, Every 8 hours",
-    "frequencyDescription": "How often should this medication be taken",
     "duration": "Duration",
     "durationPlaceholder": "Select duration",
     "durationDescription": "How long should this medication be taken",
     "notes": "Additional Notes",
-    "notesPlaceholder": "Special instructions, warnings, or interactions..."
+    "notesPlaceholder": "Special instructions, warnings, or interactions...",
+    "defaultName": "Medication",
+    "asPrescribed": "As prescribed",
+    "dosages": {
+      "oneTablet": "1 tablet",
+      "twoTablets": "2 tablets",
+      "threeTablets": "3 tablets",
+      "fourTablets": "4 tablets",
+      "custom": "Custom"
+    },
+    "periods": {
+      "oneDay": "1 day",
+      "twoDays": "2 days",
+      "threeDays": "3 days",
+      "fiveDays": "5 days",
+      "oneWeek": "1 week",
+      "tenDays": "10 days",
+      "twoWeeks": "2 weeks",
+      "threeWeeks": "3 weeks",
+      "fourWeeks": "4 weeks",
+      "chronic": "Chronic",
+      "custom": "Custom"
+    }
+  },
+  "lab": {
+    "createdSuccess": "Lab created successfully",
+    "updatedSuccess": "Lab updated successfully",
+    "image": "Lab Image",
+    "defaultName": "Lab Test",
+    "resultsAvailable": "Results available"
+  },
+  "visitEdit": {
+    "diagnosis": "Diagnosis",
+    "treatmentPlan": "Treatment Plan",
+    "notes": "Notes"
   },
   "validation": {
     "nationalIdLength": "National ID must be 14 digits",
     "weightRequired": "Weight is mandatory for dosage calculations",
-    "invalidEmail": "Invalid email format"
+    "invalidEmail": "Invalid email format",
+    "labNameRequired": "Lab name is required",
+    "scanNameRequired": "Scan name is required",
+    "scanTypeRequired": "Scan type is required",
+    "diagnosesRequired": "Diagnoses is required",
+    "diagnosisRequired": "Diagnosis is required",
+    "unknownError": "Unknown error",
+    "clinicNameRequired": "Clinic name is required",
+    "specialityRequired": "Speciality is required",
+    "failedToLoadClinics": "Failed to load clinics",
+    "failedToLoadVisits": "Failed to load visits",
+    "failedToLoadPatients": "Failed to load patients",
+    "failedToLoadDoctors": "Failed to load doctors",
+    "checkFormAndRetry": "Please check the form and try again."
+  },
+  "table": {
+    "date": "Date",
+    "doctor": "Doctor",
+    "speciality": "Speciality",
+    "diagnoses": "Diagnoses",
+    "dosage": "Dosage",
+    "duration": "Duration",
+    "comments": "Comments",
+    "actions": "Actions",
+    "type": "Type",
+    "name": "Name",
+    
+    "patientName": "Patient Name",
+    "visitDate": "Visit Date",
+    "gender": "Gender",
+    "dateOfBirth": "Date of Birth",
+    "socialSecurityNumber": "Social Security Number",
+    "job":"Job"
+  },
+  "vitals": {
+    "kg": "kg",
+    "cm": "cm",
+    "mmHg": "mmHg",
+    "systolic": "Systolic",
+    "diastolic": "Diastolic"
   },
   "admin": {
     "name": "Name",
@@ -541,7 +638,6 @@
     "totalRecords": "Total Records",
     "createDoctor": "Register New Doctor",
     "createDoctorDescription": "Add a new doctor to the system. All fields are required.",
-    "preferredLanguage": "Preferred Language",
     "medicalSpeciality": "Medical Speciality",
     "selectSpeciality": "Select speciality",
     "password": "Password",
@@ -569,7 +665,34 @@
     "date": "Date",
     "noDiagnoses": "No diagnoses"
   },
+  "search": {
+    "advancedFilters": "Advanced Filters",
+    "allGenders": "All Genders",
+    "minAge": "Min Age",
+    "maxAge": "Max Age",
+    "clinic": "Clinic",
+    "enterNationalId": "Enter national ID",
+    "from": "From",
+    "to": "To"
+  },
+  "scanTypes": {
+    "ct": "CT",
+    "xray": "X-RAY",
+    "ultrasound": "ULTRA SOUND",
+    "petct": "PET CT",
+    "mammography": "MAMMOGRAPHY"
+  },
   "scan": {
+    "enterNationalId": "Enter national ID",
+    "createdSuccess": "Scan created successfully",
+    "updatedSuccess": "Scan updated successfully",
+    "defaultName": "Imaging Study",
+    "reportAvailable": "Report available",
+    "selectedId": "Selected ID",
+    "searchByNationalId": "Search by National ID",
+    "scanOrEnter": "Scan the patient's National ID or enter it manually",
+    "noPatientFound": "No patient found with this National ID",
+    "registerPrompt": "Would you like to register this patient?",
     "selectRegistrationMethod": "Select Registration Method",
     "scanNationalId": "Scan National ID",
     "scanDescription": "Use your camera to automatically capture patient details",
@@ -657,5 +780,52 @@
     "transcriptionFailed": "Failed to transcribe audio",
     "invalidFileType": "Invalid file type. Please upload an audio or video file.",
     "fileTooLarge": "File is too large. Maximum size is 50MB."
+  },
+  "clinic": {
+    "deletedSuccess": "Clinic deleted successfully",
+    "deleteError": "Failed to delete clinic",
+    "enterName": "Enter clinic name",
+    "enterSpeciality": "Enter speciality (e.g., Dermatology)",
+    "creating": "Creating..."
+  },
+  "qr": {
+    "code": "QR Code"
+  },
+  "history": {
+    "defaultName": "Lab Test",
+    "resultsAvailable": "Results available",
+    "reportAvailable": "Report available",
+    "medicationName": "Medication",
+    "asPrescribed": "As prescribed"
+  },
+  "specialities": {
+    "cardiology": "Cardiology",
+    "dermatology": "Dermatology",
+    "endocrinology": "Endocrinology",
+    "gastroenterology": "Gastroenterology",
+    "generalPractice": "General Practice",
+    "generalSurgery": "General Surgery",
+    "hematology": "Hematology",
+    "internalMedicine": "Internal Medicine",
+    "nephrology": "Nephrology",
+    "neurology": "Neurology",
+    "obstetricsGynecology": "Obstetrics & Gynecology",
+    "oncology": "Oncology",
+    "ophthalmology": "Ophthalmology",
+    "orthopedics": "Orthopedics",
+    "ent": "Otolaryngology (ENT)",
+    "pediatrics": "Pediatrics",
+    "psychiatry": "Psychiatry",
+    "pulmonology": "Pulmonology",
+    "radiology": "Radiology",
+    "rheumatology": "Rheumatology",
+    "urology": "Urology"
+  },
+  "api": {
+    "success": "Success!",
+    "failed": "Failed: ",
+    "adminImplNeeded": "Admin creation endpoint - Implement as needed",
+    "doctorImplNeeded": "Doctor creation endpoint - Implement as needed",
+    "clinicImplNeeded": "Clinic endpoint - Implement as needed"
   }
 }

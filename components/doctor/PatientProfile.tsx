@@ -63,6 +63,8 @@ export function PatientProfile({
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
+  const tTable = useTranslations('table');
+  const tVitals = useTranslations('vitals');
 
   // Debug logging
   console.log('🔍 PatientProfile - Received patient prop:', patient);
@@ -141,17 +143,14 @@ export function PatientProfile({
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg mb-2 text-blue-900 dark:text-blue-100">
-                  Patient Not Registered
+                  {tPatient('notRegistered')}
                 </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                  This National ID was scanned but the patient is not yet registered in the system. You can register them now or view the scanned information below.
-                </p>
                 <Button
                   onClick={onEdit}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   <Plus className="mr-2 h-4 w-4" />
-                  Register New Patient
+                  {tPatient('registerNew')}
                 </Button>
               </div>
             </div>
@@ -161,35 +160,37 @@ export function PatientProfile({
         {/* Scanned Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Scanned Information</CardTitle>
-            <CardDescription>
-              Information extracted from National ID card
-            </CardDescription>
+            <CardTitle>{tPatient('scannedInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {patient.name &&
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Name</p>
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('name')}</p>
                 <p className="text-lg">{patient.name}</p>
-              </div>
+              </div>}
+              {patient.socialSecurityNumber &&
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">National ID</p>
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('nationalId')}</p>
                 <p className="text-lg font-mono">{patient.socialSecurityNumber}</p>
               </div>
+  }{patient.gender !== undefined &&
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('gender')}</p>
                 <p className="text-lg">
-                  {String(patient.gender) === '0' || patient.gender === 'male' ? 'Male' :
-                   String(patient.gender) === '1' || patient.gender === 'female' ? 'Female' : 'Other'}
+                  {String(patient.gender) === '0' || patient.gender === 'male' ? tPatient('male') :
+                   String(patient.gender) === '1' || patient.gender === 'female' ? tPatient('female') : tCommon('other')}
                 </p>
               </div>
+  }{patient.dateOfBirth && calculateAge(patient.dateOfBirth) >= 1 &&
               <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">Age</p>
-                <p className="text-lg">{calculateAge(patient.dateOfBirth)} years</p>
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('age')}</p>
+                <p className="text-lg">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
               </div>
+  } 
               {patient.address && (
                 <div className="space-y-2 md:col-span-2">
-                  <p className="text-sm font-medium text-muted-foreground">Address</p>
+                  <p className="text-sm font-medium text-muted-foreground">{tPatient('address')}</p>
                   <p className="text-lg">{patient.address}</p>
                 </div>
               )}
@@ -220,7 +221,7 @@ export function PatientProfile({
             <div className="flex items-center gap-3">
               <ScanLine className="h-5 w-5 text-green-600 dark:text-green-400" />
               <p className="text-sm text-green-700 dark:text-green-300">
-                <span className="font-medium">Patient found via National ID scan</span> - Information verified from ID card
+                <span className="font-medium">{tPatient('foundViaScan')}</span>
               </p>
             </div>
           </CardContent>
@@ -245,6 +246,8 @@ export function PatientProfile({
                   </Badge>
 
                 </div>  
+{patient.dateOfBirth && 
+
               <div className="min-w-16">
                 <div className='flex flex-row gap-2 items-center'>
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -252,6 +255,7 @@ export function PatientProfile({
                 </div>
                          <p className="font-medium truncate">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
            </div>
+}
                 </CardDescription>  
               </div>
             </div>
@@ -288,19 +292,19 @@ export function PatientProfile({
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <div className="medical-card">
                 <p className="text-sm text-muted-foreground">{tVisit('weight')}</p>
-                <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} kg</p>
+                <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} {tVitals('kg')}</p>
               </div>
               {latestVitals.height && (
                 <div className="medical-card">
                   <p className="text-sm text-muted-foreground">{tVisit('height')}</p>
-                  <p className="text-2xl font-bold">{latestVitals.height} cm</p>
+                  <p className="text-2xl font-bold">{latestVitals.height} {tVitals('cm')}</p>
                 </div>
               )}
               {latestVitals.blood_pressure_systolic && latestVitals.blood_pressure_diastolic && (
                 <div className="medical-card">
                   <p className="text-sm text-muted-foreground">{tVisit('bloodPressure')}</p>
                   <p className="text-2xl font-bold">
-                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
+                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic} {tVitals('mmHg')}
                   </p>
                 </div>
               )}
@@ -369,10 +373,10 @@ export function PatientProfile({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Speciality</TableHead>
-                        <TableHead>Diagnoses</TableHead>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('speciality')}</TableHead>
+                        <TableHead>{tTable('diagnoses')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -432,11 +436,11 @@ export function PatientProfile({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Dosage</TableHead>
-                        <TableHead>Duration</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Comments</TableHead>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('dosage')}</TableHead>
+                        <TableHead>{tTable('duration')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -496,11 +500,11 @@ export function PatientProfile({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Comments</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -571,12 +575,12 @@ export function PatientProfile({
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Comments</TableHead>
-                        <TableHead>Actions</TableHead>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('type')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -651,9 +655,16 @@ export function PatientProfile({
                                 <Activity className="h-5 w-5 text-medical-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{visit.diagnoses || 'Visit'}</p>
-                                <p className="text-sm text-muted-foreground">Dr. {visit.doctor?.name || 'N/A'}</p>
-                                <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                                <p className="font-medium truncate">{visit.diagnoses || tVisit('diagnosis')}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {visit.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('speciality')}:</span> {visit.doctor?.speciality || tCommon('unknown')}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -700,8 +711,22 @@ export function PatientProfile({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium truncate">{medication.name}</p>
-                                <p className="text-sm text-muted-foreground">{medication.dosage} - {medication.period} days</p>
-                                <p className="text-xs text-muted-foreground">Dr. {medication.doctor?.name || 'N/A'}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('dosage')}:</span> {medication.dosage}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('duration')}:</span> {medication.period} {tPatient('days')}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {medication.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {medication.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {medication.comments}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -748,8 +773,29 @@ export function PatientProfile({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium truncate">{lab.name}</p>
-                                <p className="text-sm text-muted-foreground">{lab.comments || '-'}</p>
-                                <p className="text-xs text-muted-foreground">{formatDate(lab.createdAt)} - Dr. {lab.doctor?.name || 'N/A'}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(lab.createdAt)}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {lab.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {lab.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {lab.comments}
+                                    </p>
+                                  )}
+                                  {lab.photoUrl && (
+                                    <a
+                                      href={lab.photoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-medical-primary hover:underline inline-block mt-1"
+                                    >
+                                      {tCommon('viewImage')}
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -795,9 +841,33 @@ export function PatientProfile({
                                 <ScanLine className="h-5 w-5 text-purple-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{scan.name || scan.type || 'Scan'}</p>
-                                <p className="text-sm text-muted-foreground">{scan.comments || '-'}</p>
-                                <p className="text-xs text-muted-foreground">{formatDate(scan.createdAt)} - Dr. {scan.doctor?.name || 'N/A'}</p>
+                                <p className="font-medium truncate">{scan.name || scan.type || tPatient('scans')}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(scan.createdAt)}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('type')}:</span> {scan.type || '-'}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {scan.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {scan.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {scan.comments}
+                                    </p>
+                                  )}
+                                  {scan.photoUrl && (
+                                    <a
+                                      href={scan.photoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-medical-primary hover:underline inline-block mt-1"
+                                    >
+                                      {tCommon('viewImage')}
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -851,17 +921,6 @@ export function PatientProfile({
         onOpenChange={setIsScanFormOpen}
         socialSecurityNumber={String(patient?.socialSecurityNumber || '')}
       />
-
-      {/* Floating Action Button for Mobile */}
-      <div className="fixed bottom-20 right-4 md:hidden z-50">
-        <Button
-          size="lg"
-          onClick={() => setIsVisitDialogOpen(true)}
-          className="h-14 w-12 rounded-full shadow-lg bg-medical-primary hover:bg-medical-primary/90"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
     </div>
   );
 }

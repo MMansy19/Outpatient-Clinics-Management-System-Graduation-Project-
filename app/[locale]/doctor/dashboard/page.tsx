@@ -2,7 +2,7 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Mic, Plus } from 'lucide-react';
+import { Users, Activity, Calendar, Plus, LogOut } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,12 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import { NationalIdSearch } from '@/components/doctor/NationalIdSearch';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
@@ -34,6 +40,7 @@ import {
   useGetAllVisits,
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
+import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
 
@@ -46,6 +53,9 @@ type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients';
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('doctor');
+  const tPatient = useTranslations('patient');
+  const tTable = useTranslations('table');
+  const tCommon = useTranslations('common');
   const [currentView, setCurrentView] = useState<View>('visits');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
@@ -56,6 +66,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [registrationSource, setRegistrationSource] = useState<
     'scan' | 'manual'
   >('manual');
+
+  const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
     data: allVisits,
     isLoading: loadingAllVisits,
@@ -69,21 +81,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     error: patientsError,
     refetch: refetchPatients,
   } = useGetAllPatients();
-
-  // Debug logging
-  console.log('🔍 Patients Query State:', {
-    data: allPatients,
-    isLoading: loadingAllPatients,
-    error: patientsError,
-    hasData: !!allPatients,
-  });
-
-  console.log('🔍 Visits Query State:', {
-    data: allVisits,
-    isLoading: loadingAllVisits,
-    error: visitsError,
-    hasData: !!allVisits,
-  });
 
   // Calculate statistics
   const calculateStats = () => {
@@ -173,6 +170,25 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     console.log('Transcription:', transcription);
   };
 
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+
+      await new Promise<void>((resolve) => {
+        logout(undefined, {
+          onSettled: () => resolve(),
+        });
+      });
+
+      window.location.replace(`/${locale}/login`);
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.replace(`/${locale}/login`);
+    }
+  };
+
   // Force refetch on mount
   React.useEffect(() => {
     console.log('🔄 Dashboard mounted, refetching data...');
@@ -195,24 +211,40 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
-              onClick={() => setIsVoiceRecorderOpen(true)}
-              variant="outline"
-              className="sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10"
-            >
-              <Mic className="sm:mr-2 h-5 w-5" />
-              <span className="hidden sm:inline">{t('title')}</span>
-            </Button>
-            <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
               }}
               variant="outline"
               className="sm:flex-none "
             >
-              <Plus className="sm:mr-2 h-5 w-5" />
-              <span className="hidden sm:inline">Add Patient</span>
+              <Plus className="mr-2 h-5 w-5" />
+              <span className="inline">{t('addNewPatient')}</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
+
+            {/* Logout Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {loggingOut ? 'Logging out...' : 'Logout'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* <ThemeToggle /> */}
           </div>
         </div>
@@ -228,9 +260,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.todaysPatients}</div>
-              <p className="text-xs text-muted-foreground">
-                {loadingAllPatients ? 'Loading...' : 'Total patients'}
-              </p>
               {patientsError && (
                 <p className="text-xs text-red-500 mt-1">
                   Error: {String(patientsError.message)}
@@ -248,9 +277,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingVisits}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('awaitingDocumentation')}
-              </p>
               {visitsError && (
                 <p className="text-xs text-red-500 mt-1">
                   Error: {String(visitsError.message)}
@@ -268,9 +294,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('totalThisWeek')}
-              </p>
             </CardContent>
           </Card>
         </div>
@@ -319,10 +342,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Patient Name</TableHead>
-                        <TableHead>Diagnoses</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Visit Date</TableHead>
+                        <TableHead>{tTable('patientName')}</TableHead>
+                        <TableHead>{tTable('diagnoses')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('visitDate')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -334,7 +357,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                           <TableCell className="font-medium">
                             {visit?.patient?.name ||
                               visit?.patient_name ||
-                              'N/A'}
+                              tCommon('unknown')}
                           </TableCell>
                           <TableCell className="max-w-[300px]">
                             <div
@@ -343,13 +366,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                             >
                               {visit?.diagnoses ||
                                 visit?.diagnosis ||
-                                'No diagnosis'}
+                                tTable('noDiagnosis')}
                             </div>
                           </TableCell>
                           <TableCell>
                             {visit?.doctor?.name ||
                               visit?.doctor_name ||
-                              'Dr. Unknown'}
+                              tCommon('unknown')}
                           </TableCell>
                           <TableCell>
                             {visit?.created_at
@@ -396,12 +419,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Gender</TableHead>
-                            <TableHead>Date of Birth</TableHead>
-                            <TableHead>Social Security Number</TableHead>
-                            <TableHead>Address</TableHead>
-                            <TableHead>Job</TableHead>
+                            <TableHead>{tTable('name')}</TableHead>
+                            <TableHead>{tTable('gender')}</TableHead>
+                            <TableHead>{tTable('dateOfBirth')}</TableHead>
+                            <TableHead>{tTable('socialSecurityNumber')}</TableHead>
+                            <TableHead>{tPatient('address')}</TableHead>
+                            <TableHead>{tTable('job')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -412,25 +435,25 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                               onClick={() => handleSelectPatient(patient)}
                             >
                               <TableCell className="font-medium">
-                                {patient.name || 'Unknown'}
+                                {patient.name || tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 {patient.gender === 0
-                                  ? 'Male'
+                                  ? tPatient('male')
                                   : patient.gender === 1
-                                    ? 'Female'
-                                    : 'Other'}
+                                    ? tPatient('female')
+                                    : tCommon('other')}
                               </TableCell>
                               <TableCell>
                                 {patient.dateOfBirth
                                   ? new Date(
                                       patient.dateOfBirth
                                     ).toLocaleDateString()
-                                  : 'N/A'}
+                                  : tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 <div className="font-mono text-sm">
-                                  {patient.socialSecurityNumber || 'N/A'}
+                                  {patient.socialSecurityNumber || tCommon('unknown')}
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
@@ -438,10 +461,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                   className="truncate"
                                   title={patient.address}
                                 >
-                                  {patient.address || 'N/A'}
+                                  {patient.address || tCommon('unknown')}
                                 </div>
                               </TableCell>
-                              <TableCell>{patient.job || 'N/A'}</TableCell>
+                              <TableCell>{patient.job || tCommon('unknown')}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

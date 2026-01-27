@@ -14,7 +14,11 @@
     "required": "مطلوب",
     "optional": "اختياري",
     "male": "ذكر",
-    "female": "أنثى"
+    "female": "أنثى",
+    "viewImage": "عرض الصورة",
+    "unknown": "غير معروف",
+    "other": "آخر",
+    "totalPatients": "إجمالي المرضى"
   },
   "nav": {
     "home": "الرئيسية",
@@ -188,15 +192,13 @@
     "visits": "الزيارات",
     "dashboardSubtitle": "إدارة مرضاك وسير العمل السريري",
     "patients": "المرضى",
-    "patientSearch": "البحث عن المرضى",
-    "searchSubtitle": "البحث وإدارة مرضاك",
     "addNewPatient": "إضافة مريض جديد",
     "scanID": "سكان البطاقة",
     "search": "ابحث بالاسم أو الرقم القومي",
     "searchPlaceholder": "بحث عن المرضى...",
     "noVisitsFound":"لا توجد زيارات",
     "today": "اليوم",
-    "thisWeek": "هذا الأسبوع",
+    "thisWeek": "زيارات هذا الأسبوع",
     "thisMonth": "هذا الشهر",
     "customRange": "نطاق مخصص",
     "allClinics": "جميع العيادات",
@@ -209,7 +211,6 @@
     "patientsSeenToday": "المرضى الذين تمت معاينتهم اليوم",
     "pendingVisits": "جميع الزيارات",
     "awaitingDocumentation": "في انتظار التوثيق",
-    "totalThisWeek": "الإجمالي هذا الأسبوع",
     "quickActions": "إجراءات سريعة",
     "searchPatients": "البحث عن المرضى",
     "recentVisits": "الزيارات الأخيرة",
@@ -251,12 +252,16 @@
     "addMedication": "إضافة دواء",
     "addLab": "إضافة تحليل",
     "addScan": "إضافة أشعة",
+    "enterNationalId": "أدخل الرقم القومي",
     "allVisits": "جميع الزيارات",
     "allVisitsDescription": "جميع زيارات هذا الدكتور",
     "noVisitsDescription": "لم يتم العثور على زيارات لهذا الدكتور",
     "allPatients": "جميع المرضى",
     "noPatientsFound": "لم يتم العثور على مرضى",
+    "comments":"التعليقات",
+    "optionalComments":"تعليقات اختيارية",
     "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
+  "uploadScanImage": "تحميل صورة الأشعة",
     "addPatient": {
       "title": "إضافة مريض جديد",
       "selectMethod": "اختر طريقة التسجيل",
@@ -310,6 +315,7 @@
     "address": "العنوان",
     "age": "العمر",
     "years": "سنة",
+    "days": "أيام",
     "patientCreated": "تم تسجيل المريض بنجاح",
     "patientCreateError": "فشل تسجيل المريض. حاول مرة أخرى.",
     "patientUpdated": "تم تحديث بيانات المريض",
@@ -329,7 +335,22 @@
     "medications": "الأدوية",
     "noHistory": "لا يوجد سجل طبي",
     "weightTrend": "منحنى الوزن",
-    "bpTrend": "منحنى ضغط الدم"
+    "bpTrend": "منحنى ضغط الدم",
+    "notRegistered": "المريض غير مسجل",
+    "registerNew": "تسجيل مريض جديد",
+    "scannedInfo": "المعلومات الممسوحة",
+    "foundViaScan": "تم العثور على المريض عبر مسح الرقم القومي",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "جون",
+    "lastName": "الاسم الأخير",
+    "lastNamePlaceholder": "دو",
+    "job": "المهنة",
+    "jobPlaceholder": "مهندس",
+    "addressPlaceholder": "123 شارع رئيسي، القاهرة",
+    "selectLanguage": "اختر اللغة",
+    "unknownPatient": "مريض غير معروف",
+    "noDiagnosis": "لا يوجد تشخيص",
+    "editComingSoon": "ميزة تعديل المريض قادمة قريباً"
   },
   "visit": {
     "newVisit": "زيارة جديدة",
@@ -381,7 +402,11 @@
     "generateDiagnosis": "توليد تشخيص تفريقي",
     "createVisit": "إنشاء زيارة",
     "visitDescription": "توثيق زيارة سريرية جديدة لهذا المريض",
-    "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض"
+    "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض",
+    "networkError": "خطأ في الشبكة",
+    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى",
+    "diagnosesTreatmentPlan": "التشخيص وخطة العلاج",
+    "enterDiagnosesTreatmentPlan":" أدخل التشخيص وخطة العلاج"
 
   },
   "medication": {
@@ -389,24 +414,116 @@
     "medicationCreated": "تمت إضافة الدواء بنجاح",
     "medicationCreateError": "فشل في إضافة الدواء",
     "medicationDescription": "وصف دواء لهذه الزيارة",
+    "editMedication": "تعديل الدواء",
+    "editMedicationDescription": "تعديل بيانات الدواء",
+    "updateMedication": "تحديث الدواء",
+    "medicationUpdated": "تم تحديث الدواء بنجاح",
     "name": "اسم الدواء",
-    "namePlaceholder": "أدخل اسم الدواء (مثل: أموكسيسيلين)",
+    "namePlaceholder": "أدخل اسم الدواء (مثل: أموكسيسيلين ٥٠٠ مج)",
     "dosage": "الجرعة",
     "dosagePlaceholder": "اختر الجرعة",
     "dosageDescription": "قوة الجرعة الواحدة (مثل: 500 ملجم)",
     "frequency": "التكرار",
     "frequencyPlaceholder": "مثل: مرة يوميًا، مرتين يوميًا، كل 8 ساعات",
-    "frequencyDescription": "كم مرة يجب تناول هذا الدواء",
     "duration": "المدة",
     "durationPlaceholder": "اختر المدة",
     "durationDescription": "كم من الوقت يجب تناول هذا الدواء",
     "notes": "ملاحظات إضافية",
-    "notesPlaceholder": "تعليمات خاصة، تحذيرات، أو تفاعلات..."
+    "notesPlaceholder": "تعليمات خاصة، تحذيرات، أو تفاعلات...",
+    "defaultName": "دواء",
+    "asPrescribed": "كما هو موصوف",
+    "dosages": {
+      "oneTablet": "قرص واحد",
+      "twoTablets": "قرصان",
+      "threeTablets": "ثلاثة أقراص",
+      "fourTablets": "أربعة أقراص",
+      "custom": "مخصص"
+    },
+    "periods": {
+      "oneDay": "يوم واحد",
+      "twoDays": "يومان",
+      "threeDays": "ثلاثة أيام",
+      "fiveDays": "خمسة أيام",
+      "oneWeek": "أسبوع واحد",
+      "tenDays": "عشرة أيام",
+      "twoWeeks": "أسبوعان",
+      "threeWeeks": "ثلاثة أسابيع",
+      "fourWeeks": "أربعة أسابيع",
+      "chronic": "مزمن",
+      "custom": "مخصص"
+    }
+  },
+  "lab": {
+    "createdSuccess": "تم إنشاء التحليل بنجاح",
+    "updatedSuccess": "تم تحديث التحليل بنجاح",
+    "image": "صورة التحليل",
+    "defaultName": "فحص مخبري",
+    "resultsAvailable": "النتائج متاحة"
+  },
+  "visitEdit": {
+    "diagnosis": "التشخيص",
+    "treatmentPlan": "خطة العلاج",
+    "notes": "ملاحظات"
   },
   "validation": {
     "nationalIdLength": "الرقم القومي يجب أن يكون 14 رقمًا",
     "weightRequired": "الوزن إلزامي لحساب الجرعات",
-    "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة"
+    "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة",
+    "labNameRequired": "اسم التحليل مطلوب",
+    "scanNameRequired": "اسم الأشعة مطلوب",
+    "scanTypeRequired": "نوع الأشعة مطلوب",
+    "diagnosesRequired": "التشخيصات مطلوبة",
+    "diagnosisRequired": "التشخيص مطلوب",
+    "unknownError": "خطأ غير معروف",
+    "clinicNameRequired": "اسم العيادة مطلوب",
+    "specialityRequired": "التخصص مطلوب",
+    "failedToLoadClinics": "فشل تحميل العيادات",
+    "failedToLoadVisits": "فشل تحميل الزيارات",
+    "failedToLoadPatients": "فشل تحميل المرضى",
+    "failedToLoadDoctors": "فشل تحميل الأطباء",
+    "checkFormAndRetry": "يرجى التحقق من النموذج والمحاولة مرة أخرى."
+  },
+  "table": {
+    "date": "التاريخ",
+    "doctor": "الطبيب",
+    "speciality": "التخصص",
+    "diagnoses": "التشخيصات",
+    "dosage": "الجرعة",
+    "duration": "المدة",
+    "comments": "التعليقات",
+    "actions": "الإجراءات",
+    "type": "النوع",
+    "name": "الاسم",
+    "patientName": "اسم المريض",
+    "visitDate": "تاريخ الزيارة",
+    "gender": "الجنس",
+    "dateOfBirth": "تاريخ الميلاد",
+    "socialSecurityNumber": "الرقم القومي",
+    "job":"الوظيفة"
+  },
+  "vitals": {
+    "kg": "كجم",
+    "cm": "سم",
+    "mmHg": "ملم زئبق",
+    "systolic": "انقباضي",
+    "diastolic": "انبساطي"
+  },
+  "search": {
+    "advancedFilters": "تصفية متقدمة",
+    "allGenders": "كل الأجناس",
+    "minAge": "العمر الأدنى",
+    "maxAge": "العمر الأقصى",
+    "clinic": "العيادة",
+    "enterNationalId": "أدخل الرقم القومي",
+    "from": "من",
+    "to": "إلى"
+  },
+  "scanTypes": {
+    "ct": "أشعة مقطعية",
+    "xray": "أشعة إكس",
+    "ultrasound": "موجات فوق صوتية",
+    "petct": "أشعة مقطعية بالإصدار البوزيتروني",
+    "mammography": "تصوير الثدي"
   },
   "admin": {
     "name": "الاسم",
@@ -539,7 +656,6 @@
     "totalRecords": "إجمالي السجلات",
     "createDoctor": "تسجيل طبيب جديد",
     "createDoctorDescription": "إضافة طبيب جديد إلى النظام. جميع الحقول مطلوبة.",
-    "preferredLanguage": "اللغة المفضلة",
     "medicalSpeciality": "التخصص الطبي",
     "selectSpeciality": "اختر التخصص",
     "password": "كلمة المرور",
@@ -568,6 +684,16 @@
     "noDiagnoses": "لا توجد تشخيصات"
   },
   "scan": {
+    "createdSuccess": "تم إنشاء الأشعة بنجاح",
+    "enterNationalId": "أدخل الرقم القومي",
+    "updatedSuccess": "تم تحديث الأشعة بنجاح",
+    "defaultName": "دراسة تصويرية",
+    "reportAvailable": "التقرير متاح",
+    "selectedId": "البطاقة المحددة",
+    "searchByNationalId": "البحث بالرقم القومي",
+    "scanOrEnter": "امسح الرقم القومي للمريض أو أدخله يدويًا",
+    "noPatientFound": "لم يتم العثور على مريض بهذا الرقم القومي",
+    "registerPrompt": "هل تريد تسجيل هذا المريض؟",
     "selectRegistrationMethod": "اختر طريقة التسجيل",
     "scanNationalId": "مسح البطاقة الوطنية",
     "scanDescription": "استخدم الكاميرا لالتقاط بيانات المريض تلقائيًا",
@@ -655,5 +781,52 @@
     "transcriptionFailed": "فشل تحويل الصوت إلى نص",
     "invalidFileType": "نوع ملف غير صالح. يرجى رفع ملف صوتي أو فيديو.",
     "fileTooLarge": "حجم الملف كبير جدًا. الحد الأقصى 50 ميجابايت."
+  },
+  "clinic": {
+    "deletedSuccess": "تم حذف العيادة بنجاح",
+    "deleteError": "فشل حذف العيادة",
+    "enterName": "أدخل اسم العيادة",
+    "enterSpeciality": "أدخل التخصص (مثل: الجلدية)",
+    "creating": "جاري الإنشاء..."
+  },
+  "qr": {
+    "code": "رمز الاستجابة السريعة"
+  },
+  "history": {
+    "defaultName": "فحص مخبري",
+    "resultsAvailable": "النتائج متاحة",
+    "reportAvailable": "التقرير متاح",
+    "medicationName": "دواء",
+    "asPrescribed": "كما هو موصوف"
+  },
+  "specialities": {
+    "cardiology": "أمراض القلب",
+    "dermatology": "الجلدية",
+    "endocrinology": "الغدد الصماء",
+    "gastroenterology": "أمراض الجهاز الهضمي",
+    "generalPractice": "الممارسة العامة",
+    "general Surgery": "الجراحة العامة",
+    "hematology": "أمراض الدم",
+    "internalMedicine": "الباطنة",
+    "nephrology": "أمراض الكلى",
+    "neurology": "الأعصاب",
+    "obstetricsGynecology": "النساء والتوليد",
+    "oncology": "الأورام",
+    "ophthalmology": "العيون",
+    "orthopedics": "العظام",
+    "ent": "أنف وأذن وحنجرة",
+    "pediatrics": "طب الأطفال",
+    "psychiatry": "الطب النفسي",
+    "pulmonology": "أمراض الرئة",
+    "radiology": "الأشعة",
+    "rheumatology": "الروماتيزم",
+    "urology": "المسالك البولية"
+  },
+  "api": {
+    "success": "نجح!",
+    "failed": "فشل: ",
+    "adminImplNeeded": "نقطة نهاية إنشاء المسؤول - تحتاج تنفيذ",
+    "doctorImplNeeded": "نقطة نهاية إنشاء الطبيب - تحتاج تنفيذ",
+    "clinicImplNeeded": "نقطة نهاية العيادات - تحتاج تنفيذ"
   }
 }

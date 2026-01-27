@@ -4,7 +4,6 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import Link from 'next/link';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
 import { toast, toastMessages } from '@/lib/utils/toast';
@@ -182,16 +181,6 @@ export function LoginForm({ locale }: LoginFormProps) {
           </Button>
         </form>
       </Form>
-
-      <div className="text-center text-sm">
-        <span className="text-muted-foreground">{t('noAccount')} </span>
-        <Link
-          href={`/${locale}/register`}
-          className="text-medical-primary hover:underline"
-        >
-          {t('register')}
-        </Link>
-      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Upload, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useImageUpload } from '@/src/hooks/useImageUpload';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 
 interface ImageUploadFieldProps {
   label: string;
@@ -25,6 +26,7 @@ export function ImageUploadField({
       console.error('Image upload error:', error);
     },
   });
+  const t = useTranslations('doctor');
 
   React.useEffect(() => {
     onImageSelect?.(selectedImage);
@@ -38,7 +40,7 @@ export function ImageUploadField({
           <Upload className="mx-auto h-8 w-8 text-gray-400 mb-2" />
           <label htmlFor="image-upload" className="cursor-pointer">
             <span className="text-sm text-gray-600 hover:text-medical-primary">
-              Click to upload image
+              {t('uploadScanImage')}
             </span>
             <input
               id="image-upload"
@@ -48,9 +50,6 @@ export function ImageUploadField({
               onChange={handleImageChange}
             />
           </label>
-          <p className="text-xs text-muted-foreground mt-2">
-            Max size: {maxSizeMB}MB
-          </p>
         </div>
       ) : (
         <div className="relative">
