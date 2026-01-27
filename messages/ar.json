@@ -14,7 +14,11 @@
     "required": "مطلوب",
     "optional": "اختياري",
     "male": "ذكر",
-    "female": "أنثى"
+    "female": "أنثى",
+    "viewImage": "عرض الصورة",
+    "unknown": "غير معروف",
+    "other": "آخر",
+    "totalPatients": "إجمالي المرضى"
   },
   "nav": {
     "home": "الرئيسية",
@@ -328,7 +332,25 @@
     "medications": "الأدوية",
     "noHistory": "لا يوجد سجل طبي",
     "weightTrend": "منحنى الوزن",
-    "bpTrend": "منحنى ضغط الدم"
+    "bpTrend": "منحنى ضغط الدم",
+    "notRegistered": "المريض غير مسجل",
+    "notRegisteredDescription": "تم مسح هذا الرقم القومي لكن المريض غير مسجل في النظام بعد. يمكنك تسجيله الآن أو عرض المعلومات الممسوحة أدناه.",
+    "registerNew": "تسجيل مريض جديد",
+    "scannedInfo": "المعلومات الممسوحة",
+    "scannedInfoDescription": "معلومات مستخرجة من البطاقة الشخصية",
+    "foundViaScan": "تم العثور على المريض عبر مسح الرقم القومي",
+    "firstName": "الاسم الأول",
+    "firstNamePlaceholder": "جون",
+    "lastName": "الاسم الأخير",
+    "lastNamePlaceholder": "دو",
+    "job": "المهنة",
+    "jobPlaceholder": "مهندس",
+    "addressPlaceholder": "123 شارع رئيسي، القاهرة",
+    "preferredLanguage": "اللغة المفضلة",
+    "selectLanguage": "اختر اللغة",
+    "unknownPatient": "مريض غير معروف",
+    "noDiagnosis": "لا يوجد تشخيص",
+    "editComingSoon": "ميزة تعديل المريض قادمة قريباً"
   },
   "visit": {
     "newVisit": "زيارة جديدة",
@@ -400,12 +422,75 @@
     "durationPlaceholder": "اختر المدة",
     "durationDescription": "كم من الوقت يجب تناول هذا الدواء",
     "notes": "ملاحظات إضافية",
-    "notesPlaceholder": "تعليمات خاصة، تحذيرات، أو تفاعلات..."
+    "notesPlaceholder": "تعليمات خاصة، تحذيرات، أو تفاعلات...",
+    "defaultName": "دواء",
+    "asPrescribed": "كما هو موصوف"
+  },
+  "lab": {
+    "createdSuccess": "تم إنشاء التحليل بنجاح",
+    "updatedSuccess": "تم تحديث التحليل بنجاح",
+    "image": "صورة التحليل",
+    "defaultName": "فحص مخبري",
+    "resultsAvailable": "النتائج متاحة"
+  },
+  "visitEdit": {
+    "diagnosis": "التشخيص",
+    "treatmentPlan": "خطة العلاج",
+    "notes": "ملاحظات"
   },
   "validation": {
     "nationalIdLength": "الرقم القومي يجب أن يكون 14 رقمًا",
     "weightRequired": "الوزن إلزامي لحساب الجرعات",
-    "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة"
+    "invalidEmail": "صيغة البريد الإلكتروني غير صحيحة",
+    "labNameRequired": "اسم التحليل مطلوب",
+    "scanNameRequired": "اسم الأشعة مطلوب",
+    "scanTypeRequired": "نوع الأشعة مطلوب",
+    "diagnosesRequired": "التشخيصات مطلوبة",
+    "diagnosisRequired": "التشخيص مطلوب",
+    "unknownError": "خطأ غير معروف",
+    "clinicNameRequired": "اسم العيادة مطلوب",
+    "specialityRequired": "التخصص مطلوب",
+    "failedToLoadClinics": "فشل تحميل العيادات",
+    "failedToLoadVisits": "فشل تحميل الزيارات",
+    "failedToLoadPatients": "فشل تحميل المرضى",
+    "failedToLoadDoctors": "فشل تحميل الأطباء",
+    "checkFormAndRetry": "يرجى التحقق من النموذج والمحاولة مرة أخرى."
+  },
+  "table": {
+    "date": "التاريخ",
+    "doctor": "الطبيب",
+    "speciality": "التخصص",
+    "diagnoses": "التشخيصات",
+    "dosage": "الجرعة",
+    "duration": "المدة",
+    "comments": "التعليقات",
+    "actions": "الإجراءات",
+    "type": "النوع",
+    "name": "الاسم"
+  },
+  "vitals": {
+    "kg": "كجم",
+    "cm": "سم",
+    "mmHg": "ملم زئبق",
+    "systolic": "انقباضي",
+    "diastolic": "انبساطي"
+  },
+  "search": {
+    "advancedFilters": "تصفية متقدمة",
+    "allGenders": "كل الأجناس",
+    "minAge": "العمر الأدنى",
+    "maxAge": "العمر الأقصى",
+    "clinic": "العيادة",
+    "enterNationalId": "أدخل الرقم القومي",
+    "from": "من",
+    "to": "إلى"
+  },
+  "scanTypes": {
+    "ct": "أشعة مقطعية",
+    "xray": "أشعة إكس",
+    "ultrasound": "موجات فوق صوتية",
+    "petct": "أشعة مقطعية بالإصدار البوزيتروني",
+    "mammography": "تصوير الثدي"
   },
   "admin": {
     "name": "الاسم",
@@ -562,6 +647,15 @@
     "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى"
   },
   "scan": {
+    "createdSuccess": "تم إنشاء الأشعة بنجاح",
+    "updatedSuccess": "تم تحديث الأشعة بنجاح",
+    "defaultName": "دراسة تصويرية",
+    "reportAvailable": "التقرير متاح",
+    "selectedId": "البطاقة المحددة",
+    "searchByNationalId": "البحث بالرقم القومي",
+    "scanOrEnter": "امسح الرقم القومي للمريض أو أدخله يدويًا",
+    "noPatientFound": "لم يتم العثور على مريض بهذا الرقم القومي",
+    "registerPrompt": "هل تريد تسجيل هذا المريض؟",
     "selectRegistrationMethod": "اختر طريقة التسجيل",
     "scanNationalId": "مسح البطاقة الوطنية",
     "scanDescription": "استخدم الكاميرا لالتقاط بيانات المريض تلقائيًا",
@@ -649,5 +743,52 @@
     "transcriptionFailed": "فشل تحويل الصوت إلى نص",
     "invalidFileType": "نوع ملف غير صالح. يرجى رفع ملف صوتي أو فيديو.",
     "fileTooLarge": "حجم الملف كبير جدًا. الحد الأقصى 50 ميجابايت."
+  },
+  "clinic": {
+    "deletedSuccess": "تم حذف العيادة بنجاح",
+    "deleteError": "فشل حذف العيادة",
+    "enterName": "أدخل اسم العيادة",
+    "enterSpeciality": "أدخل التخصص (مثل: الجلدية)",
+    "creating": "جاري الإنشاء..."
+  },
+  "qr": {
+    "code": "رمز الاستجابة السريعة"
+  },
+  "history": {
+    "defaultName": "فحص مخبري",
+    "resultsAvailable": "النتائج متاحة",
+    "reportAvailable": "التقرير متاح",
+    "medicationName": "دواء",
+    "asPrescribed": "كما هو موصوف"
+  },
+  "specialities": {
+    "cardiology": "أمراض القلب",
+    "dermatology": "الجلدية",
+    "endocrinology": "الغدد الصماء",
+    "gastroenterology": "أمراض الجهاز الهضمي",
+    "generalPractice": "الممارسة العامة",
+    "general Surgery": "الجراحة العامة",
+    "hematology": "أمراض الدم",
+    "internalMedicine": "الباطنة",
+    "nephrology": "أمراض الكلى",
+    "neurology": "الأعصاب",
+    "obstetricsGynecology": "النساء والتوليد",
+    "oncology": "الأورام",
+    "ophthalmology": "العيون",
+    "orthopedics": "العظام",
+    "ent": "أنف وأذن وحنجرة",
+    "pediatrics": "طب الأطفال",
+    "psychiatry": "الطب النفسي",
+    "pulmonology": "أمراض الرئة",
+    "radiology": "الأشعة",
+    "rheumatology": "الروماتيزم",
+    "urology": "المسالك البولية"
+  },
+  "api": {
+    "success": "نجح!",
+    "failed": "فشل: ",
+    "adminImplNeeded": "نقطة نهاية إنشاء المسؤول - تحتاج تنفيذ",
+    "doctorImplNeeded": "نقطة نهاية إنشاء الطبيب - تحتاج تنفيذ",
+    "clinicImplNeeded": "نقطة نهاية العيادات - تحتاج تنفيذ"
   }
 }

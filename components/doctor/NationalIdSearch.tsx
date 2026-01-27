@@ -26,6 +26,8 @@ interface NationalIdSearchProps {
 
 export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearchProps) {
   const t = useTranslations('doctor');
+  const tScan = useTranslations('scan');
+  const tPatient = useTranslations('patient');
 
   // Search states
   const [nationalId, setNationalId] = useState('');
@@ -127,9 +129,9 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
       {/* Search Input */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Search by National ID</CardTitle>
+          <CardTitle className="text-lg">{tScan('searchByNationalId')}</CardTitle>
           <CardDescription>
-            Scan the patient's National ID or enter it manually
+            {tScan('scanOrEnter')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -137,7 +139,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Enter National ID"
+                placeholder={tScan('enterNationalId')}
                 value={nationalId}
                 onChange={(e) => setNationalId(e.target.value)}
                 className="pl-10"
@@ -171,11 +173,11 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
           {/* Scan Results */}
           {scannedData && (
             <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-              <h4 className="font-medium mb-2 text-sm">Scanned Information:</h4>
+              <h4 className="font-medium mb-2 text-sm">{tScan('extractedData')}:</h4>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 {(scannedData.fullName || scannedData.firstName || scannedData.lastName) && (
                   <div>
-                    <span className="text-muted-foreground">Name:</span>{' '}
+                    <span className="text-muted-foreground">{tPatient('name')}:</span>{' '}
                     <span className="font-medium">
                       {scannedData.fullName || `${scannedData.firstName || ''} ${scannedData.lastName || ''}`.trim()}
                     </span>
@@ -183,19 +185,19 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
                 )}
                 {(scannedData.nationalId || scannedData.socialSecurityNumber) && (
                   <div>
-                    <span className="text-muted-foreground">National ID:</span>{' '}
+                    <span className="text-muted-foreground">{tPatient('nationalId')}:</span>{' '}
                     <span className="font-medium">{scannedData.nationalId || scannedData.socialSecurityNumber}</span>
                   </div>
                 )}
                 {scannedData.dateOfBirth && (
                   <div>
-                    <span className="text-muted-foreground">Birth Date:</span>{' '}
+                    <span className="text-muted-foreground">{tPatient('birthdate')}:</span>{' '}
                     <span className="font-medium">{formatDate(scannedData.dateOfBirth)}</span>
                   </div>
                 )}
                 {scannedData.gender && (
                   <div>
-                    <span className="text-muted-foreground">Gender:</span>{' '}
+                    <span className="text-muted-foreground">{tPatient('gender')}:</span>{' '}
                     <span className="font-medium">{scannedData.gender}</span>
                   </div>
                 )}
@@ -221,11 +223,11 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-2">No patient found with this National ID</p>
-              <p className="text-sm text-muted-foreground mb-4">Would you like to register this patient?</p>
+              <p className="text-muted-foreground mb-2">{tScan('noPatientFound')}</p>
+              <p className="text-sm text-muted-foreground mb-4">{tScan('registerPrompt')}</p>
               <Button variant="outline" onClick={onAddNew} className="mt-2">
                 <Plus className="mr-2 h-4 w-4" />
-                Register New Patient
+                {tPatient('registerNew')}
               </Button>
             </CardContent>
           </Card>

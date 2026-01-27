@@ -38,6 +38,8 @@ interface PatientSearchProps {
 export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps) {
   const t = useTranslations('doctor');
   const tPatient = useTranslations('patient');
+  const tSearch = useTranslations('search');
+  const tCommon = useTranslations('common');
   
   // Search states
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,10 +145,10 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
         <Card>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Advanced Filters</CardTitle>
+              <CardTitle className="text-lg">{tSearch('advancedFilters')}</CardTitle>
               <Button variant="ghost" size="sm" onClick={clearFilters}>
                 <X className="mr-2 h-4 w-4" />
-                Clear All
+                {tCommon('filter')}
               </Button>
             </div>
           </CardHeader>
@@ -154,10 +156,10 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               {/* National ID Filter */}
               <div>
-                <label className="text-sm font-medium mb-2 block">National ID</label>
+                <label className="text-sm font-medium mb-2 block">{tPatient('nationalId')}</label>
                 <Input
                   type="text"
-                  placeholder="Enter national ID"
+                  placeholder={tSearch('enterNationalId')}
                   value={nationalId}
                   onChange={(e) => setNationalId(e.target.value)}
                 />
@@ -165,13 +167,13 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
               {/* Gender Filter */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Gender</label>
+                <label className="text-sm font-medium mb-2 block">{tPatient('gender')}</label>
                 <Select value={gender} onValueChange={setGender}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Genders</SelectItem>
+                    <SelectItem value="all">{tSearch('allGenders')}</SelectItem>
                     <SelectItem value="male">{tPatient('male')}</SelectItem>
                     <SelectItem value="female">{tPatient('female')}</SelectItem>
                   </SelectContent>
@@ -180,10 +182,10 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
               {/* Min Age */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Min Age</label>
+                <label className="text-sm font-medium mb-2 block">{tSearch('minAge')}</label>
                 <Input
                   type="number"
-                  placeholder="From"
+                  placeholder={tSearch('from')}
                   value={minAge}
                   onChange={(e) => setMinAge(e.target.value)}
                   min="0"
@@ -193,10 +195,10 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
               {/* Max Age */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Max Age</label>
+                <label className="text-sm font-medium mb-2 block">{tSearch('maxAge')}</label>
                 <Input
                   type="number"
-                  placeholder="To"
+                  placeholder={tSearch('to')}
                   value={maxAge}
                   onChange={(e) => setMaxAge(e.target.value)}
                   min="0"
@@ -207,7 +209,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
             {/* Clinic Filter */}
             <div>
-              <label className="text-sm font-medium mb-2 block">Clinic</label>
+              <label className="text-sm font-medium mb-2 block">{tSearch('clinic')}</label>
               <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
                 <SelectTrigger className="w-full">
                   <Filter className="mr-2 h-4 w-4" />

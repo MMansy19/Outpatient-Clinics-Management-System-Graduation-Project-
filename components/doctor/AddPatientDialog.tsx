@@ -49,10 +49,10 @@ interface AddPatientDialogProps {
   dataSource?: 'scan' | 'manual';
 }
 
-export function AddPatientDialog({ 
-  open, 
-  onOpenChange, 
-  onSuccess, 
+export function AddPatientDialog({
+  open,
+  onOpenChange,
+  onSuccess,
   prefilledData = null,
   dataSource = 'manual',
 }: AddPatientDialogProps) {
@@ -60,6 +60,8 @@ export function AddPatientDialog({
   const tPatient = useTranslations('patient');
   const tCommon = useTranslations('common');
   const tScan = useTranslations('scan');
+  const tValidation = useTranslations('validation');
+  const tAdmin = useTranslations('admin');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<CreatePatientFormData>({
@@ -158,11 +160,11 @@ export function AddPatientDialog({
           }
           
           // Get error message from response
-          const message = typeof response.data === 'string' 
-            ? response.data 
-            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
-                ? response.data.message 
-                : 'Please check the form and try again.');
+          const message = typeof response.data === 'string'
+            ? response.data
+            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string'
+                ? response.data.message
+                : tValidation('checkFormAndRetry'));
           toast.error(
             toastMessages.patient.createError,
             message
@@ -196,7 +198,7 @@ export function AddPatientDialog({
                 )}
               </span>
             ) : (
-              tPatient('fillPatientDetails') || 'Fill in the patient details below to register them in the system.'
+              tPatient('fillPatientDetails')
             )}
           </DialogDescription>
         </DialogHeader>
@@ -211,7 +213,7 @@ export function AddPatientDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      First Name
+                      {tPatient('firstName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -219,11 +221,11 @@ export function AddPatientDialog({
                       )}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="John" 
-                        disabled={isPending} 
+                      <Input
+                        placeholder={tPatient('firstNamePlaceholder')}
+                        disabled={isPending}
                         className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -237,7 +239,7 @@ export function AddPatientDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      Last Name
+                      {tPatient('lastName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -245,11 +247,11 @@ export function AddPatientDialog({
                       )}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Doe" 
-                        disabled={isPending} 
+                      <Input
+                        placeholder={tPatient('lastNamePlaceholder')}
+                        disabled={isPending}
                         className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
-                        {...field} 
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -295,7 +297,7 @@ export function AddPatientDialog({
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
                     <FormLabel className="flex items-center gap-2">
-                      Address
+                      {tPatient('address')}
                       {dataSource === 'scan' && prefilledData?.address && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -304,7 +306,7 @@ export function AddPatientDialog({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="123 Main Street, Cairo"
+                        placeholder={tPatient('addressPlaceholder')}
                         disabled={isPending}
                         className={dataSource === 'scan' && prefilledData?.address ? 'border-medical-primary/50' : ''}
                         {...field}
@@ -321,10 +323,10 @@ export function AddPatientDialog({
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job/Occupation *</FormLabel>
+                    <FormLabel>{tPatient('job')}</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Engineer"
+                        placeholder={tPatient('jobPlaceholder')}
                         disabled={isPending}
                         {...field}
                       />
@@ -340,7 +342,7 @@ export function AddPatientDialog({
                 name="language"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Preferred Language</FormLabel>
+                    <FormLabel>{tPatient('preferredLanguage')}</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       defaultValue={field.value?.toString()}
@@ -348,12 +350,12 @@ export function AddPatientDialog({
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select language" />
+                          <SelectValue placeholder={tPatient('selectLanguage')} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="0">Arabic (العربية)</SelectItem>
-                        <SelectItem value="1">English</SelectItem>
+                        <SelectItem value="0">{tAdmin('arabic')}</SelectItem>
+                        <SelectItem value="1">{tAdmin('english')}</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

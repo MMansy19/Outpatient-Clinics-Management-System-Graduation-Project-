@@ -13,7 +13,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
 import {
   Select,
   SelectContent,
@@ -176,11 +176,11 @@ export function MedicationDialog({
                 {t('notes')} ({tCommon('optional')})
               </FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder={t('notesPlaceholder')}
                   className="min-h-[100px]"
-                  {...field}
-                  value={field.value || ''}
+                  rows={4}
                 />
               </FormControl>
               <FormDescription>{t('frequencyDescription')}</FormDescription>

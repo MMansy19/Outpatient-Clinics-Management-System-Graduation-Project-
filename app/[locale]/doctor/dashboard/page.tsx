@@ -2,7 +2,7 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Mic, Plus } from 'lucide-react';
+import { Users, Activity, Calendar, Plus, LogOut } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,12 @@ import {
   TableRow,
   TableCell,
 } from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 import { NationalIdSearch } from '@/components/doctor/NationalIdSearch';
 import { PatientRegistrationSheet } from '@/components/doctor/PatientRegistrationSheet';
@@ -34,6 +40,7 @@ import {
   useGetAllVisits,
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
+import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
 
@@ -56,6 +63,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [registrationSource, setRegistrationSource] = useState<
     'scan' | 'manual'
   >('manual');
+
+  const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
     data: allVisits,
     isLoading: loadingAllVisits,
@@ -69,21 +78,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     error: patientsError,
     refetch: refetchPatients,
   } = useGetAllPatients();
-
-  // Debug logging
-  console.log('🔍 Patients Query State:', {
-    data: allPatients,
-    isLoading: loadingAllPatients,
-    error: patientsError,
-    hasData: !!allPatients,
-  });
-
-  console.log('🔍 Visits Query State:', {
-    data: allVisits,
-    isLoading: loadingAllVisits,
-    error: visitsError,
-    hasData: !!allVisits,
-  });
 
   // Calculate statistics
   const calculateStats = () => {
@@ -173,6 +167,25 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     console.log('Transcription:', transcription);
   };
 
+  // Logout Handler
+  const handleLogout = async () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+
+      await new Promise<void>((resolve) => {
+        logout(undefined, {
+          onSettled: () => resolve(),
+        });
+      });
+
+      window.location.replace(`/${locale}/login`);
+    } catch (error) {
+      console.error('Logout error:', error);
+      window.location.replace(`/${locale}/login`);
+    }
+  };
+
   // Force refetch on mount
   React.useEffect(() => {
     console.log('🔄 Dashboard mounted, refetching data...');
@@ -195,14 +208,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <Button
-              onClick={() => setIsVoiceRecorderOpen(true)}
-              variant="outline"
-              className="sm:flex-none border-medical-primary text-medical-primary hover:bg-medical-primary/10"
-            >
-              <Mic className="sm:mr-2 h-5 w-5" />
-              <span className="hidden sm:inline">{t('title')}</span>
-            </Button>
-            <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
               }}
@@ -213,6 +218,30 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <span className="hidden sm:inline">Add Patient</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
+
+            {/* Logout Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <LogOut className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={loggingOut}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20 cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  {loggingOut ? 'Logging out...' : 'Logout'}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
             {/* <ThemeToggle /> */}
           </div>
         </div>

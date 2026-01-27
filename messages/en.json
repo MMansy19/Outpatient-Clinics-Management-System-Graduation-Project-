@@ -15,7 +15,10 @@
     "optional": "Optional",
     "male": "Male",
     "female": "Female",
-    "viewImage": "View Image"
+    "viewImage": "View Image",
+    "unknown": "Unknown",
+    "other": "Other",
+    "totalPatients": "Total Patients"
   },
   "nav": {
     "home": "Home",
@@ -332,7 +335,25 @@
     "medications": "Medications",
     "noHistory": "No medical history recorded",
     "weightTrend": "Weight Trend",
-    "bpTrend": "Blood Pressure Trend"
+    "bpTrend": "Blood Pressure Trend",
+    "notRegistered": "Patient Not Registered",
+    "notRegisteredDescription": "This National ID was scanned but the patient is not yet registered in the system. You can register them now or view the scanned information below.",
+    "registerNew": "Register New Patient",
+    "scannedInfo": "Scanned Information",
+    "scannedInfoDescription": "Information extracted from National ID card",
+    "foundViaScan": "Patient found via National ID scan",
+    "firstName": "First Name",
+    "firstNamePlaceholder": "John",
+    "lastName": "Last Name",
+    "lastNamePlaceholder": "Doe",
+    "job": "Job/Occupation",
+    "jobPlaceholder": "Engineer",
+    "addressPlaceholder": "123 Main Street, Cairo",
+    "preferredLanguage": "Preferred Language",
+    "selectLanguage": "Select language",
+    "unknownPatient": "Unknown Patient",
+    "noDiagnosis": "No diagnosis",
+    "editComingSoon": "Edit patient feature coming soon"
   },
   "visit": {
     "newVisit": "New Visit",
@@ -403,12 +424,58 @@
     "durationPlaceholder": "Select duration",
     "durationDescription": "How long should this medication be taken",
     "notes": "Additional Notes",
-    "notesPlaceholder": "Special instructions, warnings, or interactions..."
+    "notesPlaceholder": "Special instructions, warnings, or interactions...",
+    "defaultName": "Medication",
+    "asPrescribed": "As prescribed"
+  },
+  "lab": {
+    "createdSuccess": "Lab created successfully",
+    "updatedSuccess": "Lab updated successfully",
+    "image": "Lab Image",
+    "defaultName": "Lab Test",
+    "resultsAvailable": "Results available"
+  },
+  "visitEdit": {
+    "diagnosis": "Diagnosis",
+    "treatmentPlan": "Treatment Plan",
+    "notes": "Notes"
   },
   "validation": {
     "nationalIdLength": "National ID must be 14 digits",
     "weightRequired": "Weight is mandatory for dosage calculations",
-    "invalidEmail": "Invalid email format"
+    "invalidEmail": "Invalid email format",
+    "labNameRequired": "Lab name is required",
+    "scanNameRequired": "Scan name is required",
+    "scanTypeRequired": "Scan type is required",
+    "diagnosesRequired": "Diagnoses is required",
+    "diagnosisRequired": "Diagnosis is required",
+    "unknownError": "Unknown error",
+    "clinicNameRequired": "Clinic name is required",
+    "specialityRequired": "Speciality is required",
+    "failedToLoadClinics": "Failed to load clinics",
+    "failedToLoadVisits": "Failed to load visits",
+    "failedToLoadPatients": "Failed to load patients",
+    "failedToLoadDoctors": "Failed to load doctors",
+    "checkFormAndRetry": "Please check the form and try again."
+  },
+  "table": {
+    "date": "Date",
+    "doctor": "Doctor",
+    "speciality": "Speciality",
+    "diagnoses": "Diagnoses",
+    "dosage": "Dosage",
+    "duration": "Duration",
+    "comments": "Comments",
+    "actions": "Actions",
+    "type": "Type",
+    "name": "Name"
+  },
+  "vitals": {
+    "kg": "kg",
+    "cm": "cm",
+    "mmHg": "mmHg",
+    "systolic": "Systolic",
+    "diastolic": "Diastolic"
   },
   "admin": {
     "name": "Name",
@@ -564,7 +631,33 @@
     "networkError": "Network Error",
     "networkErrorDescription": "Please check your internet connection and try again"
   },
+  "search": {
+    "advancedFilters": "Advanced Filters",
+    "allGenders": "All Genders",
+    "minAge": "Min Age",
+    "maxAge": "Max Age",
+    "clinic": "Clinic",
+    "enterNationalId": "Enter national ID",
+    "from": "From",
+    "to": "To"
+  },
+  "scanTypes": {
+    "ct": "CT",
+    "xray": "X-RAY",
+    "ultrasound": "ULTRA SOUND",
+    "petct": "PET CT",
+    "mammography": "MAMMOGRAPHY"
+  },
   "scan": {
+    "createdSuccess": "Scan created successfully",
+    "updatedSuccess": "Scan updated successfully",
+    "defaultName": "Imaging Study",
+    "reportAvailable": "Report available",
+    "selectedId": "Selected ID",
+    "searchByNationalId": "Search by National ID",
+    "scanOrEnter": "Scan the patient's National ID or enter it manually",
+    "noPatientFound": "No patient found with this National ID",
+    "registerPrompt": "Would you like to register this patient?",
     "selectRegistrationMethod": "Select Registration Method",
     "scanNationalId": "Scan National ID",
     "scanDescription": "Use your camera to automatically capture patient details",
@@ -652,5 +745,52 @@
     "transcriptionFailed": "Failed to transcribe audio",
     "invalidFileType": "Invalid file type. Please upload an audio or video file.",
     "fileTooLarge": "File is too large. Maximum size is 50MB."
+  },
+  "clinic": {
+    "deletedSuccess": "Clinic deleted successfully",
+    "deleteError": "Failed to delete clinic",
+    "enterName": "Enter clinic name",
+    "enterSpeciality": "Enter speciality (e.g., Dermatology)",
+    "creating": "Creating..."
+  },
+  "qr": {
+    "code": "QR Code"
+  },
+  "history": {
+    "defaultName": "Lab Test",
+    "resultsAvailable": "Results available",
+    "reportAvailable": "Report available",
+    "medicationName": "Medication",
+    "asPrescribed": "As prescribed"
+  },
+  "specialities": {
+    "cardiology": "Cardiology",
+    "dermatology": "Dermatology",
+    "endocrinology": "Endocrinology",
+    "gastroenterology": "Gastroenterology",
+    "generalPractice": "General Practice",
+    "generalSurgery": "General Surgery",
+    "hematology": "Hematology",
+    "internalMedicine": "Internal Medicine",
+    "nephrology": "Nephrology",
+    "neurology": "Neurology",
+    "obstetricsGynecology": "Obstetrics & Gynecology",
+    "oncology": "Oncology",
+    "ophthalmology": "Ophthalmology",
+    "orthopedics": "Orthopedics",
+    "ent": "Otolaryngology (ENT)",
+    "pediatrics": "Pediatrics",
+    "psychiatry": "Psychiatry",
+    "pulmonology": "Pulmonology",
+    "radiology": "Radiology",
+    "rheumatology": "Rheumatology",
+    "urology": "Urology"
+  },
+  "api": {
+    "success": "Success!",
+    "failed": "Failed: ",
+    "adminImplNeeded": "Admin creation endpoint - Implement as needed",
+    "doctorImplNeeded": "Doctor creation endpoint - Implement as needed",
+    "clinicImplNeeded": "Clinic endpoint - Implement as needed"
   }
 }

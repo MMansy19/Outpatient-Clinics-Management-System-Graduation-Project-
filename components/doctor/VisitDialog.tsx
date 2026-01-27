@@ -11,7 +11,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
 
 import { useCreateVisit } from '@/lib/api/queries/useVisits';
 import { useFormState } from '@/src/hooks/useFormState';
@@ -96,10 +96,11 @@ export function VisitDialog({
             <FormItem>
               <FormLabel>Diagnoses & Treatment Plan</FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder="Enter diagnoses, treatment plan, and notes..."
                   className="min-h-[150px]"
-                  {...field}
+                  rows={6}
                 />
               </FormControl>
               <FormMessage />
