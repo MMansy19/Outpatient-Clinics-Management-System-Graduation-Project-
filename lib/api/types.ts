@@ -74,11 +74,14 @@ export interface CreatePatientDto {
   socialSecurityNumber: string; // 14 digits
   address?: string;
   job?: string;
+  gender?: 'male' | 'female';
+  birthdate?: string; // ISO date string
 }
 
 export interface CreateUserResponse {
   message: string;
   id: string; // globalId (UUID)
+  socialSecurityNumber?: string; // 14-digit national ID
 }
 
 // ============================================================================

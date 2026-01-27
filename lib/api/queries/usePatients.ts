@@ -68,17 +68,41 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
+      console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}`);
       try {
         const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
-        return response.data;
+        console.log(`✅ API Raw Response:`, response);
+        console.log(`✅ Patient fetched successfully:`, response.data);
+
+        // Handle both direct Patient object and wrapped response formats
+        const data = response.data;
+
+        // If data is null or undefined, return null
+        if (!data) {
+          console.log(`Patient with National ID ${socialSecurityNumber} returned null data`);
+          return null;
+        }
+
+        // If data has a 'data' property (wrapped response), use that
+        if (data && typeof data === 'object') {
+          console.log(`✅ Using wrapped response data:`, data);
+          return data as Patient;
+        }
+
+        // Return direct patient data
+        return data as Patient;
       } catch (error) {
+        console.error(`❌ Error fetching patient with National ID ${socialSecurityNumber}:`, error);
         // Check if it's a 404 (patient not found) or 500 (server error for not found)
         // In both cases, treat as "patient not found" and return null
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;
+          const statusText = error.response?.statusText;
+          const responseData = error.response?.data;
+          console.log(`📊 API Response - Status: ${status}, StatusText: ${statusText}, Data:`, responseData);
           // 404 = Not Found, 500 = Internal Server Error (often used when patient doesn't exist)
           if (status === 404 || status === 500) {
-            console.log(`Patient with National ID ${socialSecurityNumber} not found`);
+            console.log(`Patient with National ID ${socialSecurityNumber} not found (API returned ${status})`);
             return null;
           }
         }
@@ -86,8 +110,10 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
         throw error;
       }
     },
-    enabled: !!socialSecurityNumber,
-    staleTime: 5 * 60 * 1000,
+    enabled: !!socialSecurityNumber && socialSecurityNumber.length > 0,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: true,
+    gcTime: 0, // Immediately remove from cache after unmount
   });
 };
 
@@ -99,8 +125,16 @@ export const useCreatePatient = (): UseMutationResult<Patient, Error, CreatePati
       const response = await apiClient.post<Patient>('/doctor/patients', data);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Invalidate all patients queries to ensure fresh data
       queryClient.invalidateQueries({ queryKey: PATIENTS_KEY });
+
+      // Also invalidate the specific nationalId query so the new patient can be fetched
+      if (data.socialSecurityNumber) {
+        queryClient.invalidateQueries({
+          queryKey: [...PATIENTS_KEY, 'nationalId', data.socialSecurityNumber],
+        });
+      }
     },
   });
 };

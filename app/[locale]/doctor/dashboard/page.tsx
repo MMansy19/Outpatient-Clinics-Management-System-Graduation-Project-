@@ -135,8 +135,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     setCurrentView('profile');
   };
 
-  const handleNewPatientCreated = (patient: any) => {
-    setSelectedPatient(patient);
+  const handleNewPatientCreated = (data: { id: number; socialSecurityNumber: string }) => {
+    console.log('🔍 handleNewPatientCreated - data:', data);
+    setSelectedPatient({
+      id: data.id,
+      socialSecurityNumber: data.socialSecurityNumber,
+    });
     setCurrentView('profile');
   };
 
@@ -495,7 +499,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           />
         )}
 
-        {currentView === 'profile' && selectedPatient && (
+        {currentView === 'profile' && selectedPatient?.socialSecurityNumber && (
           <div className="space-y-4">
             <Button
               variant="outline"
@@ -505,7 +509,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToPatients')}
             </Button>
             <PatientProfile
-              patient={selectedPatient}
+              socialSecurityNumber={selectedPatient.socialSecurityNumber}
+              isNewPatient={selectedPatient.isNewPatient}
+              scannedData={selectedPatient.scannedData}
               onEdit={() => {
                 // If it's a new scanned patient, open registration dialog
                 if (selectedPatient?.isNewPatient) {

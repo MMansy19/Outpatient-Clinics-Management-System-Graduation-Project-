@@ -223,6 +223,7 @@
     "latestVitals": "Latest Vitals",
     "totalVisits": "Total Visits",
     "patientNotFound": "Patient not found",
+    "tryAgain": "Try Again",
     "noVisitsYet": "No visits recorded yet",
     "createFirstVisit": "Create First Visit",
     "newVisit": "New Visit",

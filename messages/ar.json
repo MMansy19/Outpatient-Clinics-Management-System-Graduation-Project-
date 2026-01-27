@@ -261,6 +261,7 @@
     "comments":"التعليقات",
     "optionalComments":"تعليقات اختيارية",
     "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
+    "tryAgain": "حاول مرة أخرى",
   "uploadScanImage": "تحميل صورة الأشعة",
     "addPatient": {
       "title": "إضافة مريض جديد",

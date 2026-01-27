@@ -43,7 +43,7 @@ import { EnrichedScanData } from '@/types/ocr';
 interface AddPatientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (patientId: number) => void;
+  onSuccess?: (data: { id: number; socialSecurityNumber: string }) => void;
   prefilledData?: EnrichedScanData | null;
   dataSource?: 'scan' | 'manual';
 }
@@ -123,7 +123,7 @@ export function AddPatientDialog({
   }, [nationalId]);
 
   const onSubmit = (data: CreatePatientFormData) => {
-    const submitData: CreatePatientFormData = {
+    const submitData: any = {
       firstName: data.firstName,
       lastName: data.lastName,
       language: data.language,
@@ -138,17 +138,35 @@ export function AddPatientDialog({
       submitData.job = data.job.trim();
     }
 
+    // Include scanned data if available (gender and birthdate from National ID)
+    if (prefilledData) {
+      if (prefilledData.gender) {
+        submitData.gender = prefilledData.gender;
+      }
+      if (prefilledData.birthdate) {
+        submitData.birthdate = prefilledData.birthdate instanceof Date
+          ? prefilledData.birthdate.toISOString().split('T')[0]
+          : prefilledData.birthdate;
+      }
+      if (prefilledData.address || prefilledData.location) {
+        submitData.address = submitData.address || prefilledData.address || prefilledData.location;
+      }
+    }
+
     createPatient(submitData, {
       onSuccess: (response) => {
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
+        const socialSecurityNumber = form.getValues('socialSecurityNumber');
         toast.success(
           toastMessages.patient.createSuccess,
           toastMessages.patient.createSuccessDescription(fullName)
         );
+        console.log('🔍 Patient created - ID:', response.id, 'National ID:', socialSecurityNumber);
+        console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
         const numericId = parseInt(response.id) || 0;
-        onSuccess?.(numericId);
+        onSuccess?.({ id: numericId, socialSecurityNumber });
       },
       onError: (error: unknown) => {
         if (

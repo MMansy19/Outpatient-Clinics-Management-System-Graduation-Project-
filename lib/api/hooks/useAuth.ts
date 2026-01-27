@@ -155,9 +155,18 @@ export function useCreatePatient() {
     mutationFn: async (data: CreatePatientDto) => {
       return await authApi.createPatient(data);
     },
-    onSuccess: () => {
-      // Invalidate patient list query
+    onSuccess: (data) => {
+      // Invalidate all patient queries to ensure fresh data
+      console.log('🔄 Invalidating patient queries after creation...');
       queryClient.invalidateQueries({ queryKey: ['patients'] });
+
+      // Also invalidate the specific nationalId query using the socialSecurityNumber from the response
+      if (data.socialSecurityNumber) {
+        queryClient.invalidateQueries({
+          queryKey: ['patients', 'nationalId', data.socialSecurityNumber],
+        });
+        console.log(`🔄 Invalidated query for nationalId: ${data.socialSecurityNumber}`);
+      }
     },
   });
 }

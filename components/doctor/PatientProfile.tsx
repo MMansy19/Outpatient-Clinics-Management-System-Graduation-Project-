@@ -15,6 +15,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { useGetPatientByNationalId } from '@/lib/api/queries/usePatients';
 import { useGetPatientVisits } from '@/lib/api/queries/useVisits';
 import { useGetPatientMedications } from '@/lib/api/queries/useMedications';
 import { useGetPatientLabs } from '@/lib/api/queries/useLabs';
@@ -38,25 +39,18 @@ import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
 import { QuickActionCard } from '@/components/shared/QuickActionCard';
 
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
-import { Gender } from '@/types/entities/Patient';
 
 interface PatientProfileProps {
-  patient: {
-    id: number | string | null;
-    name: string;
-    gender: Gender;
-    dateOfBirth: string;
-    socialSecurityNumber: string;
-    address?: string;
-    job?: string;
-    isNewPatient?: boolean;
-    scannedData?: any;
-  };
+  socialSecurityNumber: string;
+  isNewPatient?: boolean;
+  scannedData?: any;
   onEdit?: () => void;
 }
 
 export function PatientProfile({
-  patient,
+  socialSecurityNumber,
+  isNewPatient,
+  scannedData,
   onEdit,
 }: PatientProfileProps) {
   const t = useTranslations('doctor');
@@ -66,15 +60,45 @@ export function PatientProfile({
   const tTable = useTranslations('table');
   const tVitals = useTranslations('vitals');
 
-  // Debug logging
-  console.log('🔍 PatientProfile - Received patient prop:', patient);
+  // Fetch patient data by national ID
+  const {
+    data: patient,
+    isLoading: loadingPatient,
+    error: patientError,
+    refetch: refetchPatient,
+    isFetching: isRefetchingPatient,
+  } = useGetPatientByNationalId(socialSecurityNumber);
 
-  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(patient.socialSecurityNumber));
+  // Skip fetching if socialSecurityNumber is empty
+  const shouldFetch = socialSecurityNumber && socialSecurityNumber.length > 0;
+
+  // Debug logging
+  console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
+  console.log('🔍 PatientProfile - Fetched patient:', patient);
+  console.log('🔍 PatientProfile - Loading:', loadingPatient);
+  console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
+  console.log('🔍 PatientProfile - Error:', patientError);
+  console.log('🔍 PatientProfile - Scanned Data:', scannedData);
+
+  // Combine API patient data with scanned data (scanned data serves as fallback)
+  const patientName = patient?.name || scannedData?.name ||
+    (scannedData?.firstName && scannedData?.lastName ? `${scannedData.firstName} ${scannedData.lastName}` : '');
+
+  const patientGender = patient?.gender || scannedData?.gender;
+  const patientDateOfBirth = patient?.dateOfBirth || patient?.birthdate || scannedData?.birthdate || scannedData?.dateOfBirth;
+
+  // If this is a new patient (scanned but not registered yet), show registration UI
+  const isScannedNewPatient = isNewPatient && !patient;
+
+  // For newly registered patients, show loading while fetching
+  // If patient is null and we're loading or fetching, show skeleton
+  const showLoading = loadingPatient || (isRefetchingPatient && !patient);
+
+  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(socialSecurityNumber));
 
   // Debug logging
   console.log('🔍 PatientProfile - Visits Query:', {
-    patientId: patient.id,
-    nationalId: patient.socialSecurityNumber,
+    socialSecurityNumber,
     visitsResponse,
     isLoading: loadingVisits
   });
@@ -90,9 +114,9 @@ export function PatientProfile({
   const [currentTab, setCurrentTab] = useState('visits');
 
   // Fetch additional data
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(String(patient.socialSecurityNumber));
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(String(patient.socialSecurityNumber));
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(String(patient.socialSecurityNumber));
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(socialSecurityNumber);
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(socialSecurityNumber);
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(socialSecurityNumber);
 
   // Debug logging
   console.log('🔍 PatientProfile - Other Queries:', {
@@ -109,7 +133,8 @@ export function PatientProfile({
   const labsList = (labs as any)?.labs || [];
   const scansList = (scans as any)?.scans || [];
 
-  if (loadingVisits) {
+  // Show loading skeleton while fetching patient data
+  if (showLoading) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-32 w-full" />
@@ -118,20 +143,25 @@ export function PatientProfile({
     );
   }
 
-  if (!patient) {
+  // If patient not found (API returned null) and not a new scanned patient
+  if (!patient && !isScannedNewPatient) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">{t('patientNotFound')}</p>
+          <p className="text-muted-foreground mb-4">{t('patientNotFound')}</p>
+          <Button
+            variant="outline"
+            onClick={() => refetchPatient()}
+          >
+            {t('tryAgain')}
+          </Button>
         </CardContent>
       </Card>
     );
   }
 
-  // Check if this is a scanned but unregistered patient
-  const isNewScannedPatient = patient.isNewPatient && (patient.id === null || patient.id === undefined);
-
-  if (isNewScannedPatient) {
+  // If this is a scanned but unregistered patient, show registration UI
+  if (isScannedNewPatient) {
     return (
       <div className="space-y-6 pb-20 md:pb-6">
         {/* New Patient Alert */}
@@ -164,34 +194,34 @@ export function PatientProfile({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {patient.name &&
+              {scannedData?.name &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('name')}</p>
-                <p className="text-lg">{patient.name}</p>
+                <p className="text-lg">{scannedData.name}</p>
               </div>}
-              {patient.socialSecurityNumber &&
+              {socialSecurityNumber &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('nationalId')}</p>
-                <p className="text-lg font-mono">{patient.socialSecurityNumber}</p>
+                <p className="text-lg font-mono">{socialSecurityNumber}</p>
               </div>
-  }{patient.gender !== undefined &&
+              }{scannedData?.gender !== undefined &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('gender')}</p>
                 <p className="text-lg">
-                  {String(patient.gender) === '0' || patient.gender === 'male' ? tPatient('male') :
-                   String(patient.gender) === '1' || patient.gender === 'female' ? tPatient('female') : tCommon('other')}
+                  {String(scannedData.gender) === '0' || scannedData.gender === 'male' ? tPatient('male') :
+                   String(scannedData.gender) === '1' || scannedData.gender === 'female' ? tPatient('female') : tCommon('other')}
                 </p>
               </div>
-  }{patient.dateOfBirth && calculateAge(patient.dateOfBirth) >= 1 &&
+              }{scannedData?.dateOfBirth && calculateAge(scannedData.dateOfBirth) >= 1 &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('age')}</p>
-                <p className="text-lg">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
+                <p className="text-lg">{calculateAge(scannedData.dateOfBirth)} {tPatient('years')}</p>
               </div>
-  } 
-              {patient.address && (
+              }
+              {scannedData?.address && (
                 <div className="space-y-2 md:col-span-2">
                   <p className="text-sm font-medium text-muted-foreground">{tPatient('address')}</p>
-                  <p className="text-lg">{patient.address}</p>
+                  <p className="text-lg">{scannedData.address}</p>
                 </div>
               )}
             </div>
@@ -215,7 +245,7 @@ export function PatientProfile({
   return (
     <div className="space-y-6 pb-20 md:pb-6">
       {/* Scanned Patient Notification */}
-      {patient.scannedData && (
+      {scannedData && (
         <Card className="border border-green-500 bg-green-50 dark:bg-green-900/20">
           <CardContent className="py-4">
             <div className="flex items-center gap-3">
@@ -237,23 +267,23 @@ export function PatientProfile({
                 <User className="h-7 w-7 md:h-8 md:w-8 text-medical-primary" />
               </div>
                <div className="min-w-0 flex-1">
-                <CardTitle className="text-xl md:text-2xl truncate">{patient.name}</CardTitle>
+                <CardTitle className="text-xl md:text-2xl truncate">{patientName}</CardTitle>
                 <CardDescription className="flex flex-row justify-between items-center gap-2 sm:gap-4">
                 <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
-                  <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patient.socialSecurityNumber}</span>
-                  <Badge variant={String(patient.gender) === '0' || patient.gender === 'male' ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
-                    {String(patient.gender) === '0' || patient.gender === 'male' ? tPatient('male') : tPatient('female')}
+                  <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {socialSecurityNumber || patient?.socialSecurityNumber || patient?.national_id}</span>
+                  <Badge variant={String(patientGender) === '0' || patientGender === 'male' ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
+                    {String(patientGender) === '0' || patientGender === 'male' ? tPatient('male') : tPatient('female')}
                   </Badge>
 
-                </div>  
-{patient.dateOfBirth && 
+                </div>
+{patientDateOfBirth &&
 
               <div className="min-w-16">
                 <div className='flex flex-row gap-2 items-center'>
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
                 <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
                 </div>
-                         <p className="font-medium truncate">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
+                         <p className="font-medium truncate">{calculateAge(patientDateOfBirth)} {tPatient('years')}</p>
            </div>
 }
                 </CardDescription>  
@@ -895,7 +925,7 @@ export function PatientProfile({
       <VisitDialog
         open={isVisitDialogOpen}
         onOpenChange={setIsVisitDialogOpen}
-        patientId={String(patient.id)}
+        patientId={socialSecurityNumber}
         onSuccess={() => {
           setIsVisitDialogOpen(false);
         }}
@@ -904,7 +934,7 @@ export function PatientProfile({
       <MedicationDialog
         open={isMedicationDialogOpen}
         onOpenChange={setIsMedicationDialogOpen}
-        patientId={String(patient.id)}
+        patientId={socialSecurityNumber}
         onSuccess={() => {
           setIsMedicationDialogOpen(false);
         }}
@@ -913,13 +943,13 @@ export function PatientProfile({
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        socialSecurityNumber={String(patient?.socialSecurityNumber || '')}
+        socialSecurityNumber={socialSecurityNumber}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        socialSecurityNumber={String(patient?.socialSecurityNumber || '')}
+        socialSecurityNumber={socialSecurityNumber}
       />
     </div>
   );
