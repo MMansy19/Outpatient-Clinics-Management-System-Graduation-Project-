@@ -28,10 +28,16 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
-import { createPatientSchema, type CreatePatientFormData } from '@/lib/schemas/auth.schemas';
+import {
+  createPatientSchema,
+  type CreatePatientFormData,
+} from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
-import { extractGenderFromNationalId, extractBirthdateFromNationalId } from '@/lib/schemas/auth.schemas';
+import {
+  extractGenderFromNationalId,
+  extractBirthdateFromNationalId,
+} from '@/lib/schemas/auth.schemas';
 import { EnrichedScanData } from '@/types/ocr';
 
 interface AddPatientDialogProps {
@@ -58,21 +64,26 @@ export function AddPatientDialog({
 
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
-    defaultValues: prefilledData ? {
-      firstName: prefilledData.firstName || '',
-      lastName: prefilledData.lastName || '',
-      language: Language.ENGLISH,
-      socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
-      address: prefilledData.address ?? prefilledData.location ?? '',
-      job: '',
-    } : {
-      firstName: '',
-      lastName: '',
-      language: Language.ENGLISH,
-      socialSecurityNumber: '',
-      address: '',
-      job: '',
-    },
+    defaultValues: prefilledData
+      ? {
+          firstName: prefilledData.firstName || '',
+          lastName: prefilledData.lastName || '',
+          language: Language.ENGLISH,
+          socialSecurityNumber:
+            prefilledData.socialSecurityNumber ||
+            prefilledData.nationalId ||
+            '',
+          address: prefilledData.address ?? prefilledData.location ?? '',
+          job: '',
+        }
+      : {
+          firstName: '',
+          lastName: '',
+          language: Language.ENGLISH,
+          socialSecurityNumber: '',
+          address: '',
+          job: '',
+        },
   });
 
   // Watch the national ID field to show extracted info
@@ -85,7 +96,8 @@ export function AddPatientDialog({
         firstName: prefilledData.firstName || '',
         lastName: prefilledData.lastName || '',
         language: Language.ENGLISH,
-        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
+        socialSecurityNumber:
+          prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
         address: prefilledData.address ?? prefilledData.location ?? '',
         job: '',
       });
@@ -99,7 +111,7 @@ export function AddPatientDialog({
     if (nationalId && nationalId.length === 14) {
       const gender = extractGenderFromNationalId(nationalId);
       const birthdate = extractBirthdateFromNationalId(nationalId);
-      
+
       // Just for validation and display - backend extracts from National ID
       if (gender && birthdate) {
         console.log('📋 Extracted from National ID:', {
@@ -111,12 +123,21 @@ export function AddPatientDialog({
   }, [nationalId]);
 
   const onSubmit = (data: CreatePatientFormData) => {
-    // Ensure address and job are always present (empty string if undefined)
-    const submitData = {
-      ...data,
-      address: data.address ?? '',
-      job: data.job ?? '',
+    const submitData: CreatePatientFormData = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      language: data.language,
+      socialSecurityNumber: data.socialSecurityNumber,
     };
+
+    if (data.address?.trim()) {
+      submitData.address = data.address.trim();
+    }
+
+    if (data.job?.trim()) {
+      submitData.job = data.job.trim();
+    }
+
     createPatient(submitData, {
       onSuccess: (response) => {
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
@@ -130,24 +151,38 @@ export function AddPatientDialog({
         onSuccess?.(numericId);
       },
       onError: (error: unknown) => {
-        if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
-          const response = error.response as { data?: unknown; status?: number };
-          if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object'
+        ) {
+          const response = error.response as {
+            data?: unknown;
+            status?: number;
+          };
+          if (
+            response.status === 400 &&
+            typeof response.data === 'string' &&
+            response.data.includes('already exists')
+          ) {
             toast.error(
               toastMessages.patient.alreadyExists,
               toastMessages.patient.alreadyExistsDescription
             );
             return;
           }
-          const message = typeof response.data === 'string'
-            ? response.data
-            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string'
+          const message =
+            typeof response.data === 'string'
+              ? response.data
+              : response.data &&
+                  typeof response.data === 'object' &&
+                  'message' in response.data &&
+                  typeof response.data.message === 'string'
                 ? response.data.message
-                : tValidation('checkFormAndRetry'));
-          toast.error(
-            toastMessages.patient.createError,
-            message
-          );
+                : tValidation('checkFormAndRetry');
+          toast.error(toastMessages.patient.createError, message);
         } else {
           toast.error(
             toastMessages.network.error,
@@ -163,7 +198,9 @@ export function AddPatientDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {dataSource === 'scan' && <Sparkles className="h-5 w-5 text-medical-primary" />}
+            {dataSource === 'scan' && (
+              <Sparkles className="h-5 w-5 text-medical-primary" />
+            )}
             {t('addNewPatient')}
           </DialogTitle>
           <DialogDescription>
@@ -203,7 +240,11 @@ export function AddPatientDialog({
                       <Input
                         placeholder={tPatient('firstNamePlaceholder')}
                         disabled={isPending}
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -229,7 +270,11 @@ export function AddPatientDialog({
                       <Input
                         placeholder={tPatient('lastNamePlaceholder')}
                         disabled={isPending}
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -257,7 +302,11 @@ export function AddPatientDialog({
                         placeholder="30202041234567"
                         maxLength={14}
                         disabled={isPending}
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -277,7 +326,9 @@ export function AddPatientDialog({
                   <FormItem className="md:col-span-2">
                     <FormLabel className="flex items-center gap-2">
                       {tPatient('address')}
-                      <span className="text-xs text-gray-400">({tCommon('optional')})</span>
+                      <span className="text-xs text-gray-400">
+                        ({tCommon('optional')})
+                      </span>
                       {dataSource === 'scan' && prefilledData?.address && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -288,7 +339,11 @@ export function AddPatientDialog({
                       <Input
                         placeholder={tPatient('addressPlaceholder')}
                         disabled={isPending}
-                        className={dataSource === 'scan' && prefilledData?.address ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan' && prefilledData?.address
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -303,7 +358,12 @@ export function AddPatientDialog({
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tPatient('job')} <span className="text-xs text-gray-400">({tCommon('optional')})</span></FormLabel>
+                    <FormLabel>
+                      {tPatient('job')}{' '}
+                      <span className="text-xs text-gray-400">
+                        ({tCommon('optional')})
+                      </span>
+                    </FormLabel>
                     <FormControl>
                       <Input
                         placeholder={tPatient('jobPlaceholder')}
@@ -315,7 +375,7 @@ export function AddPatientDialog({
                   </FormItem>
                 )}
               />
-             </div>
+            </div>
 
             <DialogFooter>
               <Button

@@ -143,8 +143,19 @@ export const createPatientSchema = z.object({
   lastName: nameSchema,
   language: z.nativeEnum(Language),
   socialSecurityNumber: socialSecurityNumberSchema,
-  address: z.string().max(256, 'Address must not exceed 256 characters').optional(),
-  job: z.string().max(128, 'Job must not exceed 128 characters').optional(),
+   address: z
+    .string()
+    .trim()
+    .max(256, 'Address must not exceed 256 characters')
+    .optional()
+    .or(z.literal('')),
+
+  job: z
+    .string()
+    .trim()
+    .max(128, 'Job must not exceed 128 characters')
+    .optional()
+    .or(z.literal('')),
 });
 
 export type CreatePatientFormData = z.infer<typeof createPatientSchema>;
