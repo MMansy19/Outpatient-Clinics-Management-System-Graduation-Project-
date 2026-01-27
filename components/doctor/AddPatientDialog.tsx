@@ -89,11 +89,6 @@ export function AddPatientDialog({
   // Populate form with scanned data when available
   useEffect(() => {
     if (prefilledData && dataSource === 'scan') {
-      console.log('🔍 Prefilling form with scanned data:', {
-        firstName: prefilledData.firstName,
-        lastName: prefilledData.lastName,
-        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId,
-      });
       form.reset({
         firstName: prefilledData.firstName || '',
         lastName: prefilledData.lastName || '',
@@ -124,11 +119,14 @@ export function AddPatientDialog({
   }, [nationalId]);
 
   const onSubmit = (data: CreatePatientFormData) => {
-    console.log('📝 Creating patient with data:', data);
-
-    createPatient(data, {
+    // Ensure address and job are always present (empty string if undefined)
+    const submitData = {
+      ...data,
+      address: data.address ?? '',
+      job: data.job ?? '',
+    };
+    createPatient(submitData, {
       onSuccess: (response) => {
-        console.log('✅ Patient created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         toast.success(
           toastMessages.patient.createSuccess,
@@ -136,21 +134,12 @@ export function AddPatientDialog({
         );
         form.reset();
         onOpenChange(false);
-        
-        // Extract the numeric ID from globalId if needed
         const numericId = parseInt(response.id) || 0;
         onSuccess?.(numericId);
       },
       onError: (error: unknown) => {
-        console.error('❌ Create patient error:', error);
-        
-        // Handle different error cases
         if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
           const response = error.response as { data?: unknown; status?: number };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
-          
-          // Check if it's a "User already exists" error
           if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
             toast.error(
               toastMessages.patient.alreadyExists,
@@ -158,8 +147,6 @@ export function AddPatientDialog({
             );
             return;
           }
-          
-          // Get error message from response
           const message = typeof response.data === 'string'
             ? response.data
             : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string'
@@ -290,7 +277,7 @@ export function AddPatientDialog({
                 )}
               />
 
-              {/* Address */}
+              {/* Address (optional) */}
               <FormField
                 control={form.control}
                 name="address"
@@ -298,6 +285,7 @@ export function AddPatientDialog({
                   <FormItem className="md:col-span-2">
                     <FormLabel className="flex items-center gap-2">
                       {tPatient('address')}
+                      <span className="text-xs text-gray-400">({tCommon('optional')})</span>
                       {dataSource === 'scan' && prefilledData?.address && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -317,13 +305,13 @@ export function AddPatientDialog({
                 )}
               />
 
-              {/* Job */}
+              {/* Job (optional) */}
               <FormField
                 control={form.control}
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{tPatient('job')}</FormLabel>
+                    <FormLabel>{tPatient('job')} <span className="text-xs text-gray-400">({tCommon('optional')})</span></FormLabel>
                     <FormControl>
                       <Input
                         placeholder={tPatient('jobPlaceholder')}
