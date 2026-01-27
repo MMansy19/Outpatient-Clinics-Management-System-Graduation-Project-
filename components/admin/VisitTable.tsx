@@ -166,7 +166,8 @@ export function VisitTable() {
                     {formatDate(visit.createdAt)}
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                    Visit #{visit.id.slice(0, 8)}
+                    {t('visitNumber')}
+                    {visit.id.slice(0, 8)}
                   </h3>
                 </div>
               </div>
@@ -209,10 +210,10 @@ export function VisitTable() {
                     <FileText className="h-4 w-4 text-medical-primary flex-shrink-0 mt-0.5" />
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                        Diagnoses
+                        {t('diagnoses')}
                       </p>
                       <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3">
-                        {visit.diagnoses}
+                        {visit.diagnoses || t('noDiagnoses')}{' '}
                       </p>
                     </div>
                   </div>

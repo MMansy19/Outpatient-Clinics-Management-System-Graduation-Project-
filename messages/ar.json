@@ -182,7 +182,8 @@
     "clinicOrtho": "العظام",
     "clinicPediatrics": "طب الأطفال",
     "specializationPlaceholder": "مثال: القلب، الأعصاب",
-    "passwordRequirements": "يجب أن تحتوي على حروف كبيرة وصغيرة ورقم ورمز خاص"
+    "passwordRequirements": "يجب أن تحتوي على حروف كبيرة وصغيرة ورقم ورمز خاص",
+    "addClinic":"إضافة عيادة"
   },
   "doctor": {
     "dashboard": "لوحة التحكم",
@@ -675,7 +676,12 @@
     "doctorAlreadyExistsDescription": "يوجد طبيب مسجل بنفس البريد الإلكتروني أو الرقم القومي",
     "doctorCreateError": "فشل إنشاء حساب الطبيب",
     "networkError": "خطأ في الشبكة",
-    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى"
+    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى",
+    "patient": "المريض",
+    "doctor": "الطبيب",
+    "visitNumber": "زيارة #",
+    "date": "التاريخ",
+    "noDiagnoses": "لا توجد تشخيصات"
   },
   "scan": {
     "createdSuccess": "تم إنشاء الأشعة بنجاح",

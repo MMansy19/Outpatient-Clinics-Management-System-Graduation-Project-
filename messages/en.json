@@ -152,7 +152,7 @@
     "login": "Login",
     "register": "Register",
     "logOut": "Log out",
-    "loggingOut":"Logging out...",
+    "loggingOut": "Logging out...",
     "email": "Email",
     "password": "Password",
     "confirmPassword": "Confirm Password",
@@ -186,7 +186,7 @@
   },
   "doctor": {
     "dashboard": "Dashboard",
-     "title": "Voice to Text",
+    "title": "Voice to Text",
     "visits": "Visits",
     "dashboardSubtitle": "Manage your patients and clinical workflow",
     "patients": "Patients",
@@ -199,7 +199,7 @@
     "thisWeek": "Visits this week",
     "thisMonth": "This Month",
     "customRange": "Custom Range",
-    "noVisitsFound":"No visits found",
+    "noVisitsFound": "No visits found",
     "allClinics": "All Clinics",
     "noPatients": "No patients found",
     "addFirstPatient": "Add your first patient to get started",
@@ -492,7 +492,6 @@
     "actions": "Actions",
     "type": "Type",
     "name": "Name",
-    
     "patientName": "Patient Name",
     "visitDate": "Visit Date",
     "gender": "Gender",
@@ -523,7 +522,7 @@
     "previous": "Previous",
     "next": "Next",
     "logOut": "Log out",
-    "loggingOut":"Logging out...",
+    "loggingOut": "Logging out...",
     "dashboard": "Admin Dashboard",
     "dashboardSubtitle": "Manage clinics, users, and system monitoring",
     "clinicManagement": "Clinic Management",
@@ -658,7 +657,12 @@
     "doctorAlreadyExistsDescription": "A doctor with this email or national ID is already registered",
     "doctorCreateError": "Failed to create doctor account",
     "networkError": "Network Error",
-    "networkErrorDescription": "Please check your internet connection and try again"
+    "networkErrorDescription": "Please check your internet connection and try again",
+    "patient": "Patient",
+    "doctor": "Doctor",
+    "visitNumber": "Visit #",
+    "date": "Date",
+    "noDiagnoses": "No diagnoses"
   },
   "search": {
     "advancedFilters": "Advanced Filters",
@@ -750,7 +754,7 @@
     "opening": "Opening camera...",
     "pleaseWait": "Please wait..."
   },
-   "voiceRecorder": {
+  "voiceRecorder": {
     "title": "Voice to Text",
     "description": "Record your voice or upload an audio file to convert it to text",
     "recordTab": "Record",

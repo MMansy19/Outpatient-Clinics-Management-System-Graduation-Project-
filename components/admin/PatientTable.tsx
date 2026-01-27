@@ -149,7 +149,7 @@ export function PatientTable() {
                 <div className="flex items-center gap-2 text-sm">
                   <CreditCard className="h-4 w-4 text-medical-primary flex-shrink-0" />
                   <span className="text-gray-500 dark:text-gray-500 min-w-[60px]">
-                    ID:
+                    {t('nationalId')}:
                   </span>
                   <span className="text-gray-900 dark:text-gray-100 font-medium">
                     {patient.user.socialSecurityNumber}
@@ -159,7 +159,7 @@ export function PatientTable() {
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="h-4 w-4 text-medical-secondary flex-shrink-0" />
                   <span className="text-gray-500 dark:text-gray-500 min-w-[60px]">
-                    DOB:
+                    {t('dateOfBirth')}:
                   </span>
                   <span className="text-gray-900 dark:text-gray-100">
                     {formatDate(patient.user.dateOfBirth)}
@@ -169,20 +169,20 @@ export function PatientTable() {
                 <div className="flex items-center gap-2 text-sm">
                   <Briefcase className="h-4 w-4 text-medical-info flex-shrink-0" />
                   <span className="text-gray-500 dark:text-gray-500 min-w-[60px]">
-                    Job:
+                    {t('job')}:
                   </span>
                   <span className="text-gray-900 dark:text-gray-100">
-                    {patient.job}
+                    {patient.job || '-'}
                   </span>
                 </div>
 
                 <div className="flex items-start gap-2 text-sm">
                   <MapPin className="h-4 w-4 text-medical-success flex-shrink-0 mt-0.5" />
                   <span className="text-gray-500 dark:text-gray-500 min-w-[60px]">
-                    Address:
+                    {t('address')}:
                   </span>
                   <span className="text-gray-900 dark:text-gray-100 flex-1 line-clamp-2">
-                    {patient.address}
+                    {patient.address || '-'}
                   </span>
                 </div>
               </div>

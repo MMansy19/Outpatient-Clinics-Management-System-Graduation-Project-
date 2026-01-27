@@ -9,7 +9,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.17-38B2AC?style=for-the-badge&logo=tailwind-css)
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
-**Outpatient Clinics Management System for Kasr Al Ainy Hospital**  
+Outpatient Clinics Management System for Kasr Al Ainy Hospital
 *A Spring 2025 Graduation Project by Cairo University - Faculty of Engineering, BDE Department*
 
 [🌐 Live Demo](https://medistream-ocms.vercel.app) • [📖 SOW](link-to-sow.pdf) • [🐛 Issues](https://github.com/your-org/medistream-ocms/issues)
