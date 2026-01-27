@@ -69,9 +69,6 @@ export function PatientProfile({
     isFetching: isRefetchingPatient,
   } = useGetPatientByNationalId(socialSecurityNumber);
 
-  // Skip fetching if socialSecurityNumber is empty
-  const shouldFetch = socialSecurityNumber && socialSecurityNumber.length > 0;
-
   // Debug logging
   console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
   console.log('🔍 PatientProfile - Fetched patient:', patient);
@@ -259,7 +256,7 @@ export function PatientProfile({
       )}
 
       {/* Header Card */}
-      <Card className="sticky top-0 z-10 md:static md:top-auto">
+<Card className="sticky top-0 z-30 bg-background md:static md:top-auto">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
