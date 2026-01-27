@@ -112,19 +112,10 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
   return (
     <div className="space-y-4">
       {/* Search Header */}
-      <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-medical-primary">{t('patientSearch')}</h2>
           <p className="text-sm text-muted-foreground">{t('searchSubtitle')}</p>
         </div>
-        <Button
-          onClick={onAddNew}
-          className="bg-medical-primary hover:bg-medical-primary/90"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {t('addNewPatient')}
-        </Button>
-      </div>
 
       {/* Search Input */}
       <Card>

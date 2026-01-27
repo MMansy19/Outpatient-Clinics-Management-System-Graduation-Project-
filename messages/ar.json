@@ -254,12 +254,16 @@
     "addMedication": "إضافة دواء",
     "addLab": "إضافة تحليل",
     "addScan": "إضافة أشعة",
+    "enterNationalId": "أدخل الرقم القومي",
     "allVisits": "جميع الزيارات",
     "allVisitsDescription": "جميع زيارات هذا الدكتور",
     "noVisitsDescription": "لم يتم العثور على زيارات لهذا الدكتور",
     "allPatients": "جميع المرضى",
     "noPatientsFound": "لم يتم العثور على مرضى",
+    "comments":"التعليقات",
+    "optionalComments":"تعليقات اختيارية",
     "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
+  "uploadScanImage": "تحميل صورة الأشعة",
     "addPatient": {
       "title": "إضافة مريض جديد",
       "selectMethod": "اختر طريقة التسجيل",
@@ -466,7 +470,13 @@
     "comments": "التعليقات",
     "actions": "الإجراءات",
     "type": "النوع",
-    "name": "الاسم"
+    "name": "الاسم",
+    "patientName": "اسم المريض",
+    "visitDate": "تاريخ الزيارة",
+    "gender": "الجنس",
+    "dateOfBirth": "تاريخ الميلاد",
+    "socialSecurityNumber": "الرقم القومي",
+    "job":"الوظيفة"
   },
   "vitals": {
     "kg": "كجم",
@@ -648,6 +658,7 @@
   },
   "scan": {
     "createdSuccess": "تم إنشاء الأشعة بنجاح",
+    "enterNationalId": "أدخل الرقم القومي",
     "updatedSuccess": "تم تحديث الأشعة بنجاح",
     "defaultName": "دراسة تصويرية",
     "reportAvailable": "التقرير متاح",

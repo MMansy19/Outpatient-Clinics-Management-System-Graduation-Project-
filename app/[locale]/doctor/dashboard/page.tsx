@@ -53,6 +53,9 @@ type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients';
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('doctor');
+  const tPatient = useTranslations('patient');
+  const tTable = useTranslations('table');
+  const tCommon = useTranslations('common');
   const [currentView, setCurrentView] = useState<View>('visits');
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
@@ -214,8 +217,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               variant="outline"
               className="sm:flex-none "
             >
-              <Plus className="sm:mr-2 h-5 w-5" />
-              <span className="hidden sm:inline">Add Patient</span>
+              <Plus className="mr-2 h-5 w-5" />
+              <span className="inline">{t('addNewPatient')}</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
 
@@ -258,7 +261,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <CardContent>
               <div className="text-2xl font-bold">{stats.todaysPatients}</div>
               <p className="text-xs text-muted-foreground">
-                {loadingAllPatients ? 'Loading...' : 'Total patients'}
+                {loadingAllPatients ? tCommon('loading') : tCommon('totalPatients')}
               </p>
               {patientsError && (
                 <p className="text-xs text-red-500 mt-1">
@@ -348,10 +351,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Patient Name</TableHead>
-                        <TableHead>Diagnoses</TableHead>
-                        <TableHead>Doctor</TableHead>
-                        <TableHead>Visit Date</TableHead>
+                        <TableHead>{tTable('patientName')}</TableHead>
+                        <TableHead>{tTable('diagnoses')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('visitDate')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -363,7 +366,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                           <TableCell className="font-medium">
                             {visit?.patient?.name ||
                               visit?.patient_name ||
-                              'N/A'}
+                              tCommon('unknown')}
                           </TableCell>
                           <TableCell className="max-w-[300px]">
                             <div
@@ -372,13 +375,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                             >
                               {visit?.diagnoses ||
                                 visit?.diagnosis ||
-                                'No diagnosis'}
+                                tTable('noDiagnosis')}
                             </div>
                           </TableCell>
                           <TableCell>
                             {visit?.doctor?.name ||
                               visit?.doctor_name ||
-                              'Dr. Unknown'}
+                              tCommon('unknown')}
                           </TableCell>
                           <TableCell>
                             {visit?.created_at
@@ -425,12 +428,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Name</TableHead>
-                            <TableHead>Gender</TableHead>
-                            <TableHead>Date of Birth</TableHead>
-                            <TableHead>Social Security Number</TableHead>
-                            <TableHead>Address</TableHead>
-                            <TableHead>Job</TableHead>
+                            <TableHead>{tTable('name')}</TableHead>
+                            <TableHead>{tTable('gender')}</TableHead>
+                            <TableHead>{tTable('dateOfBirth')}</TableHead>
+                            <TableHead>{tTable('socialSecurityNumber')}</TableHead>
+                            <TableHead>{tPatient('address')}</TableHead>
+                            <TableHead>{tTable('job')}</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -441,25 +444,25 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                               onClick={() => handleSelectPatient(patient)}
                             >
                               <TableCell className="font-medium">
-                                {patient.name || 'Unknown'}
+                                {patient.name || tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 {patient.gender === 0
-                                  ? 'Male'
+                                  ? tPatient('male')
                                   : patient.gender === 1
-                                    ? 'Female'
-                                    : 'Other'}
+                                    ? tPatient('female')
+                                    : tCommon('other')}
                               </TableCell>
                               <TableCell>
                                 {patient.dateOfBirth
                                   ? new Date(
                                       patient.dateOfBirth
                                     ).toLocaleDateString()
-                                  : 'N/A'}
+                                  : tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 <div className="font-mono text-sm">
-                                  {patient.socialSecurityNumber || 'N/A'}
+                                  {patient.socialSecurityNumber || tCommon('unknown')}
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
@@ -467,10 +470,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                   className="truncate"
                                   title={patient.address}
                                 >
-                                  {patient.address || 'N/A'}
+                                  {patient.address || tCommon('unknown')}
                                 </div>
                               </TableCell>
-                              <TableCell>{patient.job || 'N/A'}</TableCell>
+                              <TableCell>{patient.job || tCommon('unknown')}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

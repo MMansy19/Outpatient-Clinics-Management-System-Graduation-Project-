@@ -31,6 +31,8 @@ interface EnhancedVisit extends VisitResponse {
 
 export function VisitTable() {
   const t = useTranslations('admin');
+  const tTable = useTranslations('table');
+  const tCommon = useTranslations('common');
   const [visits, setVisits] = useState<EnhancedVisit[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -178,10 +180,10 @@ export function VisitTable() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Patient
+                      {t('patientName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.patientName || 'Loading...'}
+                      {visit.patientName || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -192,10 +194,10 @@ export function VisitTable() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Doctor
+                      {t('doctorName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.doctorName || 'Loading...'}
+                      {visit.doctorName || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -259,10 +261,10 @@ export function VisitTable() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <TableCell className="font-medium">
-                      {visit.patientName || 'Loading...'}
+                      {visit.patientName || tCommon('loading')}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {visit.doctorName || 'Loading...'}
+                      {visit.doctorName || tCommon('loading')}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>

@@ -263,6 +263,7 @@
     "allPatients": "Patients",
     "noPatientsFound": "No patients found",
     "allPatientsDescription": "All patients registered under this doctor",
+    "uploadScanImage": "Upload Scan Image",
     "addPatient": {
       "title": "Add New Patient",
       "selectMethod": "Choose Registration Method",
@@ -468,7 +469,14 @@
     "comments": "Comments",
     "actions": "Actions",
     "type": "Type",
-    "name": "Name"
+    "name": "Name",
+    
+    "patientName": "Patient Name",
+    "visitDate": "Visit Date",
+    "gender": "Gender",
+    "dateOfBirth": "Date of Birth",
+    "socialSecurityNumber": "Social Security Number",
+    "job":"Job"
   },
   "vitals": {
     "kg": "kg",
@@ -649,6 +657,7 @@
     "mammography": "MAMMOGRAPHY"
   },
   "scan": {
+    "enterNationalId": "Enter national ID",
     "createdSuccess": "Scan created successfully",
     "updatedSuccess": "Scan updated successfully",
     "defaultName": "Imaging Study",

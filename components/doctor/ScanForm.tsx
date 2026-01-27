@@ -175,7 +175,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
         />
 
         <ImageUploadField
-          label="Scan Image"
+          label={t('uploadScanImage')}
           onImageSelect={setSelectedImage}
           maxSizeMB={5}
         />
