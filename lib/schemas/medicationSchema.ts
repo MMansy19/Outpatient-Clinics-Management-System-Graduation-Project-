@@ -67,14 +67,15 @@ export const medicationSchema = z.object({
     .or(z.literal('')), // Allow empty string
 
   /**
-   * Patient Social Security Number
-   *
-   * 14-digit Egyptian National ID.
+   * Patient ID
+   * 
+   * UUID of the patient receiving the medication.
+   * Validated to ensure it's a valid UUID format.
    */
   patientId: z
     .string()
-    .length(14, 'National ID must be exactly 14 digits')
-    .regex(/^[23]\d{13}$/, 'Invalid National ID format'),
+    .uuid('Invalid patient ID format')
+    .min(1, 'Patient ID is required'),
 });
 
 /**
