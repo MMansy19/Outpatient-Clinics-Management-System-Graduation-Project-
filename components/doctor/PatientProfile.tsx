@@ -213,8 +213,8 @@ export function PatientProfile({
   ];
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
-      {/* Scanned Patient Notification */}
+<div className="relative h-[100dvh] overflow-y-auto md:h-auto md:overflow-visible">
+    <div className="space-y-6 pb-20 md:pb-6">      {/* Scanned Patient Notification */}
       {patient.scannedData && (
         <Card className="border border-green-500 bg-green-50 dark:bg-green-900/20">
           <CardContent className="py-4">
@@ -229,7 +229,7 @@ export function PatientProfile({
       )}
 
       {/* Header Card */}
-      <Card className="sticky top-0 z-10 md:static md:top-auto">
+<Card className="sticky top-0 z-30 bg-background md:static md:top-auto">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
@@ -921,6 +921,7 @@ export function PatientProfile({
         onOpenChange={setIsScanFormOpen}
         socialSecurityNumber={String(patient?.socialSecurityNumber || '')}
       />
+    </div>
     </div>
   );
 }
