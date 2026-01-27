@@ -152,10 +152,10 @@ export interface CreateVisitResponse {
  */
 export interface CreateMedicationDto {
   name: string;
-  dosage: number; // Dosage amount per administration
-  period: number; // Treatment period in days
-  comments?: string; // Optional medication instructions
-  patientId: string; // UUID format
+  dosage: number;
+  period: number;
+  comments?: string;
+  patientId: string; // 14-digit social security number (National ID)
 }
 
 export interface CreateMedicationResponse {

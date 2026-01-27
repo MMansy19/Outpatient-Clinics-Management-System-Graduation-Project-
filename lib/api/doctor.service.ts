@@ -202,10 +202,10 @@ export const doctorApi = {
    * @param {number} data.dosage - Dosage amount per administration
    * @param {number} data.period - Treatment period in days
    * @param {string} [data.comments] - Optional instructions or notes
-   * @param {string} data.patientId - Patient UUID
+   * @param {string} data.patientId - Patient social security number (14-digit National ID)
    * @returns {Promise<CreateMedicationResponse>} Medication creation confirmation
    * @throws {AxiosError} When request fails (401, 403, 400, 500)
-   * 
+   *
    * @example
    * ```typescript
    * const result = await doctorApi.createMedication({
@@ -213,7 +213,7 @@ export const doctorApi = {
    *   dosage: 2,
    *   period: 7,
    *   comments: "Can't be taken with an empty stomach",
-   *   patientId: "0281ba4f-7592-477e-9d02-f2641aa89221"
+   *   patientId: "30201011234567"
    * });
    * console.log(result.id); // Medication UUID
    * ```
