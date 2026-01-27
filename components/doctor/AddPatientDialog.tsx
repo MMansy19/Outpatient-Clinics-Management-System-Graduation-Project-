@@ -25,13 +25,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
@@ -61,7 +54,6 @@ export function AddPatientDialog({
   const tCommon = useTranslations('common');
   const tScan = useTranslations('scan');
   const tValidation = useTranslations('validation');
-  const tAdmin = useTranslations('admin');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<CreatePatientFormData>({
@@ -323,34 +315,7 @@ export function AddPatientDialog({
                   </FormItem>
                 )}
               />
-
-              {/* Language */}
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{tPatient('preferredLanguage')}</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value?.toString()}
-                      disabled={isPending}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder={tPatient('selectLanguage')} />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="0">{tAdmin('arabic')}</SelectItem>
-                        <SelectItem value="1">{tAdmin('english')}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+             </div>
 
             <DialogFooter>
               <Button

@@ -398,33 +398,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               )}
             />
 
-            {/* Language */}
-            <FormField
-              control={form.control}
-              name="language"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('preferredLanguage')}</FormLabel>
-                  <Select
-                    onValueChange={(value) => field.onChange(parseInt(value))}
-                    defaultValue={field.value?.toString()}
-                    disabled={isPending}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t('preferredLanguage')} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="0">{t('arabic')}</SelectItem>
-                      <SelectItem value="1">{t('english')}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             {/* Actions */}
             <div className="flex justify-end gap-4 pt-4">
               <Button

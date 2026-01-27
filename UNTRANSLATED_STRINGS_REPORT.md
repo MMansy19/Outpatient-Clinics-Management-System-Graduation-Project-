@@ -16,7 +16,6 @@ This report identifies all hardcoded English text strings in the codebase that n
 "First Name" → Add to: patient.firstName
 "Last Name" → Add to: patient.lastName
 "Job/Occupation *" → Add to: patient.job
-"Preferred Language" → Add to: patient.preferredLanguage
 "Select language" → Add to: patient.selectLanguage
 "Arabic (العربية)" → Already translated ✓
 "English" → Already translated ✓
