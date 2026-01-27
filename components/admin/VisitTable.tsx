@@ -31,7 +31,6 @@ interface EnhancedVisit extends VisitResponse {
 
 export function VisitTable() {
   const t = useTranslations('admin');
-  const tTable = useTranslations('table');
   const tCommon = useTranslations('common');
   const [visits, setVisits] = useState<EnhancedVisit[]>([]);
   const [loading, setLoading] = useState(true);
