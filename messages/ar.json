@@ -406,8 +406,9 @@
     "generateDiagnosis": "توليد تشخيص تفريقي",
     "createVisit": "إنشاء زيارة",
     "visitDescription": "توثيق زيارة سريرية جديدة لهذا المريض",
-    "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض"
-
+    "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض",
+    "networkError": "خطأ في الشبكة",
+    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى"
   },
   "medication": {
     "addMedication": "إضافة دواء",

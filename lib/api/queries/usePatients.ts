@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
@@ -63,12 +64,27 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
   });
 };
 
-export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient, Error> => {
+export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient | null, Error> => {
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
-      const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
-      return response.data;
+      try {
+        const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+        return response.data;
+      } catch (error) {
+        // Check if it's a 404 (patient not found) or 500 (server error for not found)
+        // In both cases, treat as "patient not found" and return null
+        if (axios.isAxiosError(error)) {
+          const status = error.response?.status;
+          // 404 = Not Found, 500 = Internal Server Error (often used when patient doesn't exist)
+          if (status === 404 || status === 500) {
+            console.log(`Patient with National ID ${socialSecurityNumber} not found`);
+            return null;
+          }
+        }
+        // For other errors, rethrow
+        throw error;
+      }
     },
     enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,

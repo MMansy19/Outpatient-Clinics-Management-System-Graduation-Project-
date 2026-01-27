@@ -104,7 +104,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
         <div className="relative md:col-span-2">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder={t('searchPlaceholder') || 'Search by name, national ID, email, or phone...'}
+            placeholder={t('searchPlaceholder')}
             value={searchQuery}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -234,7 +234,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
         <div className="flex flex-wrap gap-2">
           {searchQuery && (
             <Badge variant="secondary">
-              Search: {searchQuery}
+              {tCommon('search')}: {searchQuery}
               <X
                 className="ml-2 h-3 w-3 cursor-pointer"
                 onClick={() => setSearchQuery('')}
@@ -243,7 +243,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           )}
           {nationalId && (
             <Badge variant="secondary">
-              National ID: {nationalId}
+              {tPatient('nationalId')}: {nationalId}
               <X
                 className="ml-2 h-3 w-3 cursor-pointer"
                 onClick={() => setNationalId('')}
@@ -252,7 +252,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           )}
           {gender !== 'all' && (
             <Badge variant="secondary">
-              Gender: {gender}
+              {tPatient('gender')}: {gender === 'male' ? tPatient('male') : gender === 'female' ? tPatient('female') : gender}
               <X
                 className="ml-2 h-3 w-3 cursor-pointer"
                 onClick={() => setGender('all')}
@@ -261,7 +261,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           )}
           {minAge && (
             <Badge variant="secondary">
-              Min Age: {minAge}
+              {tSearch('minAge')}: {minAge}
               <X
                 className="ml-2 h-3 w-3 cursor-pointer"
                 onClick={() => setMinAge('')}
@@ -270,7 +270,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
           )}
           {maxAge && (
             <Badge variant="secondary">
-              Max Age: {maxAge}
+              {tSearch('maxAge')}: {maxAge}
               <X
                 className="ml-2 h-3 w-3 cursor-pointer"
                 onClick={() => setMaxAge('')}
@@ -319,7 +319,7 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
                 </div>
                 <div className="text-right text-sm">
                   <div className="font-medium">
-                    {patient.birthdate ? calculateAge(patient.birthdate) : 'N/A'} {tPatient('years')}
+                    {patient.birthdate ? calculateAge(patient.birthdate) : tCommon('unknown')} {tPatient('years')}
                   </div>
                   <div className="text-muted-foreground">
                     {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}

@@ -406,7 +406,9 @@
     "generateDiagnosis": "Generate Differential Diagnosis",
     "createVisit": "Create Visit",
     "visitDescription": "Document a new clinical visit for this patient",
-    "visitDescreption": "Document a new clinical visit for this patient"
+    "visitDescreption": "Document a new clinical visit for this patient",
+    "networkError": "Network Error",
+    "networkErrorDescription": "Please check your internet connection and try again"
   },
   "medication": {
     "addMedication": "Add Medication",

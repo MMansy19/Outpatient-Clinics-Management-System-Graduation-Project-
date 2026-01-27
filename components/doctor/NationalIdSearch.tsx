@@ -28,12 +28,13 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
   const t = useTranslations('doctor');
   const tScan = useTranslations('scan');
   const tPatient = useTranslations('patient');
+  const tCommon = useTranslations('common');
 
   // Search states
   const [nationalId, setNationalId] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
-  const [hasScanned, setHasScanned] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // Fetch patient by National ID
   const { data: patient, isLoading, error, refetch } = useGetPatientByNationalId(nationalId);
@@ -43,24 +44,24 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
     setScannedData(data);
     setNationalId(data.nationalId || data.socialSecurityNumber || '');
     setIsScannerOpen(false);
-    setHasScanned(true);
+    setHasSearched(true);
   };
 
   // Effect to automatically navigate to patient profile when search results arrive after scan
   useEffect(() => {
-    if (hasScanned && nationalId) {
+    if (hasSearched && nationalId) {
       refetch().then(() => {
         // The navigation will be handled by the separate effect below
       });
     }
-  }, [hasScanned, nationalId, refetch]);
+  }, [hasSearched, nationalId, refetch]);
 
   // Effect to handle patient data and navigate to profile
   useEffect(() => {
     if (!nationalId) return;
 
+    // Patient found - navigate to their profile
     if (patient) {
-      // Patient found - navigate to their profile
       // Transform gender from number (0/1) to Gender enum ('male'/'female')
       const genderValue = typeof patient.gender === 'number'
         ? (patient.gender === 0 ? Gender.MALE : Gender.FEMALE)
@@ -74,30 +75,31 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
         socialSecurityNumber: patient?.socialSecurityNumber,
         address: patient.address,
       });
-      setHasScanned(false);
-    } else if (error && hasScanned && scannedData) {
-      // Patient not found - show profile with scanned data and option to register
-      const fullName = scannedData.fullName || `${scannedData.firstName || ''} ${scannedData.lastName || ''}`.trim();
+      setHasSearched(false);
+    } else if (hasSearched && !isLoading && !patient && !error) {
+      // Patient not found (null) - show profile with scanned data and option to register
+      const fullName = scannedData?.fullName || `${scannedData?.firstName || ''} ${scannedData?.lastName || ''}`.trim();
       // Transform gender from string ('male'/'female') to Gender enum
-      const genderValue = scannedData.gender === 'male' ? Gender.MALE : Gender.FEMALE;
+      const genderValue = scannedData?.gender === 'male' ? Gender.MALE : Gender.FEMALE;
 
       onSelectPatient({
         id: null, // No existing patient ID - will be assigned when registered
-        name: fullName || 'Unknown',
+        name: fullName || tCommon('unknown'),
         gender: genderValue,
-        dateOfBirth: scannedData.dateOfBirth ? scannedData.dateOfBirth.toISOString() : new Date().toISOString(),
-        socialSecurityNumber: scannedData.socialSecurityNumber || scannedData.nationalId || '',
-        address: scannedData.location || scannedData.address || '',
+        dateOfBirth: scannedData?.dateOfBirth ? scannedData.dateOfBirth.toISOString() : new Date().toISOString(),
+        socialSecurityNumber: scannedData?.socialSecurityNumber || scannedData?.nationalId || nationalId,
+        address: scannedData?.location || scannedData?.address || '',
         isNewPatient: true, // Flag to indicate this is a scanned but unregistered patient
         scannedData: scannedData, // Store full scanned data
       });
-      setHasScanned(false);
+      setHasSearched(false);
     }
-  }, [patient, error, hasScanned, scannedData, nationalId, onSelectPatient]);
+  }, [patient, isLoading, error, hasSearched, scannedData, nationalId, onSelectPatient, tCommon]);
 
   const handleManualSearch = () => {
     if (nationalId && !isLoading) {
-      setHasScanned(true);
+      setHasSearched(true);
+      setScannedData(null); // Clear scanned data for manual search
       refetch();
     }
   };
@@ -200,17 +202,17 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
 
       {/* Search Status */}
       <div className="space-y-3">
-        {isLoading && hasScanned && (
+        {isLoading && hasSearched && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Loader2 className="h-12 w-12 animate-spin text-medical-primary mb-4" />
-              <p className="text-muted-foreground mb-2">Searching for patient...</p>
-              <p className="text-sm text-muted-foreground">National ID: {nationalId}</p>
+              <p className="text-muted-foreground mb-2">{tCommon('loading')}</p>
+              <p className="text-sm text-muted-foreground">{tPatient('nationalId')}: {nationalId}</p>
             </CardContent>
           </Card>
         )}
 
-        {!isLoading && hasScanned && error && (
+        {!isLoading && hasSearched && patient === null && !error && (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-12">
               <Search className="h-12 w-12 text-muted-foreground mb-4" />
@@ -219,6 +221,24 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               <Button variant="outline" onClick={onAddNew} className="mt-2">
                 <Plus className="mr-2 h-4 w-4" />
                 {tPatient('registerNew')}
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
+        {!isLoading && hasSearched && error && (
+          <Card className="border-red-200 bg-red-50 dark:bg-red-900/20">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Search className="h-12 w-12 text-red-500 mb-4" />
+              <p className="text-red-600 dark:text-red-400 mb-2">
+                {tCommon('error')}
+              </p>
+              <p className="text-sm text-muted-foreground mb-4">
+                {t('networkErrorDescription')}
+              </p>
+              <Button variant="outline" onClick={handleManualSearch} className="mt-2">
+                <Search className="mr-2 h-4 w-4" />
+                {tCommon('search')}
               </Button>
             </CardContent>
           </Card>
