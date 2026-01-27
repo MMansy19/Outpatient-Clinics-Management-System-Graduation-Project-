@@ -29,12 +29,43 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
   const tScan = useTranslations('scan');
   const tPatient = useTranslations('patient');
   const tCommon = useTranslations('common');
+  const tValidation = useTranslations('validation');
 
   // Search states
   const [nationalId, setNationalId] = useState('');
+  const [nationalIdError, setNationalIdError] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [scannedData, setScannedData] = useState<EnrichedScanData | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
+
+  // Validate Egyptian National ID (14 digits)
+  const isValidNationalId = (id: string): boolean => {
+    const trimmedId = id.trim();
+    // Must be exactly 14 digits
+    return /^\d{14}$/.test(trimmedId);
+  };
+
+  // Validate on change and update error message
+  const validateNationalId = (id: string): boolean => {
+    if (!id.trim()) {
+      setNationalIdError('');
+      return false;
+    }
+    if (!isValidNationalId(id)) {
+      setNationalIdError(tValidation('nationalIdLength'));
+      return false;
+    }
+    setNationalIdError('');
+    return true;
+  };
+
+  // Handle input change with validation
+  const handleNationalIdChange = (value: string) => {
+    // Only allow digits
+    const digitsOnly = value.replace(/\D/g, '');
+    setNationalId(digitsOnly);
+    validateNationalId(digitsOnly);
+  };
 
   // Fetch patient by National ID
   const { data: patient, isLoading, error, refetch } = useGetPatientByNationalId(nationalId);
@@ -80,7 +111,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
       // Patient not found (null) - show profile with scanned data and option to register
       const fullName = scannedData?.fullName || `${scannedData?.firstName || ''} ${scannedData?.lastName || ''}`.trim();
       // Transform gender from string ('male'/'female') to Gender enum
-      const genderValue = scannedData?.gender === 'male' ? Gender.MALE : Gender.FEMALE;
+      const genderValue = scannedData?.gender === 'male' ? Gender.MALE : scannedData?.gender === 'female' ? Gender.FEMALE : undefined;
 
       onSelectPatient({
         id: null, // No existing patient ID - will be assigned when registered
@@ -97,7 +128,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
   }, [patient, isLoading, error, hasSearched, scannedData, nationalId, onSelectPatient, tCommon]);
 
   const handleManualSearch = () => {
-    if (nationalId && !isLoading) {
+    if (nationalId && isValidNationalId(nationalId) && !isLoading) {
       setHasSearched(true);
       setScannedData(null); // Clear scanned data for manual search
       refetch();
@@ -128,10 +159,11 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               <Input
                 placeholder={tScan('enterNationalId')}
                 value={nationalId}
-                onChange={(e) => setNationalId(e.target.value)}
+                onChange={(e) => handleNationalIdChange(e.target.value)}
                 className="pl-10"
+                maxLength={14}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter' && !isLoading) {
+                  if (e.key === 'Enter' && isValidNationalId(nationalId) && !isLoading) {
                     handleManualSearch();
                   }
                 }}
@@ -146,7 +178,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
             </Button>
             <Button
               onClick={handleManualSearch}
-              disabled={!nationalId || isLoading}
+              disabled={!isValidNationalId(nationalId) || isLoading}
               className="bg-medical-primary hover:bg-medical-primary/90"
             >
               {isLoading ? (
@@ -156,6 +188,11 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
               )}
             </Button>
           </div>
+
+          {/* Validation Error Message */}
+          {nationalIdError && (
+            <p className="text-sm text-red-500">{nationalIdError}</p>
+          )}
 
           {/* Scan Results */}
           {scannedData && (
