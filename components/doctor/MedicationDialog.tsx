@@ -183,7 +183,6 @@ export function MedicationDialog({
                   rows={4}
                 />
               </FormControl>
-              <FormDescription>{t('frequencyDescription')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

@@ -94,11 +94,11 @@ export function VisitDialog({
           name="diagnoses"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diagnoses & Treatment Plan</FormLabel>
+              <FormLabel>{t('diagnosesTreatmentPlan')}</FormLabel>
               <FormControl>
                 <VoiceFormField
                   field={field}
-                  placeholder="Enter diagnoses, treatment plan, and notes..."
+                  placeholder={t('enterDiagnosesTreatmentPlan')}
                   className="min-h-[150px]"
                   rows={6}
                 />

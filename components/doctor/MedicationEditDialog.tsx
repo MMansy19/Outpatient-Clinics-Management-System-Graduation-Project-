@@ -190,7 +190,6 @@ export function MedicationEditDialog({
                   value={field.value || ''}
                 />
               </FormControl>
-              <FormDescription>{t('frequencyDescription')}</FormDescription>
               <FormMessage />
             </FormItem>
           )}

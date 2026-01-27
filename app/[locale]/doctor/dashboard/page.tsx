@@ -260,9 +260,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.todaysPatients}</div>
-              <p className="text-xs text-muted-foreground">
-                {loadingAllPatients ? tCommon('loading') : tCommon('totalPatients')}
-              </p>
               {patientsError && (
                 <p className="text-xs text-red-500 mt-1">
                   Error: {String(patientsError.message)}
@@ -280,9 +277,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.pendingVisits}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('awaitingDocumentation')}
-              </p>
               {visitsError && (
                 <p className="text-xs text-red-500 mt-1">
                   Error: {String(visitsError.message)}
@@ -300,9 +294,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
-              <p className="text-xs text-muted-foreground">
-                {t('totalThisWeek')}
-              </p>
             </CardContent>
           </Card>
         </div>

@@ -199,7 +199,7 @@
     "searchPlaceholder": "بحث عن المرضى...",
     "noVisitsFound":"لا توجد زيارات",
     "today": "اليوم",
-    "thisWeek": "هذا الأسبوع",
+    "thisWeek": "زيارات هذا الأسبوع",
     "thisMonth": "هذا الشهر",
     "customRange": "نطاق مخصص",
     "allClinics": "جميع العيادات",
@@ -212,7 +212,6 @@
     "patientsSeenToday": "المرضى الذين تمت معاينتهم اليوم",
     "pendingVisits": "جميع الزيارات",
     "awaitingDocumentation": "في انتظار التوثيق",
-    "totalThisWeek": "الإجمالي هذا الأسبوع",
     "quickActions": "إجراءات سريعة",
     "searchPatients": "البحث عن المرضى",
     "recentVisits": "الزيارات الأخيرة",
@@ -407,7 +406,10 @@
     "visitDescription": "توثيق زيارة سريرية جديدة لهذا المريض",
     "visitDescreption": "توثيق زيارة سريرية جديدة لهذا المريض",
     "networkError": "خطأ في الشبكة",
-    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى"
+    "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى",
+    "diagnosesTreatmentPlan": "التشخيص وخطة العلاج",
+    "enterDiagnosesTreatmentPlan":" أدخل التشخيص وخطة العلاج"
+
   },
   "medication": {
     "addMedication": "إضافة دواء",
@@ -415,13 +417,12 @@
     "medicationCreateError": "فشل في إضافة الدواء",
     "medicationDescription": "وصف دواء لهذه الزيارة",
     "name": "اسم الدواء",
-    "namePlaceholder": "أدخل اسم الدواء (مثل: أموكسيسيلين)",
+    "namePlaceholder": "أدخل اسم الدواء (مثل: أموكسيسيلين ٥٠٠ مج)",
     "dosage": "الجرعة",
     "dosagePlaceholder": "اختر الجرعة",
     "dosageDescription": "قوة الجرعة الواحدة (مثل: 500 ملجم)",
     "frequency": "التكرار",
     "frequencyPlaceholder": "مثل: مرة يوميًا، مرتين يوميًا، كل 8 ساعات",
-    "frequencyDescription": "كم مرة يجب تناول هذا الدواء",
     "duration": "المدة",
     "durationPlaceholder": "اختر المدة",
     "durationDescription": "كم من الوقت يجب تناول هذا الدواء",

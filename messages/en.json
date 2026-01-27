@@ -198,7 +198,7 @@
     "search": "Search by Name or National ID",
     "searchPlaceholder": "Search patients...",
     "today": "Today",
-    "thisWeek": "This Week",
+    "thisWeek": "Visits this week",
     "thisMonth": "This Month",
     "customRange": "Custom Range",
     "noVisitsFound":"No visits found",
@@ -212,7 +212,6 @@
     "patientsSeenToday": "Patients seen today",
     "pendingVisits": "All Visits",
     "awaitingDocumentation": "Awaiting documentation",
-    "totalThisWeek": "Total this week",
     "quickActions": "Quick Actions",
     "searchPatients": "Search Patients",
     "recentVisits": "Recent Visits",
@@ -407,7 +406,9 @@
     "visitDescription": "Document a new clinical visit for this patient",
     "visitDescreption": "Document a new clinical visit for this patient",
     "networkError": "Network Error",
-    "networkErrorDescription": "Please check your internet connection and try again"
+    "networkErrorDescription": "Please check your internet connection and try again",
+    "diagnosesTreatmentPlan": "Diagnosis & Treatment Plan",
+    "enterDiagnosesTreatmentPlan":"Enter diagnosis and treatment plan"
   },
   "medication": {
     "addMedication": "Add Medication",
@@ -421,7 +422,6 @@
     "dosageDescription": "Strength per dose (e.g., 500mg)",
     "frequency": "Frequency",
     "frequencyPlaceholder": "e.g., Once daily, Twice daily, Every 8 hours",
-    "frequencyDescription": "How often should this medication be taken",
     "duration": "Duration",
     "durationPlaceholder": "Select duration",
     "durationDescription": "How long should this medication be taken",

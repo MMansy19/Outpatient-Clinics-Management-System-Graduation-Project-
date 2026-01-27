@@ -919,17 +919,6 @@ export function PatientProfile({
         onOpenChange={setIsScanFormOpen}
         socialSecurityNumber={String(patient?.socialSecurityNumber || '')}
       />
-
-      {/* Floating Action Button for Mobile */}
-      <div className="fixed bottom-20 right-4 md:hidden z-50">
-        <Button
-          size="lg"
-          onClick={() => setIsVisitDialogOpen(true)}
-          className="h-14 w-12 rounded-full shadow-lg bg-medical-primary hover:bg-medical-primary/90"
-        >
-          <Plus className="h-6 w-6" />
-        </Button>
-      </div>
     </div>
   );
 }

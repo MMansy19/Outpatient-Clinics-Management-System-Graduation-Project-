@@ -200,9 +200,6 @@ export function MedicationForm({
                       value={field.value || ''}
                     />
                   </FormControl>
-                  <FormDescription>
-                    {t('frequencyDescription')}
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
