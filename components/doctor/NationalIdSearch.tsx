@@ -84,7 +84,7 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
 
       onSelectPatient({
         id: null, // No existing patient ID - will be assigned when registered
-        name: fullName || tCommon('unknown'),
+        name: fullName || '',
         gender: genderValue,
         dateOfBirth: scannedData?.dateOfBirth ? scannedData.dateOfBirth.toISOString() : new Date().toISOString(),
         socialSecurityNumber: scannedData?.socialSecurityNumber || scannedData?.nationalId || nationalId,
@@ -113,12 +113,6 @@ export function NationalIdSearch({ onSelectPatient, onAddNew }: NationalIdSearch
 
   return (
     <div className="space-y-4">
-      {/* Search Header */}
-        <div>
-          <h2 className="text-2xl font-bold text-medical-primary">{t('patientSearch')}</h2>
-          <p className="text-sm text-muted-foreground">{t('searchSubtitle')}</p>
-        </div>
-
       {/* Search Input */}
       <Card>
         <CardHeader>

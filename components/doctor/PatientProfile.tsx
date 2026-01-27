@@ -145,9 +145,6 @@ export function PatientProfile({
                 <h3 className="font-semibold text-lg mb-2 text-blue-900 dark:text-blue-100">
                   {tPatient('notRegistered')}
                 </h3>
-                <p className="text-sm text-blue-700 dark:text-blue-300 mb-4">
-                  {tPatient('notRegisteredDescription')}
-                </p>
                 <Button
                   onClick={onEdit}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -164,20 +161,20 @@ export function PatientProfile({
         <Card>
           <CardHeader>
             <CardTitle>{tPatient('scannedInfo')}</CardTitle>
-            <CardDescription>
-              {tPatient('scannedInfoDescription')}
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {patient.name &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('name')}</p>
                 <p className="text-lg">{patient.name}</p>
-              </div>
+              </div>}
+              {patient.socialSecurityNumber &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('nationalId')}</p>
                 <p className="text-lg font-mono">{patient.socialSecurityNumber}</p>
               </div>
+  }{patient.gender !== undefined &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('gender')}</p>
                 <p className="text-lg">
@@ -185,10 +182,12 @@ export function PatientProfile({
                    String(patient.gender) === '1' || patient.gender === 'female' ? tPatient('female') : tCommon('other')}
                 </p>
               </div>
+  }{patient.dateOfBirth && calculateAge(patient.dateOfBirth) >= 1 &&
               <div className="space-y-2">
                 <p className="text-sm font-medium text-muted-foreground">{tPatient('age')}</p>
                 <p className="text-lg">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
               </div>
+  } 
               {patient.address && (
                 <div className="space-y-2 md:col-span-2">
                   <p className="text-sm font-medium text-muted-foreground">{tPatient('address')}</p>
@@ -247,6 +246,8 @@ export function PatientProfile({
                   </Badge>
 
                 </div>  
+{patient.dateOfBirth && 
+
               <div className="min-w-16">
                 <div className='flex flex-row gap-2 items-center'>
                   <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -254,6 +255,7 @@ export function PatientProfile({
                 </div>
                          <p className="font-medium truncate">{calculateAge(patient.dateOfBirth)} {tPatient('years')}</p>
            </div>
+}
                 </CardDescription>  
               </div>
             </div>

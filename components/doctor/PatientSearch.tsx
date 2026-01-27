@@ -91,14 +91,6 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
   return (
     <div className="space-y-4">
-      {/* Search Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-medical-primary">{t('patientSearch')}</h2>
-          <p className="text-sm text-muted-foreground">{t('searchSubtitle')}</p>
-        </div>
-      </div>
-
       {/* Primary Search */}
       <div className="grid gap-4 md:grid-cols-3">
         <div className="relative md:col-span-2">
@@ -318,12 +310,15 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
                   </CardDescription>
                 </div>
                 <div className="text-right text-sm">
+                  {patient.birthdate && (
                   <div className="font-medium">
                     {patient.birthdate ? calculateAge(patient.birthdate) : tCommon('unknown')} {tPatient('years')}
                   </div>
+                  )}
+                  { patient.gender && 
                   <div className="text-muted-foreground">
                     {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
-                  </div>
+                  </div>}
                 </div>
               </div>
             </CardHeader>

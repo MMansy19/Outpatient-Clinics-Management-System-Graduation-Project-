@@ -34,7 +34,7 @@ import {
 } from '@/components/ui/card';
 
 import { useCreateMedication } from '@/lib/api/queries/useMedications';
-import { medicationSchema, COMMON_PERIODS, COMMON_DOSAGES } from '@/lib/schemas/medicationSchema';
+import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationFormProps {
@@ -51,6 +51,12 @@ export function MedicationForm({
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
   const { mutate: createMedication, isPending } = useCreateMedication();
+
+  // Helper function to create translation function for medication namespace
+  const getMedicationT = (key: string) => t(key);
+
+  const periodOptions = getLocalizedPeriodOptions(getMedicationT);
+  const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<CreateMedicationDto>({
     resolver: zodResolver(medicationSchema),
@@ -132,9 +138,9 @@ export function MedicationForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {COMMON_DOSAGES.map((dosageOption) => (
-                        <SelectItem 
-                          key={dosageOption.value} 
+                      {dosageOptions.map((dosageOption) => (
+                        <SelectItem
+                          key={dosageOption.value}
                           value={dosageOption.value.toString()}
                         >
                           {dosageOption.label}
@@ -167,9 +173,9 @@ export function MedicationForm({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {COMMON_PERIODS.map((periodOption) => (
-                        <SelectItem 
-                          key={periodOption.value} 
+                      {periodOptions.map((periodOption) => (
+                        <SelectItem
+                          key={periodOption.value}
                           value={periodOption.value.toString()}
                         >
                           {periodOption.label}

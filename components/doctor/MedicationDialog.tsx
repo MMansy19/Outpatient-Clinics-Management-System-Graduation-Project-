@@ -24,7 +24,7 @@ import {
 
 import { useCreateMedication } from '@/lib/api/queries/useMedications';
 import { useFormState } from '@/src/hooks/useFormState';
-import { medicationSchema, COMMON_PERIODS, COMMON_DOSAGES } from '@/lib/schemas/medicationSchema';
+import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationDialogProps {
@@ -43,6 +43,12 @@ export function MedicationDialog({
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
   const { mutate: createMedication } = useCreateMedication();
+
+  // Helper function to create translation function for medication namespace
+  const getMedicationT = (key: string) => t(key);
+
+  const periodOptions = getLocalizedPeriodOptions(getMedicationT);
+  const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<CreateMedicationDto>({
     resolver: zodResolver(medicationSchema),
@@ -123,7 +129,7 @@ export function MedicationDialog({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMON_DOSAGES.map((dosageOption) => (
+                  {dosageOptions.map((dosageOption) => (
                     <SelectItem key={dosageOption.value} value={dosageOption.value.toString()}>
                       {dosageOption.label}
                     </SelectItem>
@@ -153,7 +159,7 @@ export function MedicationDialog({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {COMMON_PERIODS.map((periodOption) => (
+                  {periodOptions.map((periodOption) => (
                     <SelectItem key={periodOption.value} value={periodOption.value.toString()}>
                       {periodOption.label}
                     </SelectItem>
