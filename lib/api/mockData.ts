@@ -1,5 +1,5 @@
 // Mock Data Service for Development Without Backend
-import type { AuthResponse, RegisterRequest, CreatePatientRequest } from '@/types/api';
+import type { AuthResponse, RegisterRequest } from '@/types/api';
 import type { Clinic, ClinicWithStats } from '@/types/entities/Clinic';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
@@ -11,7 +11,6 @@ import { ScanType } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
 import { MedicationFrequency } from '@/types/entities/Medication';
 import { UserRole } from '@/types/entities/User';
-import type { SearchFilters } from '@/types/entities/Visit';
 // Storage keys
 export const STORAGE_KEYS = {
   USERS: 'mock_users',
@@ -341,29 +340,40 @@ const initMedications = (): Medication[] => [
 // Initialize all mock data (only if not already initialized)
 export const initMockData = () => {
   if (typeof window === 'undefined') return;
-  
+
+  console.log('🔍 initMockData - Starting initialization...');
+
   // Only initialize if data doesn't exist
   if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
+    console.log('🔍 initMockData - Initializing USERS');
     setStorageData(STORAGE_KEYS.USERS, initUsers());
   }
   if (!localStorage.getItem(STORAGE_KEYS.PATIENTS)) {
+    console.log('🔍 initMockData - Initializing PATIENTS');
     setStorageData(STORAGE_KEYS.PATIENTS, initPatients());
   }
   if (!localStorage.getItem(STORAGE_KEYS.CLINICS)) {
+    console.log('🔍 initMockData - Initializing CLINICS');
     setStorageData(STORAGE_KEYS.CLINICS, initClinics());
   }
   if (!localStorage.getItem(STORAGE_KEYS.VISITS)) {
+    console.log('🔍 initMockData - Initializing VISITS');
     setStorageData(STORAGE_KEYS.VISITS, initVisits());
   }
   if (!localStorage.getItem(STORAGE_KEYS.LABS)) {
+    console.log('🔍 initMockData - Initializing LABS');
     setStorageData(STORAGE_KEYS.LABS, initLabs());
   }
   if (!localStorage.getItem(STORAGE_KEYS.SCANS)) {
+    console.log('🔍 initMockData - Initializing SCANS');
     setStorageData(STORAGE_KEYS.SCANS, initScans());
   }
   if (!localStorage.getItem(STORAGE_KEYS.MEDICATIONS)) {
+    console.log('🔍 initMockData - Initializing MEDICATIONS');
     setStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
   }
+
+  console.log('🔍 initMockData - Initialization complete!');
 };
 
 // Reset all mock data (for testing/development)
@@ -502,111 +512,6 @@ export const mockClinicsAPI = {
   },
 };
 
-// Mock Patients API
-export const mockPatientsAPI = {
-  async searchPatients(filters?: SearchFilters): Promise<{ patients: Patient[]; total: number }> {
-    await delay();
-    let patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    
-    // Apply filters
-    if (filters) {
-      // General query search (name, national_id, email, phone)
-      if (filters.query) {
-        const lowerQuery = filters.query.toLowerCase();
-        patients = patients.filter((p: Patient) =>
-          p.name.toLowerCase().includes(lowerQuery) ||
-          p.national_id.toString().includes(lowerQuery) ||
-          p.email?.toLowerCase().includes(lowerQuery) ||
-          p.phone_number?.toLowerCase().includes(lowerQuery)
-        );
-      }
-
-      // Specific national ID search (exact match)
-      if (filters.nationalId) {
-        patients = patients.filter((p: Patient) =>
-          p.national_id.toString() === filters.nationalId
-        );
-      }
-
-      // Gender filter
-      if (filters.gender) {
-        patients = patients.filter((p: Patient) =>
-          p.gender === filters.gender
-        );
-      }
-
-      // Age range filter
-      if (filters.minAge !== undefined || filters.maxAge !== undefined) {
-        patients = patients.filter((p: Patient) => {
-          const age = new Date().getFullYear() - new Date(p.birthdate).getFullYear();
-          const meetsMin = filters.minAge === undefined || age >= filters.minAge;
-          const meetsMax = filters.maxAge === undefined || age <= filters.maxAge;
-          return meetsMin && meetsMax;
-        });
-      }
-
-      // Date range filter (patient creation date)
-      if (filters.startDate || filters.endDate) {
-        patients = patients.filter((p: Patient) => {
-          const createdDate = new Date(p.created_at);
-          const afterStart = !filters.startDate || createdDate >= filters.startDate;
-          const beforeEnd = !filters.endDate || createdDate <= filters.endDate;
-          return afterStart && beforeEnd;
-        });
-      }
-    }
-
-    return { patients, total: patients.length };
-  },
-
-  async getPatient(id: number): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const patient = patients.find((p: Patient) => p.id === id);
-    if (!patient) throw new Error('Patient not found');
-    return patient;
-  },
-
-  async createPatient(data: CreatePatientRequest): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const newPatient: Patient = {
-      id: patients.length + 1,
-      global_id: `PAT${String(patients.length + 1).padStart(3, '0')}`,
-      national_id: data.national_id,
-      name: data.name,
-      birthdate: data.birthdate,
-      gender: data.gender === 'male' ? Gender.MALE : Gender.FEMALE,
-      phone_number: data.phone_number,
-      email: data.email,
-      address: data.address,
-      is_deleted: false,
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-    patients.push(newPatient);
-    setStorageData(STORAGE_KEYS.PATIENTS, patients);
-    return newPatient;
-  },
-
-  async updatePatient(id: number, data: Partial<Patient>): Promise<Patient> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const index = patients.findIndex((p: Patient) => p.id === id);
-    if (index === -1) throw new Error('Patient not found');
-    
-    patients[index] = { ...patients[index], ...data, updated_at: new Date() };
-    setStorageData(STORAGE_KEYS.PATIENTS, patients);
-    return patients[index];
-  },
-
-  async deletePatient(id: number): Promise<void> {
-    await delay();
-    const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    const filtered = patients.filter((p: Patient) => p.id !== id);
-    setStorageData(STORAGE_KEYS.PATIENTS, filtered);
-  },
-};
 
 // Mock Doctors API
 export const mockDoctorsAPI = {
@@ -652,13 +557,18 @@ export const mockDoctorsAPI = {
 
 // Mock Visits API
 export const mockVisitsAPI = {
-  async getPatientVisits(patientId: number): Promise<VisitWithRelations[]> {
+  async getPatientVisits(socialSecurityNumber: string): Promise<VisitWithRelations[]> {
+    console.log('🔍 mockVisitsAPI.getPatientVisits called with SSN:', socialSecurityNumber);
     await delay();
+
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const visits = getStorageData(STORAGE_KEYS.VISITS, initVisits());
     const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
     const clinics = getStorageData(STORAGE_KEYS.CLINICS, initClinics());
     const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
-    
+
     const patientVisits = visits.filter((v: Visit) => v.patient_id === patientId);
     const patient = patients.find((p: Patient) => p.id === patientId);
     
@@ -792,23 +702,63 @@ export const mockVisitsAPI = {
   },
 };
 
+// Helper function to get patientId from socialSecurityNumber
+async function getPatientIdFromSSN(socialSecurityNumber: string): Promise<number> {
+  // Try to find the patient by SSN
+  const patients = getStorageData(STORAGE_KEYS.PATIENTS, initPatients());
+  const patient = patients.find((p: Patient) => String(p?.national_id) === socialSecurityNumber);
+
+  if (patient) {
+    console.log('🔍 Found patient by SSN:', patient);
+    return patient.id;
+  }
+
+  // Fallback: try to extract ID from SSN (for demo purposes)
+  // The SSN format is YYMMDDXXXXXXX where the middle digits might indicate something
+  // For demo, we'll use a simple mapping
+  console.log('⚠️ Could not find patient by SSN, using fallback mapping');
+  const lastDigit = parseInt(socialSecurityNumber.slice(-1));
+  return (lastDigit % 3) + 1; // Distribute across 1-3
+}
+
 // Mock Medical History API
 export const mockMedicalHistoryAPI = {
-  async getPatientLabs(patientId: number): Promise<Lab[]> {
+  async getPatientLabs(socialSecurityNumber: string): Promise<Lab[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const labs = getStorageData(STORAGE_KEYS.LABS, initLabs());
-    return labs.filter((l: Lab) => l.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs - all labs:', labs);
+    const filtered = labs.filter((l: Lab) => l.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientLabs - filtered result:', filtered);
+    return filtered;
   },
 
-  async getPatientScans(patientId: number): Promise<Scan[]> {
+  async getPatientScans(socialSecurityNumber: string): Promise<Scan[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const scans = getStorageData(STORAGE_KEYS.SCANS, initScans());
-    return scans.filter((s: Scan) => s.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans - all scans:', scans);
+    const filtered = scans.filter((s: Scan) => s.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientScans - filtered result:', filtered);
+    return filtered;
   },
 
-  async getPatientMedications(patientId: number): Promise<Medication[]> {
+  async getPatientMedications(socialSecurityNumber: string): Promise<Medication[]> {
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications called with SSN:', socialSecurityNumber);
     await delay();
+    const patientId = await getPatientIdFromSSN(socialSecurityNumber);
+    console.log('🔍 Mapped SSN to patientId:', patientId);
+
     const medications = getStorageData(STORAGE_KEYS.MEDICATIONS, initMedications());
-    return medications.filter((m: Medication) => m.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications - all medications:', medications);
+    const filtered = medications.filter((m: Medication) => m.patient_id === patientId);
+    console.log('🔍 mockMedicalHistoryAPI.getPatientMedications - filtered result:', filtered);
+    return filtered;
   },
 };

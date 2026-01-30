@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuthStore } from '@/stores/authStore';
+import { initMockData } from '@/lib/api/mockData';
 
 /**
  * Session Initializer Component
@@ -19,6 +20,12 @@ export function SessionInitializer() {
   const { user, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
+    // Initialize mock data for development mode
+    if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
+      console.log('[SessionInitializer] Initializing mock data...');
+      initMockData();
+    }
+
     // Session is automatically restored from localStorage by Zustand persist
     // No additional validation needed here
     if (isAuthenticated && user) {

@@ -85,11 +85,11 @@ export function Navbar({ locale }: NavbarProps) {
               </Button>
             </Link>
 
-            <Link href={`/${locale}/register`}>
+            {/* <Link href={`/${locale}/register`}>
               <Button size="sm" className="bg-emerald-500 hover:bg-emerald-600">
                 {t('register')}
               </Button>
-            </Link>
+            </Link> */}
           </div>
 
           {/* Mobile Menu Button */}
@@ -148,8 +148,7 @@ export function Navbar({ locale }: NavbarProps) {
                     {t('login')}
                   </Button>
                 </Link>
-
-                <Link href={`/${locale}/register`} className="block">
+                {/* <Link href={`/${locale}/register`} className="block">
                   <Button
                     size="sm"
                     className="w-full bg-emerald-500 hover:bg-emerald-600"
@@ -157,7 +156,7 @@ export function Navbar({ locale }: NavbarProps) {
                   >
                     {t('register')}
                   </Button>
-                </Link>
+                </Link> */}
               </div>
             </div>
           </div>

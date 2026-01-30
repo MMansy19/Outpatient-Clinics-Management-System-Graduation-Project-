@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
-import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse, VisitResponse } from '@/lib/api/types';
+import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
-import type { User } from '@/types/entities/User';
+// import type { User } from '@/types/entities/User';
 import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
 
@@ -19,17 +19,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
-export const useGetPatientVisits = (patientId: number): UseQueryResult<VisitWithRelations[], Error> => {
+export const useGetPatientVisits = (socialSecurityNumber: string): UseQueryResult<VisitWithRelations[], Error> => {
+  console.log('🔍 useGetPatientVisits called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+
   return useQuery({
-    queryKey: [...VISITS_KEY, 'patient', patientId],
+    queryKey: [...VISITS_KEY, 'patient', socialSecurityNumber],
     queryFn: async () => {
+      console.log('🔍 useGetPatientVisits - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+
       if (USE_MOCK_DATA) {
-        return await mockVisitsAPI.getPatientVisits(patientId);
+        console.log('🔍 useGetPatientVisits - using mock data');
+        const result = await mockVisitsAPI.getPatientVisits(socialSecurityNumber);
+        console.log('🔍 useGetPatientVisits - mock result:', result);
+        return result;
       }
-      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/visits/patient/${patientId}`);
+      console.log('🔍 useGetPatientVisits - using real API');
+      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${socialSecurityNumber}/visits`);
       return response.data;
     },
-    enabled: !!patientId,
+    enabled: !!socialSecurityNumber,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -185,32 +193,24 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
   return useQuery<PaginatedVisitsResponse>({
     queryKey: [...VISITS_KEY, 'all', params?.page || 1, params?.limit || 10],
     queryFn: async (): Promise<PaginatedVisitsResponse> => {
-      if (USE_MOCK_DATA) {
-        // For mock data, return recent visits
-        const visits = await mockVisitsAPI.getRecentVisits(params?.limit || 10);
-        // Transform VisitWithRelations[] to VisitResponse[]
-        const items: VisitResponse[] = visits.map((visit) => ({
-          id: visit.global_id,
-          diagnoses: visit.diagnosis,
-          doctor: {
-            id: visit.doctor.id.toString(),
-            name: 
-            // visit.doctor?.name ||
-            '',
-          },
-          patient: {
-            id: visit.patient.id.toString(),
-            name: visit.patient?.name || '',
-          },
-          createdAt: visit.created_at.toISOString(),
-        }));
-        return {
-          items,
-          page: 1,
-          totalPages: 1,
-          totalItems: 10,
-        };
-      }
+      // if (USE_MOCK_DATA) {
+      //   // For mock data, return recent visits
+      //   const visits = await mockVisitsAPI.getRecentVisits(params?.limit || 10);
+      //   // Transform VisitWithRelations[] to VisitResponse[]
+      //   const items: VisitResponse[] = visits.map((visit) => ({
+      //     id: visit.global_id,
+      //     diagnoses: visit.diagnosis,
+      //     doctorId: visit.doctor.id.toString(),
+      //     patientId: visit.patient.id.toString(),
+      //     createdAt: visit.created_at.toISOString(),
+      //   }));
+      //   return {
+      //     items,
+      //     page: 1,
+      //     totalPages: 1,
+      //     totalItems: 10,
+      //   };
+      // }
       const response = await doctorApi.getAllVisits(params);
       return response as PaginatedVisitsResponse;
     },

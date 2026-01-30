@@ -159,8 +159,6 @@ export function DoctorTable() {
           ))
         )}
       </div>
-
-      {/* Desktop Table View (>= md) */}
       <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
         <div className="overflow-x-auto">
           <Table>
@@ -252,7 +250,6 @@ export function DoctorTable() {
           </Button>
         </div>
       </div>
-
       <style jsx>{`
         @keyframes fadeInUp {
           from {

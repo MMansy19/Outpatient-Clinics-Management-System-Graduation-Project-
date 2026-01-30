@@ -25,34 +25,33 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
-import { createPatientSchema, type CreatePatientFormData } from '@/lib/schemas/auth.schemas';
+import {
+  createPatientSchema,
+  type CreatePatientFormData,
+} from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
-import { extractGenderFromNationalId, extractBirthdateFromNationalId } from '@/lib/schemas/auth.schemas';
+import {
+  extractGenderFromNationalId,
+  extractBirthdateFromNationalId,
+} from '@/lib/schemas/auth.schemas';
 import { EnrichedScanData } from '@/types/ocr';
 
 interface AddPatientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (patientId: number) => void;
+  onSuccess?: (data: { id: number; socialSecurityNumber: string }) => void;
   prefilledData?: EnrichedScanData | null;
   dataSource?: 'scan' | 'manual';
 }
 
-export function AddPatientDialog({ 
-  open, 
-  onOpenChange, 
-  onSuccess, 
+export function AddPatientDialog({
+  open,
+  onOpenChange,
+  onSuccess,
   prefilledData = null,
   dataSource = 'manual',
 }: AddPatientDialogProps) {
@@ -60,25 +59,31 @@ export function AddPatientDialog({
   const tPatient = useTranslations('patient');
   const tCommon = useTranslations('common');
   const tScan = useTranslations('scan');
+  const tValidation = useTranslations('validation');
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<CreatePatientFormData>({
     resolver: zodResolver(createPatientSchema),
-    defaultValues: prefilledData ? {
-      firstName: prefilledData.firstName || '',
-      lastName: prefilledData.lastName || '',
-      language: Language.ENGLISH,
-      socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
-      address: prefilledData.address ?? prefilledData.location ?? '',
-      job: '',
-    } : {
-      firstName: '',
-      lastName: '',
-      language: Language.ENGLISH,
-      socialSecurityNumber: '',
-      address: '',
-      job: '',
-    },
+    defaultValues: prefilledData
+      ? {
+          firstName: prefilledData.firstName || '',
+          lastName: prefilledData.lastName || '',
+          language: Language.ENGLISH,
+          socialSecurityNumber:
+            prefilledData.socialSecurityNumber ||
+            prefilledData.nationalId ||
+            '',
+          address: prefilledData.address ?? prefilledData.location ?? '',
+          job: '',
+        }
+      : {
+          firstName: '',
+          lastName: '',
+          language: Language.ENGLISH,
+          socialSecurityNumber: '',
+          address: '',
+          job: '',
+        },
   });
 
   // Watch the national ID field to show extracted info
@@ -87,16 +92,12 @@ export function AddPatientDialog({
   // Populate form with scanned data when available
   useEffect(() => {
     if (prefilledData && dataSource === 'scan') {
-      console.log('🔍 Prefilling form with scanned data:', {
-        firstName: prefilledData.firstName,
-        lastName: prefilledData.lastName,
-        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId,
-      });
       form.reset({
         firstName: prefilledData.firstName || '',
         lastName: prefilledData.lastName || '',
         language: Language.ENGLISH,
-        socialSecurityNumber: prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
+        socialSecurityNumber:
+          prefilledData.socialSecurityNumber || prefilledData.nationalId || '',
         address: prefilledData.address ?? prefilledData.location ?? '',
         job: '',
       });
@@ -110,7 +111,7 @@ export function AddPatientDialog({
     if (nationalId && nationalId.length === 14) {
       const gender = extractGenderFromNationalId(nationalId);
       const birthdate = extractBirthdateFromNationalId(nationalId);
-      
+
       // Just for validation and display - backend extracts from National ID
       if (gender && birthdate) {
         console.log('📋 Extracted from National ID:', {
@@ -122,54 +123,84 @@ export function AddPatientDialog({
   }, [nationalId]);
 
   const onSubmit = (data: CreatePatientFormData) => {
-    console.log('📝 Creating patient with data:', data);
-    
-    createPatient({
-      ...data,
-      job: data.job || '',
-    }, {
+    const submitData: any = {
+      firstName: data.firstName,
+      lastName: data.lastName,
+      language: data.language,
+      socialSecurityNumber: data.socialSecurityNumber,
+    };
+
+    if (data.address?.trim()) {
+      submitData.address = data.address.trim();
+    }
+
+    if (data.job?.trim()) {
+      submitData.job = data.job.trim();
+    }
+
+    // Include scanned data if available (gender and birthdate from National ID)
+    if (prefilledData) {
+      if (prefilledData.gender) {
+        submitData.gender = prefilledData.gender;
+      }
+      if (prefilledData.birthdate) {
+        submitData.birthdate = prefilledData.birthdate instanceof Date
+          ? prefilledData.birthdate.toISOString().split('T')[0]
+          : prefilledData.birthdate;
+      }
+      if (prefilledData.address || prefilledData.location) {
+        submitData.address = submitData.address || prefilledData.address || prefilledData.location;
+      }
+    }
+
+    createPatient(submitData, {
       onSuccess: (response) => {
-        console.log('✅ Patient created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
+        const socialSecurityNumber = form.getValues('socialSecurityNumber');
         toast.success(
           toastMessages.patient.createSuccess,
           toastMessages.patient.createSuccessDescription(fullName)
         );
+        console.log('🔍 Patient created - ID:', response.id, 'National ID:', socialSecurityNumber);
+        console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
-        
-        // Extract the numeric ID from globalId if needed
         const numericId = parseInt(response.id) || 0;
-        onSuccess?.(numericId);
+        onSuccess?.({ id: numericId, socialSecurityNumber });
       },
       onError: (error: unknown) => {
-        console.error('❌ Create patient error:', error);
-        
-        // Handle different error cases
-        if (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object') {
-          const response = error.response as { data?: unknown; status?: number };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
-          
-          // Check if it's a "User already exists" error
-          if (response.status === 400 && typeof response.data === 'string' && response.data.includes('already exists')) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object'
+        ) {
+          const response = error.response as {
+            data?: unknown;
+            status?: number;
+          };
+          if (
+            response.status === 400 &&
+            typeof response.data === 'string' &&
+            response.data.includes('already exists')
+          ) {
             toast.error(
               toastMessages.patient.alreadyExists,
               toastMessages.patient.alreadyExistsDescription
             );
             return;
           }
-          
-          // Get error message from response
-          const message = typeof response.data === 'string' 
-            ? response.data 
-            : (response.data && typeof response.data === 'object' && 'message' in response.data && typeof response.data.message === 'string' 
-                ? response.data.message 
-                : 'Please check the form and try again.');
-          toast.error(
-            toastMessages.patient.createError,
-            message
-          );
+          const message =
+            typeof response.data === 'string'
+              ? response.data
+              : response.data &&
+                  typeof response.data === 'object' &&
+                  'message' in response.data &&
+                  typeof response.data.message === 'string'
+                ? response.data.message
+                : tValidation('checkFormAndRetry');
+          toast.error(toastMessages.patient.createError, message);
         } else {
           toast.error(
             toastMessages.network.error,
@@ -185,7 +216,9 @@ export function AddPatientDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            {dataSource === 'scan' && <Sparkles className="h-5 w-5 text-medical-primary" />}
+            {dataSource === 'scan' && (
+              <Sparkles className="h-5 w-5 text-medical-primary" />
+            )}
             {t('addNewPatient')}
           </DialogTitle>
           <DialogDescription>
@@ -199,7 +232,7 @@ export function AddPatientDialog({
                 )}
               </span>
             ) : (
-              tPatient('fillPatientDetails') || 'Fill in the patient details below to register them in the system.'
+              tPatient('fillPatientDetails')
             )}
           </DialogDescription>
         </DialogHeader>
@@ -214,7 +247,7 @@ export function AddPatientDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      First Name
+                      {tPatient('firstName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -222,11 +255,15 @@ export function AddPatientDialog({
                       )}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="John" 
-                        disabled={isPending} 
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
-                        {...field} 
+                      <Input
+                        placeholder={tPatient('firstNamePlaceholder')}
+                        disabled={isPending}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -240,7 +277,7 @@ export function AddPatientDialog({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel className="flex items-center gap-2">
-                      Last Name
+                      {tPatient('lastName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -248,11 +285,15 @@ export function AddPatientDialog({
                       )}
                     </FormLabel>
                     <FormControl>
-                      <Input 
-                        placeholder="Doe" 
-                        disabled={isPending} 
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
-                        {...field} 
+                      <Input
+                        placeholder={tPatient('lastNamePlaceholder')}
+                        disabled={isPending}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
+                        {...field}
                       />
                     </FormControl>
                     <FormMessage />
@@ -279,7 +320,11 @@ export function AddPatientDialog({
                         placeholder="30202041234567"
                         maxLength={14}
                         disabled={isPending}
-                        className={dataSource === 'scan' ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan'
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -291,14 +336,17 @@ export function AddPatientDialog({
                 )}
               />
 
-              {/* Address */}
+              {/* Address (optional) */}
               <FormField
                 control={form.control}
                 name="address"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
                     <FormLabel className="flex items-center gap-2">
-                      Address
+                      {tPatient('address')}
+                      <span className="text-xs text-gray-400">
+                        ({tCommon('optional')})
+                      </span>
                       {dataSource === 'scan' && prefilledData?.address && (
                         <Badge variant="secondary" className="text-xs">
                           {tScan('autoFilled')}
@@ -307,9 +355,13 @@ export function AddPatientDialog({
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="123 Main Street, Cairo"
+                        placeholder={tPatient('addressPlaceholder')}
                         disabled={isPending}
-                        className={dataSource === 'scan' && prefilledData?.address ? 'border-medical-primary/50' : ''}
+                        className={
+                          dataSource === 'scan' && prefilledData?.address
+                            ? 'border-medical-primary/50'
+                            : ''
+                        }
                         {...field}
                       />
                     </FormControl>
@@ -318,47 +370,25 @@ export function AddPatientDialog({
                 )}
               />
 
-              {/* Job */}
+              {/* Job (optional) */}
               <FormField
                 control={form.control}
                 name="job"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Job/Occupation *</FormLabel>
+                    <FormLabel>
+                      {tPatient('job')}{' '}
+                      <span className="text-xs text-gray-400">
+                        ({tCommon('optional')})
+                      </span>
+                    </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Engineer"
+                        placeholder={tPatient('jobPlaceholder')}
                         disabled={isPending}
                         {...field}
                       />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Language */}
-              <FormField
-                control={form.control}
-                name="language"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Preferred Language</FormLabel>
-                    <Select
-                      onValueChange={(value) => field.onChange(parseInt(value))}
-                      defaultValue={field.value?.toString()}
-                      disabled={isPending}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select language" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="0">Arabic (العربية)</SelectItem>
-                        <SelectItem value="1">English</SelectItem>
-                      </SelectContent>
-                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -5,19 +5,20 @@ import type { Medication } from './Medication';
 
 export interface Patient {
   id: number;
-  global_id: string;
-  national_id: number;
+  global_id?: string;
+  national_id?: number;
+  socialSecurityNumber?: string;
   name: string;
   gender: Gender;
-  birthdate: Date;
+  birthdate?: Date;
+  dateOfBirth?: string;
   phone_number?: string;
   email?: string;
   address?: string;
-  is_deleted: boolean;
-  created_at: Date;
-  updated_at: Date;
+  is_deleted?: boolean;
+  created_at?: Date;
+  updated_at?: Date;
 }
-
 export enum Gender {
   MALE = 'male',
   FEMALE = 'female',
