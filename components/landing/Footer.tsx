@@ -25,7 +25,6 @@ export function Footer({ locale }: FooterProps) {
     { href: `/${locale}`, label: t('links.home') },
     { href: `/${locale}#clinics`, label: t('links.clinics') },
     { href: `/${locale}#doctors`, label: t('links.doctors') },
-    { href: `/${locale}/register`, label: t('links.register') },
   ];
 
   const socialLinks = [

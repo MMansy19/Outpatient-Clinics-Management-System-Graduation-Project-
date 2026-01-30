@@ -30,7 +30,7 @@ class ApiClient {
     this.instance = axios.create({
       baseURL: API_BASE_URL,
       withCredentials: true, // ⚠️ CRITICAL: Enables cookie-based authentication
-      timeout: 30000,
+      timeout: 180000,
       headers: {
         'Content-Type': 'application/json',
       },

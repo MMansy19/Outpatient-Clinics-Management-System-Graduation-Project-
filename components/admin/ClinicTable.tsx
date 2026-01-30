@@ -111,7 +111,7 @@ export function ClinicTable() {
         >
           <Plus className="mr-2 h-4 w-4" />
           <span className="hidden sm:inline">{t('addClinic')}</span>
-          <span className="sm:hidden">Add</span>
+          <span className="sm:hidden">{t('addClinic')}</span>
         </Button>
       </div>
 

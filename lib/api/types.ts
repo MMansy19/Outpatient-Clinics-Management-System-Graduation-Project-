@@ -72,13 +72,16 @@ export interface CreatePatientDto {
   lastName: string;
   language: Language;
   socialSecurityNumber: string; // 14 digits
-  address: string;
-  job: string;
+  address?: string;
+  job?: string;
+  gender?: 'male' | 'female';
+  birthdate?: string; // ISO date string
 }
 
 export interface CreateUserResponse {
   message: string;
   id: string; // globalId (UUID)
+  socialSecurityNumber?: string; // 14-digit national ID
 }
 
 // ============================================================================
@@ -152,10 +155,10 @@ export interface CreateVisitResponse {
  */
 export interface CreateMedicationDto {
   name: string;
-  dosage: number; // Dosage amount per administration
-  period: number; // Treatment period in days
-  comments?: string; // Optional medication instructions
-  patientId: string; // UUID format
+  dosage: number;
+  period: number;
+  comments?: string;
+  patientId: string; // 14-digit social security number (National ID)
 }
 
 export interface CreateMedicationResponse {
@@ -237,15 +240,11 @@ export interface PatientResponse {
 export interface VisitResponse {
   id: string;
   diagnoses: string;
-  diagnosesAudioUrl?: string; // URL to the audio file of the diagnoses
-  doctor: {
-    id: string;
-    name: string;
-  };
-  patient: {
-    id: string;
-    name: string;
-  };
+  patientId: string;
+  doctorId: string;
+  patientName?: string;
+  doctorName?: string;
+  diagnosesAudioUrl?: string;
   createdAt: string; // ISO date string
   patientID: string;
   doctorID: string;
@@ -363,4 +362,9 @@ export interface PatientByIdResponse {
 export interface EnhancedVisitResponse extends VisitResponse {
   patientName?: string;
   doctorName?: string;
+}
+
+export interface UpdateVisitDto {
+  diagnoses?: string;
+  clinicId?: string;
 }

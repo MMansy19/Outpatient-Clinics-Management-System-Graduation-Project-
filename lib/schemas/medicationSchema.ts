@@ -121,7 +121,87 @@ export const medicationUpdateSchema = medicationSchema.partial();
 export type MedicationUpdateData = z.infer<typeof medicationUpdateSchema>;
 
 /**
- * Common Medication Periods (for UI dropdowns)
+ * Medication Period Enum
+ * Represents the treatment duration in days
+ */
+export enum MedicationPeriod {
+  CHRONIC = 0,
+  ONE_DAY = 1,
+  TWO_DAYS = 2,
+  THREE_DAYS = 3,
+  FOUR_DAYS = 4,
+  FIVE_DAYS = 5,
+  SIX_DAYS = 6,
+  ONE_WEEK = 7,
+  EIGHT_DAYS = 8,
+  NINE_DAYS = 9,
+  TEN_DAYS = 10,
+  ELEVEN_DAYS = 11,
+  TWELVE_DAYS = 12,
+  THIRTEEN_DAYS = 13,
+  TWO_WEEKS = 14,
+  FIFTEEN_DAYS = 15,
+  SIXTEEN_DAYS = 16,
+  SEVENTEEN_DAYS = 17,
+  EIGHTEEN_DAYS = 18,
+  NINETEEN_DAYS = 19,
+  TWENTY_DAYS = 20,
+  THREE_WEEKS = 21,
+  TWENTY_TWO_DAYS = 22,
+  TWENTY_THREE_DAYS = 23,
+  TWENTY_FOUR_DAYS = 24,
+  TWENTY_FIVE_DAYS = 25,
+  TWENTY_SIX_DAYS = 26,
+  TWENTY_SEVEN_DAYS = 27,
+  FOUR_WEEKS = 28,
+  TWENTY_NINE_DAYS = 29,
+  THIRTY_DAYS = 30,
+  FIVE_WEEKS = 35,
+  SIX_WEEKS = 42,
+  SEVEN_WEEKS = 49,
+  EIGHT_WEEKS = 56,
+  NINE_WEEKS = 63,
+  TEN_WEEKS = 70,
+  ELEVEN_WEEKS = 77,
+  TWELVE_WEEKS = 84,
+}
+
+/**
+ * Localized Period Options
+ * Generates translated period options for dropdowns
+ */
+export const getLocalizedPeriodOptions = (t: (key: string) => string) => {
+  return [
+    { label: t('periods.oneDay'), value: MedicationPeriod.ONE_DAY },
+    { label: t('periods.twoDays'), value: MedicationPeriod.TWO_DAYS },
+    { label: t('periods.threeDays'), value: MedicationPeriod.THREE_DAYS },
+    { label: t('periods.fiveDays'), value: MedicationPeriod.FIVE_DAYS },
+    { label: t('periods.oneWeek'), value: MedicationPeriod.ONE_WEEK },
+    { label: t('periods.tenDays'), value: MedicationPeriod.TEN_DAYS },
+    { label: t('periods.twoWeeks'), value: MedicationPeriod.TWO_WEEKS },
+    { label: t('periods.threeWeeks'), value: MedicationPeriod.THREE_WEEKS },
+    { label: t('periods.fourWeeks'), value: MedicationPeriod.FOUR_WEEKS },
+    { label: t('periods.chronic'), value: MedicationPeriod.CHRONIC },
+    { label: t('periods.custom'), value: 0 },
+  ];
+};
+
+/**
+ * Localized Dosage Options
+ * Generates translated dosage options for dropdowns
+ */
+export const getLocalizedDosageOptions = (t: (key: string) => string) => {
+  return [
+    { label: t('dosages.oneTablet'), value: 1 },
+    { label: t('dosages.twoTablets'), value: 2 },
+    { label: t('dosages.threeTablets'), value: 3 },
+    { label: t('dosages.fourTablets'), value: 4 },
+    { label: t('dosages.custom'), value: 0 },
+  ];
+};
+
+/**
+ * Legacy Common Medication Periods (deprecated - use getLocalizedPeriodOptions instead)
  */
 export const COMMON_PERIODS = [
   { label: '3 days', value: 3 },
@@ -135,7 +215,7 @@ export const COMMON_PERIODS = [
 ] as const;
 
 /**
- * Common Dosages (for UI suggestions)
+ * Legacy Common Dosages (deprecated - use getLocalizedDosageOptions instead)
  */
 export const COMMON_DOSAGES = [
   { label: '1 tablet', value: 1 },

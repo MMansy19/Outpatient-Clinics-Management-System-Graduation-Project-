@@ -10,6 +10,7 @@ import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
+import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 
 /**
  * Query Key Factory for Medications
@@ -27,16 +28,21 @@ const medicationsKeys = {
 // ============================================================================
 
 /**
+ * Toggle between mock data and real backend API
+ */
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
+/**
  * Get Patient Medications
  *
  * Retrieves all medications for a specific patient.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {number} patientId - Patient's numeric ID
  * @returns {UseQueryResult} Query result with medications array
  *
  * @example
  * ```typescript
- * const { data: medications, isLoading, error } = useGetPatientMedications('29512011234567');
+ * const { data: medications, isLoading, error } = useGetPatientMedications(1);
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -49,9 +55,22 @@ const medicationsKeys = {
 export const useGetPatientMedications = (
   socialSecurityNumber: string
 ): UseQueryResult<unknown[], Error> => {
+  console.log('🔍 useGetPatientMedications called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+
   return useQuery({
     queryKey: medicationsKeys.patient(socialSecurityNumber),
-    queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
+    queryFn: async () => {
+      console.log('🔍 useGetPatientMedications - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+
+      if (USE_MOCK_DATA) {
+        console.log('🔍 useGetPatientMedications - using mock data');
+        const result = await mockMedicalHistoryAPI.getPatientMedications(socialSecurityNumber);
+        console.log('🔍 useGetPatientMedications - mock result:', result);
+        return result;
+      }
+      console.log('🔍 useGetPatientMedications - using real API');
+      return await doctorApi.getPatientMedications(socialSecurityNumber);
+    },
     enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)

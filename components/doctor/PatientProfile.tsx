@@ -1,7 +1,8 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { User, Calendar, Phone, Mail, Edit, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
+import { useState } from 'react';
+import { User, Calendar, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -14,67 +15,123 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-// import { useGetPatient } from '@/lib/api/queries/usePatients';
+import { useGetPatientByNationalId } from '@/lib/api/queries/usePatients';
 import { useGetPatientVisits } from '@/lib/api/queries/useVisits';
 import { useGetPatientMedications } from '@/lib/api/queries/useMedications';
 import { useGetPatientLabs } from '@/lib/api/queries/useLabs';
 import { useGetPatientScans } from '@/lib/api/queries/useScans';
+
+import { VisitDialog } from '@/components/doctor/VisitDialog';
+import { MedicationDialog } from '@/components/doctor/MedicationDialog';
 import { LabForm } from '@/components/doctor/LabForm';
 import { ScanForm } from '@/components/doctor/ScanForm';
-import { MedicationForm } from '@/components/doctor/MedicationForm';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { EmptyState } from '@/components/shared/EmptyState';
+import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
+import { QuickActionCard } from '@/components/shared/QuickActionCard';
+
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
-import { Gender } from '@/types/entities/Patient';
-// import { Medication } from '@/types/entities/Medication';
-// import { Lab } from '@/types/entities/Lab';
-// import { Scan } from '@/types/entities/Scan';
-import { useState } from 'react';
 
 interface PatientProfileProps {
-  patient: {
-    id: number | string;
-    name: string;
-    gender: Gender;
-    birthdate: string;
-    national_id: string;
-    address?: string;
-    job?: string;
-    phone_number?: string;
-    email?: string;
-  };
-  patientId: string | number;
+  socialSecurityNumber: string;
+  isNewPatient?: boolean;
+  scannedData?: any;
   onEdit?: () => void;
-  onNewVisit?: () => void;
-  onNewMedication?: () => void;
-  onNewLab?: () => void;
-  onNewScan?: () => void;
 }
 
 export function PatientProfile({
-  patient,
+  socialSecurityNumber,
+  isNewPatient,
+  scannedData,
   onEdit,
-  onNewVisit,
-  onNewMedication,
-  onNewLab,
-  onNewScan,
 }: PatientProfileProps) {
   const t = useTranslations('doctor');
   const tPatient = useTranslations('patient');
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
-  const { data: visits, isLoading: loadingVisits } = useGetPatientVisits(Number(patient.id));
+  const tTable = useTranslations('table');
+  const tVitals = useTranslations('vitals');
+
+  // Fetch patient data by national ID
+  const {
+    data: patient,
+    isLoading: loadingPatient,
+    error: patientError,
+    refetch: refetchPatient,
+    isFetching: isRefetchingPatient,
+  } = useGetPatientByNationalId(socialSecurityNumber);
+
+  // Debug logging
+  console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
+  console.log('🔍 PatientProfile - Fetched patient:', patient);
+  console.log('🔍 PatientProfile - Loading:', loadingPatient);
+  console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
+  console.log('🔍 PatientProfile - Error:', patientError);
+  console.log('🔍 PatientProfile - Scanned Data:', scannedData);
+
+  // Combine API patient data with scanned data (scanned data serves as fallback)
+  const patientName = patient?.name || scannedData?.name ||
+    (scannedData?.firstName && scannedData?.lastName ? `${scannedData.firstName} ${scannedData.lastName}` : '');
+
+  const patientGender = patient?.gender || scannedData?.gender;
+  const patientDateOfBirth = patient?.dateOfBirth || patient?.birthdate || scannedData?.birthdate || scannedData?.dateOfBirth;
+
+  // If this is a new patient (scanned but not registered yet), show registration UI
+  const isScannedNewPatient = isNewPatient && !patient;
+
+  // For newly registered patients, show loading while fetching
+  // If patient is null and we're loading or fetching, show skeleton
+  const showLoading = loadingPatient || (isRefetchingPatient && !patient);
+
+  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(socialSecurityNumber));
+
+  // Debug logging
+  console.log('🔍 PatientProfile - Visits Query:', {
+    socialSecurityNumber,
+    visitsResponse,
+    isLoading: loadingVisits
+  });
+
+  // Extract visits from the wrapped response structure
+  const visits = (visitsResponse as any)?.clinics?.flatMap((clinic: any) => clinic.visits || []) || [];
 
   // Dialog states
+  const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
+  const [isMedicationDialogOpen, setIsMedicationDialogOpen] = useState(false);
   const [isLabFormOpen, setIsLabFormOpen] = useState(false);
   const [isScanFormOpen, setIsScanFormOpen] = useState(false);
-  const [isMedicationFormOpen, setIsMedicationFormOpen] = useState(false);
+  const [currentTab, setCurrentTab] = useState('visits');
 
-  // Fetch additional data using socialSecurityNumber
-  const nationalId =  String(patient?.national_id || '');
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(nationalId);
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(nationalId);
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(nationalId);
+  // Fetch additional data
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(socialSecurityNumber);
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(socialSecurityNumber);
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(socialSecurityNumber);
 
-  if (loadingVisits) {
+  // Debug logging
+  console.log('🔍 PatientProfile - Other Queries:', {
+    medications,
+    labs,
+    scans,
+    loadingMedications,
+    loadingLabs,
+    loadingScans
+  });
+
+  // Extract data from wrapped response structures
+  const medicationsList = (medications as any)?.medications || [];
+  const labsList = (labs as any)?.labs || [];
+  const scansList = (scans as any)?.scans || [];
+
+  // Show loading skeleton while fetching patient data
+  if (showLoading) {
     return (
       <div className="space-y-4">
         <div className="skeleton h-32 w-full" />
@@ -83,84 +140,170 @@ export function PatientProfile({
     );
   }
 
-  if (!patient) {
+  // If patient not found (API returned null) and not a new scanned patient
+  if (!patient && !isScannedNewPatient) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <p className="text-muted-foreground">{t('patientNotFound')}</p>
+          <p className="text-muted-foreground mb-4">{t('patientNotFound')}</p>
+          <Button
+            variant="outline"
+            onClick={() => refetchPatient()}
+          >
+            {t('tryAgain')}
+          </Button>
         </CardContent>
       </Card>
+    );
+  }
+
+  // If this is a scanned but unregistered patient, show registration UI
+  if (isScannedNewPatient) {
+    return (
+      <div className="space-y-6 pb-20 md:pb-6">
+        {/* New Patient Alert */}
+        <Card className="border-2 border-blue-500 bg-blue-50 dark:bg-blue-900/20">
+          <CardContent className="py-6">
+            <div className="flex items-start gap-4">
+              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center shrink-0">
+                <ScanLine className="h-6 w-6 text-blue-600 dark:text-blue-300" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2 text-blue-900 dark:text-blue-100">
+                  {tPatient('notRegistered')}
+                </h3>
+                <Button
+                  onClick={onEdit}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  {tPatient('registerNew')}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Scanned Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle>{tPatient('scannedInfo')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {scannedData?.name &&
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('name')}</p>
+                <p className="text-lg">{scannedData.name}</p>
+              </div>}
+              {socialSecurityNumber &&
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('nationalId')}</p>
+                <p className="text-lg font-mono">{socialSecurityNumber}</p>
+              </div>
+              }{scannedData?.gender !== undefined &&
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('gender')}</p>
+                <p className="text-lg">
+                  {String(scannedData.gender) === '0' || scannedData.gender === 'male' ? tPatient('male') :
+                   String(scannedData.gender) === '1' || scannedData.gender === 'female' ? tPatient('female') : tCommon('other')}
+                </p>
+              </div>
+              }{scannedData?.dateOfBirth && calculateAge(scannedData.dateOfBirth) >= 1 &&
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">{tPatient('age')}</p>
+                <p className="text-lg">{calculateAge(scannedData.dateOfBirth)} {tPatient('years')}</p>
+              </div>
+              }
+              {scannedData?.address && (
+                <div className="space-y-2 md:col-span-2">
+                  <p className="text-sm font-medium text-muted-foreground">{tPatient('address')}</p>
+                  <p className="text-lg">{scannedData.address}</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   const latestVisit = visits?.[0];
   const latestVitals = latestVisit?.vitals;
 
+  // Tabs configuration
+  const tabs = [
+    { value: 'visits', label: t('visits'), icon: Activity, count: visits?.length || 0 },
+    { value: 'medications', label: tPatient('medications'), icon: Pill, count: medicationsList?.length || 0 },
+    { value: 'labs', label: tPatient('labs'), icon: TestTube2, count: labsList?.length || 0 },
+    { value: 'scans', label: tPatient('scans'), icon: ScanLine, count: scansList?.length || 0 },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 pb-20 md:pb-6">
+      {/* Scanned Patient Notification */}
+      {scannedData && (
+        <Card className="border border-green-500 bg-green-50 dark:bg-green-900/20">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <ScanLine className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <p className="text-sm text-green-700 dark:text-green-300">
+                <span className="font-medium">{tPatient('foundViaScan')}</span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Header Card */}
-      <Card>
+<Card className="sticky top-0 z-30 bg-background md:static md:top-auto">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
-              <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
-          <User className="h-6 w-6 sm:h-8 sm:w-8 text-medical-primary" />
+              <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
+                <User className="h-7 w-7 md:h-8 md:w-8 text-medical-primary" />
               </div>
-              <div className="min-w-0 flex-1">
-          <CardTitle className="text-xl sm:text-2xl truncate">{patient.name}</CardTitle>
-          <CardDescription className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 mt-1">
-            <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {patient.national_id}</span>
-            <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'} className="w-fit max-w-full px-2 py-1 text-xs sm:text-sm">
-              {patient.gender === Gender.MALE ? tPatient('male') : tPatient('female')}
-            </Badge>
-          </CardDescription>
+               <div className="min-w-0 flex-1">
+                <CardTitle className="text-xl md:text-2xl truncate">{patientName}</CardTitle>
+                <CardDescription className="flex flex-row justify-between items-center gap-2 sm:gap-4">
+                <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
+                  <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {socialSecurityNumber || patient?.socialSecurityNumber || patient?.national_id}</span>
+                  <Badge variant={String(patientGender) === '0' || patientGender === 'male' ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
+                    {String(patientGender) === '0' || patientGender === 'male' ? tPatient('male') : tPatient('female')}
+                  </Badge>
+
+                </div>
+{patientDateOfBirth &&
+
+              <div className="min-w-16">
+                <div className='flex flex-row gap-2 items-center'>
+                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
+                </div>
+                         <p className="font-medium truncate">{calculateAge(patientDateOfBirth)} {tPatient('years')}</p>
+           </div>
+}
+                </CardDescription>  
               </div>
             </div>
             <div className="flex gap-2 sm:shrink-0">
-              {onEdit && (
-          <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 sm:flex-none">
-            <Edit className="mr-2 h-4 w-4" />
-            {tCommon('edit')}
-          </Button>
-              )}
-              {onNewVisit && (
-          <Button size="sm" onClick={onNewVisit} className="bg-medical-primary hover:bg-medical-primary/90 flex-1 sm:flex-none">
-            <Activity className="mr-2 h-4 w-4" />
-            {t('newVisit')}
-          </Button>
-              )}
+              {/* {onEdit && (
+                <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 sm:flex-none min-h-[44px]">
+                  <Edit className="mr-2 h-4 w-4" />
+                  <span className="hidden sm:inline">{tCommon('edit')}</span>
+                </Button>
+              )} */}
+              <Button
+                size="sm"
+                onClick={() => setIsVisitDialogOpen(true)}
+                className="bg-medical-primary hover:bg-medical-primary/90 hidden sm:flex-none min-h-[44px]"
+              >
+                <Activity className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">{t('newVisit')}</span>
+              </Button>
             </div>
           </div>
         </CardHeader>
-        <CardContent className="max-h-[300px] overflow-y-auto">
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
-                <p className="font-medium">{calculateAge(patient.birthdate)} {tPatient('years')}</p>
-              </div>
-            </div>
-            {patient.phone_number && (
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">{tPatient('phone')}</p>
-                  <p className="font-medium">{patient.phone_number}</p>
-                </div>
-              </div>
-            )}
-            {patient.email && (
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4 text-muted-foreground" />
-                <div>
-                  <p className="text-sm text-muted-foreground">{tPatient('email')}</p>
-                  <p className="font-medium">{patient.email}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
       </Card>
 
       {/* Latest Vitals */}
@@ -173,22 +316,22 @@ export function PatientProfile({
             </CardDescription>
           </CardHeader>
           <CardContent className="max-h-[400px] overflow-y-auto">
-            <div className="grid gap-4 md:grid-cols-4">
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <div className="medical-card">
                 <p className="text-sm text-muted-foreground">{tVisit('weight')}</p>
-                <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} kg</p>
+                <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} {tVitals('kg')}</p>
               </div>
               {latestVitals.height && (
                 <div className="medical-card">
                   <p className="text-sm text-muted-foreground">{tVisit('height')}</p>
-                  <p className="text-2xl font-bold">{latestVitals.height} cm</p>
+                  <p className="text-2xl font-bold">{latestVitals.height} {tVitals('cm')}</p>
                 </div>
               )}
               {latestVitals.blood_pressure_systolic && latestVitals.blood_pressure_diastolic && (
                 <div className="medical-card">
                   <p className="text-sm text-muted-foreground">{tVisit('bloodPressure')}</p>
                   <p className="text-2xl font-bold">
-                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic}
+                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic} {tVitals('mmHg')}
                   </p>
                 </div>
               )}
@@ -203,316 +346,608 @@ export function PatientProfile({
         </Card>
       )}
 
-      {/* Patient Data Tabs - 4 Tabs */}
-      <Tabs defaultValue="visits" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 md:w-auto">
-          <TabsTrigger value="visits">
-            <Activity className="mr-2 h-4 w-4" />
-            {t('visits')}
-          </TabsTrigger>
-          <TabsTrigger value="medications">
-            <Pill className="mr-2 h-4 w-4" />
-            {tPatient('medications')}
-          </TabsTrigger>
-          <TabsTrigger value="labs">
-            <TestTube2 className="mr-2 h-4 w-4" />
-            {tPatient('labs')}
-          </TabsTrigger>
-          <TabsTrigger value="scans">
-            <ScanLine className="mr-2 h-4 w-4" />
-            {tPatient('scans')}
-          </TabsTrigger>
-        </TabsList>
+      {/* Patient Data Tabs */}
+      <div className="w-full min-h-[400px]">
+        {/* Desktop Tabs */}
+        <Tabs defaultValue="visits" className="w-full hidden md:block">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="visits">
+              <Activity className="mr-2 h-4 w-4" />
+              {t('visits')}
+            </TabsTrigger>
+            <TabsTrigger value="medications">
+              <Pill className="mr-2 h-4 w-4" />
+              {tPatient('medications')}
+            </TabsTrigger>
+            <TabsTrigger value="labs">
+              <TestTube2 className="mr-2 h-4 w-4" />
+              {tPatient('labs')}
+            </TabsTrigger>
+            <TabsTrigger value="scans">
+              <ScanLine className="mr-2 h-4 w-4" />
+              {tPatient('scans')}
+            </TabsTrigger>
+          </TabsList>
 
-        {/* Visits Tab */}
-        <TabsContent value="visits">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('visits')}</CardTitle>
-              <CardDescription>
-                {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto">
-              {loadingVisits ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
+          {/* Visits Tab */}
+          <TabsContent value="visits" className="mt-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{t('visits')}</CardTitle>
+                    <CardDescription>
+                      {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
+                    </CardDescription>
+                  </div>
+                                    <Button
+                    size="sm"
+                    onClick={() => setIsVisitDialogOpen(true)}
+                    className="bg-medical-primary hover:bg-medical-primary/90"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('createVisit')}
+                  </Button>
                 </div>
-              ) : visits && visits.length > 0 ? (
-                <div className="space-y-3">
-                  {visits.slice(0, 5).map((visit) => (
-                    <div
-                      key={visit.id}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent cursor-pointer"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium line-clamp-1">{visit.chief_complaint}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">{visit.diagnosis}</p>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <p className="text-sm font-medium whitespace-nowrap">{formatDate(visit.created_at)}</p>
-                        <p className="text-xs text-muted-foreground truncate max-w-[120px]">
-                          Dr. {visit.doctor.username}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('noVisitsYet')}</p>
-                  {onNewVisit && (
-                    <Button
-                      variant="outline"
-                      onClick={onNewVisit}
-                      className="mt-4"
-                    >
-                      {t('createFirstVisit')}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+              </CardHeader>
+              <CardContent className="max-h-[500px] overflow-y-auto">
+                {loadingVisits ? (
+                  <div className="space-y-2">
+                    <div className="skeleton h-16 w-full" />
+                    <div className="skeleton h-16 w-full" />
+                  </div>
+                ) : visits && visits.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('speciality')}</TableHead>
+                        <TableHead>{tTable('diagnoses')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visits.map((visit: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(visit.createdAt)}</TableCell>
+                          <TableCell>Dr. {visit.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{visit.doctor?.speciality || 'N/A'}</TableCell>
+                          <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <EmptyState
+                    icon={Activity}
+                    title={t('noVisitsYet')}
+                    description={t('noVisitsDescription')}
+                    action={{
+                      label: t('createFirstVisit'),
+                      onClick: () => setIsVisitDialogOpen(true),
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* Medications Tab */}
-        <TabsContent value="medications">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{tPatient('medications')}</CardTitle>
-                  <CardDescription>
-                    {medications ? `${medications.length} ${t('totalMedications')}` : tCommon('loading')}
-                  </CardDescription>
+          {/* Medications Tab */}
+          <TabsContent value="medications" className="mt-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{tPatient('medications')}</CardTitle>
+                    <CardDescription>
+                      {medicationsList ? `${medicationsList.length} ${t('totalMedications')}` : tCommon('loading')}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsMedicationDialogOpen(true)}
+                    className="bg-medical-primary hover:bg-medical-primary/90"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('addMedication')}
+                  </Button>
                 </div>
-                <Button
-                  size="sm"
-                  onClick={() => setIsMedicationFormOpen(true)}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('addMedication')}
-                </Button>
+              </CardHeader>
+              <CardContent className="max-h-[500px] overflow-y-auto">
+                {loadingMedications ? (
+                  <div className="space-y-2">
+                    <div className="skeleton h-16 w-full" />
+                    <div className="skeleton h-16 w-full" />
+                  </div>
+                ) : medicationsList && medicationsList.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('dosage')}</TableHead>
+                        <TableHead>{tTable('duration')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {medicationsList.map((medication: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-medium">{medication.name}</TableCell>
+                          <TableCell>{medication.dosage}</TableCell>
+                          <TableCell>{medication.period} days</TableCell>
+                          <TableCell>Dr. {medication.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{medication.comments || '-'}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <EmptyState
+                    icon={Pill}
+                    title={t('noMedicationsYet')}
+                    action={{
+                      label: t('addFirstMedication'),
+                      onClick: () => setIsMedicationDialogOpen(true),
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Labs Tab */}
+          <TabsContent value="labs" className="mt-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{tPatient('labs')}</CardTitle>
+                    <CardDescription>
+                      {labsList ? `${labsList.length} ${t('totalLabs')}` : tCommon('loading')}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsLabFormOpen(true)}
+                    className="bg-medical-primary hover:bg-medical-primary/90"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('addLab')}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="max-h-[500px] overflow-y-auto">
+                {loadingLabs ? (
+                  <div className="space-y-2">
+                    <div className="skeleton h-16 w-full" />
+                    <div className="skeleton h-16 w-full" />
+                  </div>
+                ) : labsList && labsList.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('actions')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {labsList.map((lab: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(lab.createdAt)}</TableCell>
+                          <TableCell className="font-medium">{lab.name}</TableCell>
+                          <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{lab.comments || '-'}</TableCell>
+                          <TableCell>
+                            {lab.photoUrl && (
+                              <a
+                                href={lab.photoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-medical-primary hover:underline"
+                              >
+                                {tCommon('viewImage')}
+                              </a>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <EmptyState
+                    icon={TestTube2}
+                    title={t('noLabsYet')}
+                    action={{
+                      label: t('addFirstLab'),
+                      onClick: () => setIsLabFormOpen(true),
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Scans Tab */}
+          <TabsContent value="scans" className="mt-6">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>{tPatient('scans')}</CardTitle>
+                    <CardDescription>
+                      {scansList ? `${scansList.length} ${t('totalScans')}` : tCommon('loading')}
+                    </CardDescription>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={() => setIsScanFormOpen(true)}
+                    className="bg-medical-primary hover:bg-medical-primary/90"
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    {t('addScan')}
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="max-h-[500px] overflow-y-auto">
+                {loadingScans ? (
+                  <div className="space-y-2">
+                    <div className="skeleton h-16 w-full" />
+                    <div className="skeleton h-16 w-full" />
+                  </div>
+                ) : scansList && scansList.length > 0 ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('date')}</TableHead>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('type')}</TableHead>
+                        <TableHead>{tTable('doctor')}</TableHead>
+                        <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('actions')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {scansList.map((scan: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell>{formatDate(scan.createdAt)}</TableCell>
+                          <TableCell className="font-medium">{scan.name || '-'}</TableCell>
+                          <TableCell>{scan.type || '-'}</TableCell>
+                          <TableCell>Dr. {scan.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{scan.comments || '-'}</TableCell>
+                          <TableCell>
+                            {scan.photoUrl && (
+                              <a
+                                href={scan.photoUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-xs text-medical-primary hover:underline"
+                              >
+                                {tCommon('viewImage')}
+                              </a>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <EmptyState
+                    icon={ScanLine}
+                    title={t('noScansYet')}
+                    action={{
+                      label: t('addFirstScan'),
+                      onClick: () => setIsScanFormOpen(true),
+                    }}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        {/* Mobile Tab Navigation */}
+        <div className="md:hidden">
+          <MobileTabNavigation
+            tabs={tabs}
+            currentTab={currentTab}
+            onTabChange={setCurrentTab}
+          />
+          <div className="mt-6">
+            {currentTab === 'visits' && (
+              <div className="space-y-4">
+                <QuickActionCard
+                  icon={Plus}
+                  title={t('newVisit')}
+                  onClick={() => setIsVisitDialogOpen(true)}
+                  variant="primary"
+                  size="lg"
+                />
+                <Card>
+                  <CardContent className="p-4">
+                    {loadingVisits ? (
+                      <div className="space-y-2">
+                        <div className="skeleton h-16 w-full" />
+                        <div className="skeleton h-16 w-full" />
+                      </div>
+                    ) : visits && visits.length > 0 ? (
+                      <div className="space-y-3">
+                        {visits.map((visit: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
+                                <Activity className="h-5 w-5 text-medical-primary" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{visit.diagnoses || tVisit('diagnosis')}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {visit.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('speciality')}:</span> {visit.doctor?.speciality || tCommon('unknown')}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={Activity}
+                        title={t('noVisitsYet')}
+                        action={{
+                          label: t('createFirstVisit'),
+                          onClick: () => setIsVisitDialogOpen(true),
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
               </div>
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto">
-              {loadingMedications ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : medications && medications.length > 0 ? (
-                <div className="space-y-3">
-                  {medications?.map((medication: any) => (
-                    <div
-                      key={medication.id}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium line-clamp-1">{medication.name}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {medication.dosage} - {medication.frequency}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('noMedicationsYet')}</p>
-                  {onNewMedication && (
-                    <Button
-                      variant="outline"
-                      onClick={onNewMedication}
-                      className="mt-4"
-                    >
-                      {t('addFirstMedication')}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+            )}
 
-        {/* Labs Tab */}
-        <TabsContent value="labs">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{tPatient('labs')}</CardTitle>
-                  <CardDescription>
-                    {labs ? `${labs.length} ${t('totalLabs')}` : tCommon('loading')}
-                  </CardDescription>
-                </div>
-                <Button
-                  size="sm"
+            {currentTab === 'medications' && (
+              <div className="space-y-4">
+                <QuickActionCard
+                  icon={Plus}
+                  title={t('addMedication')}
+                  onClick={() => setIsMedicationDialogOpen(true)}
+                  variant="primary"
+                  size="lg"
+                />
+                <Card>
+                  <CardContent className="p-4">
+                    {loadingMedications ? (
+                      <div className="space-y-2">
+                        <div className="skeleton h-16 w-full" />
+                        <div className="skeleton h-16 w-full" />
+                      </div>
+                    ) : medicationsList && medicationsList.length > 0 ? (
+                      <div className="space-y-3">
+                        {medicationsList.map((medication: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                <Pill className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{medication.name}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('dosage')}:</span> {medication.dosage}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('duration')}:</span> {medication.period} {tPatient('days')}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {medication.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {medication.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {medication.comments}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={Pill}
+                        title={t('noMedicationsYet')}
+                        action={{
+                          label: t('addFirstMedication'),
+                          onClick: () => setIsMedicationDialogOpen(true),
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+
+            {currentTab === 'labs' && (
+              <div className="space-y-4">
+                <QuickActionCard
+                  icon={Plus}
+                  title={t('addLab')}
                   onClick={() => setIsLabFormOpen(true)}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('addLab')}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto">
-              {loadingLabs ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : labs && labs.length > 0 ? (
-                <div className="space-y-3">
-                  {labs?.map((lab: any) => (
-                    <div
-                      key={lab.id}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium line-clamp-1">{lab.name}</p>
-                        {lab.comments && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {lab.comments}
-                          </p>
-                        )}
-                        {lab.result_url && (
-                          <a
-                            href={lab.result_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-medical-primary hover:underline mt-1 inline-block"
-                          >
-                            {tCommon('viewImage')}
-                          </a>
-                        )}
+                  variant="primary"
+                  size="lg"
+                />
+                <Card>
+                  <CardContent className="p-4">
+                    {loadingLabs ? (
+                      <div className="space-y-2">
+                        <div className="skeleton h-16 w-full" />
+                        <div className="skeleton h-16 w-full" />
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('noLabsYet')}</p>
-                  {onNewLab && (
-                    <Button
-                      variant="outline"
-                      onClick={onNewLab}
-                      className="mt-4"
-                    >
-                      {t('addFirstLab')}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                    ) : labsList && labsList.length > 0 ? (
+                      <div className="space-y-3">
+                        {labsList.map((lab: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                                <TestTube2 className="h-5 w-5 text-green-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{lab.name}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(lab.createdAt)}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {lab.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {lab.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {lab.comments}
+                                    </p>
+                                  )}
+                                  {lab.photoUrl && (
+                                    <a
+                                      href={lab.photoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-medical-primary hover:underline inline-block mt-1"
+                                    >
+                                      {tCommon('viewImage')}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={TestTube2}
+                        title={t('noLabsYet')}
+                        action={{
+                          label: t('addFirstLab'),
+                          onClick: () => setIsLabFormOpen(true),
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
-        {/* Scans Tab */}
-        <TabsContent value="scans">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>{tPatient('scans')}</CardTitle>
-                  <CardDescription>
-                    {scans ? `${scans.length} ${t('totalScans')}` : tCommon('loading')}
-                  </CardDescription>
-                </div>
-                <Button
-                  size="sm"
+            {currentTab === 'scans' && (
+              <div className="space-y-4">
+                <QuickActionCard
+                  icon={Plus}
+                  title={t('addScan')}
                   onClick={() => setIsScanFormOpen(true)}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {t('addScan')}
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="max-h-[500px] overflow-y-auto">
-              {loadingScans ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : scans && scans.length > 0 ? (
-                <div className="space-y-3">
-                  {scans?.map((scan: any) => (
-                    <div
-                      key={scan.id}
-                      className="flex items-start justify-between gap-4 p-3 rounded-lg border hover:bg-accent"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium line-clamp-1">{scan.type}</p>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {formatDate(scan.scan_date)}
-                        </p>
-                        {scan.comments && (
-                          <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
-                            {scan.comments}
-                          </p>
-                        )}
-                        {scan.image_url && (
-                          <a
-                            href={scan.image_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-xs text-medical-primary hover:underline mt-1 inline-block"
-                          >
-                            {tCommon('viewImage')}
-                          </a>
-                        )}
+                  variant="primary"
+                  size="lg"
+                />
+                <Card>
+                  <CardContent className="p-4">
+                    {loadingScans ? (
+                      <div className="space-y-2">
+                        <div className="skeleton h-16 w-full" />
+                        <div className="skeleton h-16 w-full" />
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">{t('noScansYet')}</p>
-                  {onNewScan && (
-                    <Button
-                      variant="outline"
-                      onClick={onNewScan}
-                      className="mt-4"
-                    >
-                      {t('addFirstScan')}
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                    ) : scansList && scansList.length > 0 ? (
+                      <div className="space-y-3">
+                        {scansList.map((scan: any, index: number) => (
+                          <div key={index} className="border rounded-lg p-3">
+                            <div className="flex items-start gap-3">
+                              <div className="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                                <ScanLine className="h-5 w-5 text-purple-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{scan.name || scan.type || tPatient('scans')}</p>
+                                <div className="mt-1 space-y-1">
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(scan.createdAt)}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('type')}:</span> {scan.type || '-'}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {scan.doctor?.name || tCommon('unknown')}
+                                  </p>
+                                  {scan.comments && (
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">{tTable('comments')}:</span> {scan.comments}
+                                    </p>
+                                  )}
+                                  {scan.photoUrl && (
+                                    <a
+                                      href={scan.photoUrl}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-xs text-medical-primary hover:underline inline-block mt-1"
+                                    >
+                                      {tCommon('viewImage')}
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <EmptyState
+                        icon={ScanLine}
+                        title={t('noScansYet')}
+                        action={{
+                          label: t('addFirstScan'),
+                          onClick: () => setIsScanFormOpen(true),
+                        }}
+                      />
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
 
-      {/* Dialogs for creating new records */}
+      {/* Dialogs */}
+      <VisitDialog
+        open={isVisitDialogOpen}
+        onOpenChange={setIsVisitDialogOpen}
+        patientId={socialSecurityNumber}
+        onSuccess={() => {
+          setIsVisitDialogOpen(false);
+        }}
+      />
+
+      <MedicationDialog
+        open={isMedicationDialogOpen}
+        onOpenChange={setIsMedicationDialogOpen}
+        patientId={socialSecurityNumber}
+        onSuccess={() => {
+          setIsMedicationDialogOpen(false);
+        }}
+      />
+
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        socialSecurityNumber={nationalId}
+        socialSecurityNumber={socialSecurityNumber}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        socialSecurityNumber={nationalId}
+        socialSecurityNumber={socialSecurityNumber}
       />
-
-      {/* Medication Form */}
-      {isMedicationFormOpen && (
-        <Card>
-          <MedicationForm
-            patientId={String(patient?.national_id)}
-            onSuccess={() => {
-              setIsMedicationFormOpen(false);
-            }}
-            onCancel={() => setIsMedicationFormOpen(false)}
-          />
-        </Card>
-      )}
     </div>
   );
 }
