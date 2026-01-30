@@ -232,21 +232,23 @@ export interface PatientResponse {
 
 /**
  * Visit Response (from admin endpoint)
+ * Updated to include audio diagnosis URL
  */
 export interface VisitResponse {
   id: string;
   diagnoses: string;
-  doctor:{
+  diagnosesAudioUrl?: string; // URL to the audio file of the diagnoses
+  doctor: {
     id: string;
     name: string;
-  }
-  patient:{
+  };
+  patient: {
     id: string;
     name: string;
-  }
+  };
   createdAt: string; // ISO date string
-  patientID: string; 
-  doctorID: string; 
+  patientID: string;
+  doctorID: string;
 }
 
 /**
@@ -356,7 +358,7 @@ export interface PatientByIdResponse {
 }
 
 /**
- * Enhanced Visit Response with populated names
+ * Enhanced Visit Response with populated names and audio URL
  */
 export interface EnhancedVisitResponse extends VisitResponse {
   patientName?: string;
