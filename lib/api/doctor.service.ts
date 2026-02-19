@@ -125,21 +125,21 @@ export const doctorApi = {
    * Retrieves all visits for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/visits
+   * **Endpoint:** GET /api/v1/doctor/patient/{patientId}/visits
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @returns {Promise<Visit[]>} Array of patient visits
    * @throws {AxiosError} When request fails
    *
    * @example
    * ```typescript
-   * const visits = await doctorApi.getPatientVisits("29512011234567");
+   * const visits = await doctorApi.getPatientVisits("0281ba4f-7592-477e-9d02-f2641aa89221");
    * visits.forEach(visit => console.log(visit.diagnoses));
    * ```
    */
-  getPatientVisits: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientVisits: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/visits`
+      `/doctor/patient/${patientId}/visits`
     );
     return response.data;
   },
@@ -234,21 +234,21 @@ export const doctorApi = {
    * Retrieves all medications prescribed to a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/:socialSecurityNumber/medications
+   * **Endpoint:** GET /api/v1/doctor/patient/:patientId/medications
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @returns {Promise<Medication[]>} Array of patient medications
    * @throws {AxiosError} When request fails
    *
    * @example
    * ```typescript
-   * const medications = await doctorApi.getPatientMedications("29512011234567");
+   * const medications = await doctorApi.getPatientMedications("0281ba4f-7592-477e-9d02-f2641aa89221");
    * medications.forEach(med => console.log(`${med.name}: ${med.dosage}`));
    * ```
    */
-  getPatientMedications: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientMedications: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/medications`
+      `/doctor/patient/${patientId}/medications`
     );
     return response.data;
   },
@@ -414,15 +414,15 @@ export const doctorApi = {
    * Retrieves all lab records for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/labs
+   * **Endpoint:** GET /api/v1/doctor/patient/:patientId/labs
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @returns {Promise<any[]>} Array of patient labs
    * @throws {AxiosError} When request fails
    */
-  getPatientLabs: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientLabs: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/labs`
+      `/doctor/patient/${patientId}/labs`
     );
     return response.data;
   },
@@ -433,9 +433,9 @@ export const doctorApi = {
    * Creates a new lab record for a patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/lab/{socialSecurityNumber}
+   * **Endpoint:** POST /api/v1/doctor/lab/:patientId
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @param {Object} data - Lab creation data
    * @param {string} data.name - Lab name
    * @param {string} data.comments - Lab comments
@@ -444,12 +444,12 @@ export const doctorApi = {
    * @throws {AxiosError} When request fails
    */
   createLab: async (
-    socialSecurityNumber: string,
+    patientId: string,
     data: { name: string; comments: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
     const response = await apiClient.post<unknown>(
-      `/doctor/lab/${socialSecurityNumber}`,
+      `/doctor/lab/${patientId}`,
       data,
       {
         headers: isFormData ? {
@@ -521,15 +521,15 @@ export const doctorApi = {
    * Retrieves all scan records for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/scans
+   * **Endpoint:** GET /api/v1/doctor/patient/:patientId/scans
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @returns {Promise<any[]>} Array of patient scans
    * @throws {AxiosError} When request fails
    */
-  getPatientScans: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientScans: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/scans`
+      `/doctor/patient/${patientId}/scans`
     );
     return response.data;
   },
@@ -540,9 +540,9 @@ export const doctorApi = {
    * Creates a new scan record for a patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/scan/{socialSecurityNumber}
+   * **Endpoint:** POST /api/v1/doctor/scan/:patientId
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient's UUID (globalId)
    * @param {Object} data - Scan creation data
    * @param {string} data.name - Scan name
    * @param {string} data.comments - Scan comments
@@ -552,12 +552,12 @@ export const doctorApi = {
    * @throws {AxiosError} When request fails
    */
   createScan: async (
-    socialSecurityNumber: string,
+    patientId: string,
     data: { name: string; comments: string; type: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
     const response = await apiClient.post<unknown>(
-      `/doctor/scan/${socialSecurityNumber}`,
+      `/doctor/scan/${patientId}`,
       data,
       {
         headers: isFormData ? {
