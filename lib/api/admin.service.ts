@@ -142,13 +142,59 @@ export const adminApi = {
 
   /**
    * Update patient information
-   * 
+   *
    * @param id - Patient ID (UUID)
    * @param data - Updated patient data
    * @returns Success message
    */
   updatePatient: async (id: string, data: { firstName?: string; lastName?: string; job?: string; address?: string }): Promise<{ message: string }> => {
     const response = await apiClient.patch<{ message: string }>(`/admin/patient/${id}`, data);
+    return response.data;
+  },
+
+  // ============================================================================
+  // Admin - Clinic Doctor Management
+  // ============================================================================
+
+  /**
+   * Get doctors in a specific clinic
+   *
+   * @param params - Pagination parameters with clinicId
+   * @returns Paginated list of doctors in the clinic
+   * @see docs/16-2-2026.md - GET /api/v1/admin/clinic/doctors
+   */
+  getClinicDoctors: async (params: PaginationParams & { clinicId: string }): Promise<PaginatedDoctorsResponse> => {
+    const response = await apiClient.get<PaginatedDoctorsResponse>('/admin/clinic/doctors', {
+      params: {
+        page: params.page,
+        limit: params.limit,
+        clinicId: params.clinicId,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Create a new doctor (Admin only)
+   *
+   * Admin can create doctors assigned to their clinic.
+   *
+   * @param data - Doctor creation data
+   * @returns Success message with doctor ID
+   * @see docs/16-2-2026.md - POST /api/v1/admin/doctor
+   */
+  createDoctor: async (data: {
+    firstName: string;
+    lastName: string;
+    language: number;
+    socialSecurityNumber: string;
+    email: string;
+    phone: string;
+    password: string;
+    speciality: string;
+    clinicId: string;
+  }): Promise<{ message: string; id: string }> => {
+    const response = await apiClient.post<{ message: string; id: string }>('/admin/doctor', data);
     return response.data;
   },
 };
