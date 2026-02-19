@@ -37,12 +37,12 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  *
  * Retrieves all medications for a specific patient.
  *
- * @param {number} patientId - Patient's numeric ID
+ * @param {string} patientId - Patient's UUID (globalId)
  * @returns {UseQueryResult} Query result with medications array
  *
  * @example
  * ```typescript
- * const { data: medications, isLoading, error } = useGetPatientMedications(1);
+ * const { data: medications, isLoading, error } = useGetPatientMedications("0281ba4f-7592-477e-9d02-f2641aa89221");
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -53,25 +53,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  * ```
  */
 export const useGetPatientMedications = (
-  socialSecurityNumber: string
+  patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientMedications called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: medicationsKeys.patient(socialSecurityNumber),
+    queryKey: medicationsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientMedications - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientMedications - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientMedications - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientMedications(socialSecurityNumber);
+        const result = await mockMedicalHistoryAPI.getPatientMedications(patientId);
         console.log('🔍 useGetPatientMedications - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientMedications - using real API');
-      return await doctorApi.getPatientMedications(socialSecurityNumber);
+      return await doctorApi.getPatientMedications(patientId);
     },
-    enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
+    enabled: !!patientId, // Only run when patientId is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
@@ -348,23 +348,23 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
  * Utility function to prefetch medications before user navigates.
  * Improves perceived performance.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {string} patientId - Patient's UUID (globalId)
  *
  * @example
  * ```typescript
  * // In a patient list, prefetch on hover
  * <PatientCard
- *   onMouseEnter={() => prefetchPatientMedications(patient.socialSecurityNumber)}
+ *   onMouseEnter={() => prefetchPatientMedications(patient.id)}
  * />
  * ```
  */
 export const usePrefetchPatientMedications = () => {
   const queryClient = useQueryClient();
 
-  return (socialSecurityNumber: string) => {
+  return (patientId: string) => {
     queryClient.prefetchQuery({
-      queryKey: medicationsKeys.patient(socialSecurityNumber),
-      queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
+      queryKey: medicationsKeys.patient(patientId),
+      queryFn: () => doctorApi.getPatientMedications(patientId),
       staleTime: 5 * 60 * 1000,
     });
   };
