@@ -96,7 +96,7 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
           {
             scanId: scan.id,
             data: formData as any,
-            socialSecurityNumber: '', // Required but not used in edit
+            patientId: '',
           },
           {
             onSuccess: resolve,

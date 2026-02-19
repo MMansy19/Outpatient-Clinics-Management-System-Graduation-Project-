@@ -76,7 +76,7 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
           {
             labId: lab.id,
             data: formData as any,
-            socialSecurityNumber: '',
+            patientId: '',
           },
           {
             onSuccess: resolve,

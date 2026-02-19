@@ -48,11 +48,11 @@ type ScanFormData = z.infer<typeof scanSchema>;
 interface ScanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  socialSecurityNumber: string;
+  patientId?: string;
   onSuccess?: () => void;
 }
 
-export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }: ScanFormProps) {
+export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
@@ -90,7 +90,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
       return new Promise((resolve, reject) => {
         createScanMutation.mutate(
           {
-            socialSecurityNumber,
+            patientId: patientId || '',
             data: formData,
           },
           {

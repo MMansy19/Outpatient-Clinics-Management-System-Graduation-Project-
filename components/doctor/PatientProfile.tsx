@@ -69,8 +69,12 @@ export function PatientProfile({
     isFetching: isRefetchingPatient,
   } = useGetPatientByNationalId(socialSecurityNumber);
 
+  // Get patient ID (UUID/global_id) for subsequent queries
+  const patientId = patient?.global_id;
+
   // Debug logging
   console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
+  console.log('🔍 PatientProfile - patientId (UUID):', patientId);
   console.log('🔍 PatientProfile - Fetched patient:', patient);
   console.log('🔍 PatientProfile - Loading:', loadingPatient);
   console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
@@ -91,7 +95,7 @@ export function PatientProfile({
   // If patient is null and we're loading or fetching, show skeleton
   const showLoading = loadingPatient || (isRefetchingPatient && !patient);
 
-  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(socialSecurityNumber));
+  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(patientId || '');
 
   // Debug logging
   console.log('🔍 PatientProfile - Visits Query:', {
@@ -111,9 +115,9 @@ export function PatientProfile({
   const [currentTab, setCurrentTab] = useState('visits');
 
   // Fetch additional data
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(socialSecurityNumber);
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(socialSecurityNumber);
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(socialSecurityNumber);
+  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(patientId || '');
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(patientId || '');
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(patientId || '');
 
   // Debug logging
   console.log('🔍 PatientProfile - Other Queries:', {
@@ -931,7 +935,7 @@ export function PatientProfile({
       <MedicationDialog
         open={isMedicationDialogOpen}
         onOpenChange={setIsMedicationDialogOpen}
-        patientId={socialSecurityNumber}
+        patientId={patientId || ''}
         onSuccess={() => {
           setIsMedicationDialogOpen(false);
         }}
@@ -940,13 +944,13 @@ export function PatientProfile({
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        socialSecurityNumber={socialSecurityNumber}
+        patientId={patientId || ''}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        socialSecurityNumber={socialSecurityNumber}
+        patientId={patientId || ''}
       />
     </div>
   );
