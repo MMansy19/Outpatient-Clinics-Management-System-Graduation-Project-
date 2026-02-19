@@ -36,3 +36,4 @@ coverage/
 # Production
 *.tsbuildinfo
 next-env.d.ts
+.worktrees/
