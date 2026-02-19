@@ -20,6 +20,10 @@ interface User {
   name: string;
   language: Language;
   role: Role;
+  /**
+   * Clinic ID for ADMIN role. This is used to scope admin actions to their clinic.
+   */
+  clinicId?: string;
 }
 
 interface AuthState {
