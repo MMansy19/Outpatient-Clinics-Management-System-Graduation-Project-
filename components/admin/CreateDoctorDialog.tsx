@@ -69,9 +69,15 @@ const MEDICAL_SPECIALITIES = [
 
 interface CreateDoctorDialogProps {
   trigger?: React.ReactNode;
+  /**
+   * Optional clinic ID. If provided, hides the clinic selector
+   * and automatically assigns the doctor to this clinic.
+   * Useful for ADMIN role (clinic-scoped doctor creation).
+   */
+  clinicId?: string;
 }
 
-export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
+export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
@@ -89,7 +95,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       phone: '',
       password: '',
       speciality: '',
-      clinicId: '',
+      clinicId: clinicId || '',
     },
   });
 
@@ -303,47 +309,49 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               )}
             />
 
-            {/* Clinic Selection */}
-            <FormField
-              control={form.control}
-              name="clinicId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('clinic')}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isPending || loadingClinics}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            loadingClinics
-                              ? t('loadingClinics')
-                              : t('selectClinicRequired')
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {clinics.length === 0 && !loadingClinics ? (
-                        <SelectItem value="no-clinics" disabled>
-                          {t('noClinicsAvailable')}
-                        </SelectItem>
-                      ) : (
-                        clinics.map((clinic) => (
-                          <SelectItem key={clinic.id} value={clinic.id}>
-                            {clinic.name} - {clinic.speciality}
+            {/* Clinic Selection - Hide when clinicId is provided (ADMIN role) */}
+            {!clinicId && (
+              <FormField
+                control={form.control}
+                name="clinicId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('clinic')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isPending || loadingClinics}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              loadingClinics
+                                ? t('loadingClinics')
+                                : t('selectClinicRequired')
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clinics.length === 0 && !loadingClinics ? (
+                          <SelectItem value="no-clinics" disabled>
+                            {t('noClinicsAvailable')}
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        ) : (
+                          clinics.map((clinic) => (
+                            <SelectItem key={clinic.id} value={clinic.id}>
+                              {clinic.name} - {clinic.speciality}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Speciality */}
             <FormField
