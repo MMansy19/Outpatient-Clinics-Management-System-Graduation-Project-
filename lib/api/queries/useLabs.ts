@@ -34,12 +34,12 @@ const labsKeys = {
  *
  * Retrieves all lab records for a specific patient.
  *
- * @param {number} patientId - Patient's numeric ID
+ * @param {string} patientId - Patient's UUID (globalId)
  * @returns {UseQueryResult} Query result with labs array
  *
  * @example
  * ```typescript
- * const { data: labs, isLoading, error } = useGetPatientLabs(1);
+ * const { data: labs, isLoading, error } = useGetPatientLabs("0281ba4f-7592-477e-9d02-f2641aa89221");
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -50,25 +50,25 @@ const labsKeys = {
  * ```
  */
 export const useGetPatientLabs = (
-  socialSecurityNumber: string
+  patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientLabs called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientLabs called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: labsKeys.patient(socialSecurityNumber),
+    queryKey: labsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientLabs - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientLabs - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientLabs - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientLabs(socialSecurityNumber);
+        const result = await mockMedicalHistoryAPI.getPatientLabs(patientId);
         console.log('🔍 useGetPatientLabs - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientLabs - using real API');
-      return await doctorApi.getPatientLabs(socialSecurityNumber);
+      return await doctorApi.getPatientLabs(patientId);
     },
-    enabled: !!socialSecurityNumber,
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -115,7 +115,7 @@ export const useGetLab = (
  * const createLabMutation = useCreateLab();
  *
  * const handleSubmit = (data: { name: string; comments: string }) => {
- *   createLabMutation.mutate({ socialSecurityNumber, data }, {
+ *   createLabMutation.mutate({ patientId, data }, {
  *     onSuccess: (response) => {
  *       toast.success(`Lab created: ${response.id}`);
  *       onClose();
@@ -139,16 +139,16 @@ export const useGetLab = (
 export const useCreateLab = (): UseMutationResult<
   unknown,
   Error,
-  { socialSecurityNumber: string; data: { name: string; comments: string } | FormData }
+  { patientId: string; data: { name: string; comments: string } | FormData }
 > => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ socialSecurityNumber, data }) => doctorApi.createLab(socialSecurityNumber, data),
+    mutationFn: ({ patientId, data }) => doctorApi.createLab(patientId, data),
     onSuccess: (response, variables) => {
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -205,7 +205,7 @@ export const useCreateLab = (): UseMutationResult<
 export const useUpdateLab = (): UseMutationResult<
   unknown,
   Error,
-  { labId: string; data: Partial<Lab>; socialSecurityNumber: string }
+  { labId: string; data: Partial<Lab>; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -220,7 +220,7 @@ export const useUpdateLab = (): UseMutationResult<
 
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -262,7 +262,7 @@ export const useUpdateLab = (): UseMutationResult<
 export const useDeleteLab = (): UseMutationResult<
   void,
   Error,
-  { labId: string; socialSecurityNumber: string }
+  { labId: string; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -276,7 +276,7 @@ export const useDeleteLab = (): UseMutationResult<
 
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -301,23 +301,23 @@ export const useDeleteLab = (): UseMutationResult<
  * Utility function to prefetch labs before user navigates.
  * Improves perceived performance.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {string} patientId - Patient's UUID (globalId)
  *
  * @example
  * ```typescript
  * // In a patient list, prefetch on hover
  * <PatientCard
- *   onMouseEnter={() => prefetchPatientLabs(patient.socialSecurityNumber)}
+ *   onMouseEnter={() => prefetchPatientLabs(patient.id)}
  * />
  * ```
  */
 export const usePrefetchPatientLabs = () => {
   const queryClient = useQueryClient();
 
-  return (socialSecurityNumber: string) => {
+  return (patientId: string) => {
     queryClient.prefetchQuery({
-      queryKey: labsKeys.patient(socialSecurityNumber),
-      queryFn: () => doctorApi.getPatientLabs(socialSecurityNumber),
+      queryKey: labsKeys.patient(patientId),
+      queryFn: () => doctorApi.getPatientLabs(patientId),
       staleTime: 5 * 60 * 1000,
     });
   };
