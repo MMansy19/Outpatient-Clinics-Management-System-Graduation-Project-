@@ -27,7 +27,7 @@ export async function GET() {
           },
           {
             doctor: {
-              name: 'Dr. Sara Hassan',
+              name: 'Dr. Khaled Hassan',
               speciality: 'Internal Medicine',
             },
             diagnoses: 'Flu symptoms - Prescribed rest and medication',
