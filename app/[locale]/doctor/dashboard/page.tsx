@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Users, Activity, Calendar, Plus, LogOut } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -36,10 +37,14 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
+import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import {
   useGetAllVisits,
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
+import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
+import { adminApi } from '@/lib/api/admin.service';
+import type { ClinicResponse } from '@/lib/api/types';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -48,7 +53,7 @@ interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
 }
 
-type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients';
+type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients' | 'doctors' | 'clinics';
 
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
@@ -67,6 +72,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     'scan' | 'manual'
   >('manual');
 
+  // Get user role and clinicId from auth store
+  const { user } = useAuthStore();
+  const userRole = user?.role;
+  const clinicId = user?.clinicId;
+  const isAdmin = userRole === Role.ADMIN;
+
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
     data: allVisits,
@@ -81,6 +92,40 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     error: patientsError,
     refetch: refetchPatients,
   } = useGetAllPatients();
+
+  // Admin-specific: Get doctors in admin's clinic
+  const {
+    data: clinicDoctors,
+    isLoading: loadingClinicDoctors,
+  } = useGetClinicDoctors(clinicId || '', 1, 50);
+
+  // Admin-specific: Get clinic info
+  const [clinics, setClinics] = React.useState<ClinicResponse[]>([]);
+  const [loadingClinics, setLoadingClinics] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isAdmin && clinicId) {
+      loadClinics();
+    }
+  }, [isAdmin, clinicId]);
+
+  const loadClinics = async () => {
+    try {
+      setLoadingClinics(true);
+      const data = await adminApi.getClinics();
+      // Filter to only admin's clinic
+      const adminClinic = data.find(c => c.id === clinicId);
+      if (adminClinic) {
+        setClinics([adminClinic]);
+      } else {
+        setClinics(data);
+      }
+    } catch (error) {
+      console.error('Failed to load clinics:', error);
+    } finally {
+      setLoadingClinics(false);
+    }
+  };
 
   // Calculate statistics
   const calculateStats = () => {
@@ -121,10 +166,18 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
       return visitDate >= thisWeekStart;
     }).length;
 
+    // Admin-specific: Doctors in clinic
+    const doctorsInClinic = clinicDoctors?.items?.length || 0;
+
+    // Admin-specific: Clinic name
+    const clinicName = clinics.length > 0 ? clinics[0].name : '';
+
     return {
       todaysPatients,
       pendingVisits,
       thisWeeksVisits,
+      doctorsInClinic,
+      clinicName,
     };
   };
 
@@ -201,7 +254,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   }, [ refetchPatients, refetchVisits]);
 
   return (
-    <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
+    <AuthGuard allowedRoles={[Role.DOCTOR, Role.ADMIN]} locale={locale}>
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -210,10 +263,22 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               {t('dashboard')}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              {t('dashboardSubtitle')}
+              {isAdmin && stats.clinicName ? stats.clinicName : t('dashboardSubtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Add Doctor button - only for ADMIN */}
+            {isAdmin && (
+              <CreateDoctorDialog
+                clinicId={clinicId}
+                trigger={
+                  <Button variant="outline" className="sm:flex-none">
+                    <Plus className="mr-2 h-5 w-5" />
+                    <span className="inline">{t('addDoctor') || 'Add Doctor'}</span>
+                  </Button>
+                }
+              />
+            )}
             <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
@@ -254,7 +319,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
@@ -289,7 +354,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </CardContent>
           </Card>
 
-          <Card className="sm:col-span-2 md:col-span-1">
+          <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">
                 {t('thisWeek')}
@@ -300,6 +365,23 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
             </CardContent>
           </Card>
+
+          {/* Admin-specific: Doctors in Clinic */}
+          {isAdmin && (
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium">
+                  {t('doctorsInClinic') || 'Doctors in Clinic'}
+                </CardTitle>
+                <Users className="h-4 w-4 text-medical-primary" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -325,6 +407,25 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           >
             {t('searchPatients')}
           </Button>
+          {/* Admin-specific tabs */}
+          {isAdmin && (
+            <>
+              <Button
+                variant={currentView === 'doctors' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('doctors')}
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
+              >
+                {t('doctors') || 'Doctors'}
+              </Button>
+              <Button
+                variant={currentView === 'clinics' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('clinics')}
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
+              >
+                {t('clinics') || 'Clinics'}
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Recent Visits */}
@@ -538,6 +639,114 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToProfile')}
             </Button>
           </div>
+        )}
+
+        {/* Admin: Doctors View */}
+        {currentView === 'doctors' && isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('doctors') || 'Doctors'}</CardTitle>
+              <CardDescription>
+                {t('doctorsInClinicDescription') || 'Doctors in your clinic'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingClinicDoctors ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : clinicDoctors && clinicDoctors.items && clinicDoctors.items.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('email')}</TableHead>
+                        <TableHead>{tTable('phone')}</TableHead>
+                        <TableHead>{tTable('speciality')}</TableHead>
+                        <TableHead>{tTable('status')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {clinicDoctors.items.map((doctor: any) => (
+                        <TableRow key={doctor.id}>
+                          <TableCell className="font-medium">
+                            {doctor.user?.firstName} {doctor.user?.lastName}
+                          </TableCell>
+                          <TableCell>{doctor.email}</TableCell>
+                          <TableCell>{doctor.phone}</TableCell>
+                          <TableCell>{doctor.speciality}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                doctor.isApproved
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              }`}
+                            >
+                              {doctor.isApproved ? 'Approved' : 'Pending'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {t('noDoctorsFound') || 'No doctors found in your clinic'}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin: Clinics View */}
+        {currentView === 'clinics' && isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('clinics') || 'Clinics'}</CardTitle>
+              <CardDescription>
+                {t('clinicInfoDescription') || 'Your clinic information'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingClinics ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : clinics && clinics.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('speciality')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {clinics.map((clinic: ClinicResponse) => (
+                        <TableRow key={clinic.id}>
+                          <TableCell className="font-medium">{clinic.name}</TableCell>
+                          <TableCell>{clinic.speciality}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {t('noClinicsFound') || 'No clinic information found'}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         <AddPatientDialog

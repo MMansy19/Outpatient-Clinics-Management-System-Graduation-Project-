@@ -42,6 +42,7 @@ export function useLogin() {
         name: data.name,
         language: data.language,
         role: data.role,
+        clinicId: data.clinicId,
       });
 
       // Invalidate queries that depend on auth state
