@@ -2,7 +2,7 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Plus, LogOut } from 'lucide-react';
+import { Users, Activity, Calendar, Plus, LogOut, Stethoscope, ClipboardList } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { useAuthStore } from '@/stores/authStore';
@@ -169,6 +169,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     // Admin-specific: Doctors in clinic
     const doctorsInClinic = clinicDoctors?.items?.length || 0;
 
+    // Admin-specific: Total patients and visits in clinic
+    const clinicPatients = patientsList.length;
+    const clinicVisits = visitsList.length;
+
     // Admin-specific: Clinic name
     const clinicName = clinics.length > 0 ? clinics[0].name : '';
 
@@ -177,6 +181,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
       pendingVisits,
       thisWeeksVisits,
       doctorsInClinic,
+      clinicPatients,
+      clinicVisits,
       clinicName,
     };
   };
@@ -320,67 +326,124 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
         {/* Stats Cards */}
         <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('todayPatients')}
-              </CardTitle>
-              <Users className="h-4 w-4 text-medical-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.todaysPatients}</div>
-              {patientsError && (
-                <p className="text-xs text-red-500 mt-1">
-                  Error: {String(patientsError.message)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          {isAdmin ? (
+            /* Admin Stats: Clinic-level overview */
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('doctorsInClinic')}
+                  </CardTitle>
+                  <Stethoscope className="h-4 w-4 text-medical-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('doctorsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('pendingVisits')}
-              </CardTitle>
-              <Activity className="h-4 w-4 text-medical-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingVisits}</div>
-              {visitsError && (
-                <p className="text-xs text-red-500 mt-1">
-                  Error: {String(visitsError.message)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('patientsInClinic')}
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-medical-info" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingAllPatients ? '...' : stats.clinicPatients}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('patientsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('thisWeek')}
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-medical-info" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('visitsInClinic')}
+                  </CardTitle>
+                  <ClipboardList className="h-4 w-4 text-medical-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingAllVisits ? '...' : stats.clinicVisits}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('visitsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-          {/* Admin-specific: Doctors in Clinic */}
-          {isAdmin && (
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {t('doctorsInClinic') || 'Doctors in Clinic'}
-                </CardTitle>
-                <Users className="h-4 w-4 text-medical-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
-                </div>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('thisWeek')}
+                  </CardTitle>
+                  <Calendar className="h-4 w-4 text-medical-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('thisWeekDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            /* Doctor Stats: Personal activity */
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('todayPatients')}
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-medical-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.todaysPatients}</div>
+                  {patientsError && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Error: {String(patientsError.message)}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('pendingVisits')}
+                  </CardTitle>
+                  <Activity className="h-4 w-4 text-medical-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.pendingVisits}</div>
+                  {visitsError && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Error: {String(visitsError.message)}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('thisWeek')}
+                  </CardTitle>
+                  <Calendar className="h-4 w-4 text-medical-info" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                </CardContent>
+              </Card>
+            </>
           )}
         </div>
 
@@ -416,13 +479,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
               >
                 {t('doctors') || 'Doctors'}
-              </Button>
-              <Button
-                variant={currentView === 'clinics' ? 'default' : 'outline'}
-                onClick={() => setCurrentView('clinics')}
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
-              >
-                {t('clinics') || 'Clinics'}
               </Button>
             </>
           )}
@@ -533,45 +589,54 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {patientsList.map((patient: any) => (
+                          {patientsList.map((patient: any) => {
+                            // Handle both admin (nested user) and doctor (flat) patient structures
+                            const patientName = patient.name || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '') || tCommon('unknown');
+                            const patientGender = patient.gender ?? patient.user?.gender;
+                            const patientDOB = patient.dateOfBirth || patient.user?.dateOfBirth;
+                            const patientSSN = patient.socialSecurityNumber || patient.user?.socialSecurityNumber;
+                            const patientAddress = patient.address || patient.user?.address;
+                            const patientJob = patient.job || patient.user?.job;
+
+                            return (
                             <TableRow
                               key={patient.id}
                               className="cursor-pointer hover:bg-muted/50"
                               onClick={() => handleSelectPatient(patient)}
                             >
                               <TableCell className="font-medium">
-                                {patient.name || tCommon('unknown')}
+                                {patientName}
                               </TableCell>
                               <TableCell>
-                                {patient.gender === 0
+                                {patientGender === 0
                                   ? tPatient('male')
-                                  : patient.gender === 1
+                                  : patientGender === 1
                                     ? tPatient('female')
                                     : tCommon('other')}
                               </TableCell>
                               <TableCell>
-                                {patient.dateOfBirth
+                                {patientDOB
                                   ? new Date(
-                                      patient.dateOfBirth
+                                      patientDOB
                                     ).toLocaleDateString()
                                   : tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 <div className="font-mono text-sm">
-                                  {patient.socialSecurityNumber || tCommon('unknown')}
+                                  {patientSSN || tCommon('unknown')}
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
                                 <div
                                   className="truncate"
-                                  title={patient.address}
+                                  title={patientAddress}
                                 >
-                                  {patient.address || tCommon('unknown')}
+                                  {patientAddress || tCommon('unknown')}
                                 </div>
                               </TableCell>
-                              <TableCell>{patient.job || tCommon('unknown')}</TableCell>
+                              <TableCell>{patientJob || tCommon('unknown')}</TableCell>
                             </TableRow>
-                          ))}
+                          )})}
                         </TableBody>
                       </Table>
                     </div>

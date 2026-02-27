@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { 
+import type {
   PaginatedDoctorsResponse,
   PaginatedPatientsResponse,
   PaginatedVisitsResponse,
@@ -8,8 +8,14 @@ import type {
   CreateClinicDto,
   UpdateClinicDto,
   DoctorByIdResponse,
-  PatientByIdResponse
+  PatientByIdResponse,
+  CreateVisitDto,
+  CreateVisitResponse,
+  CreateMedicationDto,
+  CreateMedicationResponse,
 } from './types';
+import type { Lab } from '@/types/entities/Lab';
+import type { Scan } from '@/types/entities/Scan';
 
 /**
  * Admin API Service
@@ -195,6 +201,294 @@ export const adminApi = {
     clinicId: string;
   }): Promise<{ message: string; id: string }> => {
     const response = await apiClient.post<{ message: string; id: string }>('/admin/doctor', data);
+    return response.data;
+  },
+
+  // ============================================================================
+  // Admin - Clinic-scoped Patient Management
+  // ============================================================================
+
+  /**
+   * Get all patients in the clinic (admin's clinic - paginated)
+   *
+   * @param params - Pagination parameters
+   * @returns Paginated list of patients in the clinic
+   * @see GET /api/v1/apatientsInClinicparams - Pagination parameters
+   * @returns Paginated list of visits in the clinic
+   * @see GET /api/v1/admin/clinic/visits
+   */
+  getClinicVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
+    const response = await apiClient.get<PaginatedVisitsResponse>('/admin/clinic/visits', {
+      params: {
+        page: params.page,
+        limit: params.limit,
+      },
+    });
+    return response.data;
+  },
+
+  // ============================================================================
+  // Admin - Patient Visit Management
+  // ============================================================================
+
+  /**
+   * Create Visit
+   *
+   * Creates a new patient visit record with diagnoses and treatment plan.
+   *
+   * @param data - Visit creation data
+   * @returns Visit creation confirmation with UUID
+   * @see docs/16-2-2026.md - POST /api/v1/admin/visit
+   */
+  createVisit: async (data: CreateVisitDto): Promise<CreateVisitResponse> => {
+    const response = await apiClient.post<CreateVisitResponse>('/admin/visit', data);
+    return response.data;
+  },
+
+  /**
+   * Get Patient Visits
+   *
+   * Retrieves all visits for a specific patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @returns Array of patient visits
+   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/visits
+   */
+  getPatientVisits: async (patientId: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/visits`);
+    return response.data;
+  },
+
+  // ============================================================================
+  // Admin - Patient Medication Management
+  // ============================================================================
+
+  /**
+   * Create Medication
+   *
+   * Creates a new medication record for a patient.
+   *
+   * @param data - Medication creation data
+   * @returns Medication creation confirmation
+   * @see docs/16-2-2026.md - POST /api/v1/admin/medication
+   */
+  createMedication: async (
+    data: CreateMedicationDto
+  ): Promise<CreateMedicationResponse> => {
+    const response = await apiClient.post<CreateMedicationResponse>('/admin/medication', data);
+    return response.data;
+  },
+
+  /**
+   * Get Patient Medications
+   *
+   * Retrieves all medications prescribed to a specific patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @returns Array of patient medications
+   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/medications
+   */
+  getPatientMedications: async (patientId: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/medications`);
+    return response.data;
+  },
+
+  /**
+   * Get Medication by ID
+   *
+   * @param medicationId - Medication UUID
+   * @returns Medication details
+   */
+  getMedication: async (medicationId: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/admin/medication/${medicationId}`);
+    return response.data;
+  },
+
+  /**
+   * Update Medication
+   *
+   * @param medicationId - Medication UUID
+   * @param data - Fields to update
+   * @returns Updated medication
+   */
+  updateMedication: async (
+    medicationId: string,
+    data: Partial<CreateMedicationDto>
+  ): Promise<unknown> => {
+    const response = await apiClient.patch<unknown>(`/admin/medication/${medicationId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete Medication (Soft Delete)
+   *
+   * @param medicationId - Medication UUID
+   */
+  deleteMedication: async (medicationId: string): Promise<void> => {
+    await apiClient.delete(`/admin/medication/${medicationId}`);
+  },
+
+  // ============================================================================
+  // Admin - Patient Lab Management
+  // ============================================================================
+
+  /**
+   * Get Patient Labs
+   *
+   * Retrieves all lab records for a specific patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @returns Array of patient labs
+   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/labs
+   */
+  getPatientLabs: async (patientId: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/labs`);
+    return response.data;
+  },
+
+  /**
+   * Create Lab
+   *
+   * Creates a new lab record for a patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @param data - Lab creation data
+   * @returns Created lab details
+   * @see docs/16-2-2026.md - POST /api/v1/admin/lab
+   */
+  createLab: async (
+    patientId: string,
+    data: { name: string; comments: string; image?: File; patientId?: string } | FormData
+  ): Promise<unknown> => {
+    const isFormData = data instanceof FormData;
+    // Add patientId to the data if not using FormData
+    const payload = isFormData ? data : { ...data, patientId };
+    const response = await apiClient.post<unknown>('/admin/lab', payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get Lab by ID
+   *
+   * @param labId - Lab UUID
+   * @returns Lab details
+   */
+  getLab: async (labId: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/admin/lab/${labId}`);
+    return response.data;
+  },
+
+  /**
+   * Update Lab
+   *
+   * @param labId - Lab UUID
+   * @param data - Fields to update
+   * @returns Updated lab
+   */
+  updateLab: async (labId: string, data: Partial<Lab>): Promise<unknown> => {
+    const response = await apiClient.patch<unknown>(`/admin/lab/${labId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete Lab (Soft Delete)
+   *
+   * @param labId - Lab UUID
+   */
+  deleteLab: async (labId: string): Promise<void> => {
+    await apiClient.delete(`/admin/lab/${labId}`);
+  },
+
+  // ============================================================================
+  // Admin - Patient Scan Management
+  // ============================================================================
+
+  /**
+   * Get Patient Scans
+   *
+   * Retrieves all scan records for a specific patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @returns Array of patient scans
+   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/scans
+   */
+  getPatientScans: async (patientId: string): Promise<unknown[]> => {
+    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/scans`);
+    return response.data;
+  },
+
+  /**
+   * Create Scan
+   *
+   * Creates a new scan record for a patient.
+   *
+   * @param patientId - Patient's UUID (globalId)
+   * @param data - Scan creation data
+   * @returns Created scan details
+   * @see docs/16-2-2026.md - POST /api/v1/admin/scan
+   */
+  createScan: async (
+    patientId: string,
+    data: { name: string; comments: string; type: string; image?: File; patientId?: string } | FormData
+  ): Promise<unknown> => {
+    const isFormData = data instanceof FormData;
+    // Add patientId to the data if not using FormData
+    const payload = isFormData ? data : { ...data, patientId };
+    const response = await apiClient.post<unknown>('/admin/scan', payload, {
+      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
+    });
+    return response.data;
+  },
+
+  /**
+   * Get Scan by ID
+   *
+   * @param scanId - Scan UUID
+   * @returns Scan details
+   */
+  getScan: async (scanId: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/admin/scan/${scanId}`);
+    return response.data;
+  },
+
+  /**
+   * Update Scan
+   *
+   * @param scanId - Scan UUID
+   * @param data - Fields to update
+   * @returns Updated scan
+   */
+  updateScan: async (scanId: string, data: Partial<Scan>): Promise<unknown> => {
+    const response = await apiClient.patch<unknown>(`/admin/scan/${scanId}`, data);
+    return response.data;
+  },
+
+  /**
+   * Delete Scan (Soft Delete)
+   *
+   * @param scanId - Scan UUID
+   */
+  deleteScan: async (scanId: string): Promise<void> => {
+    await apiClient.delete(`/admin/scan/${scanId}`);
+  },
+
+  // ============================================================================
+  // Admin - Patient Search
+  // ============================================================================
+
+  /**
+   * Search Patient by SSN
+   *
+   * Search for a patient by social security number.
+   *
+   * @param socialSecurityNumber - Patient's 14-digit SSN
+   * @returns Patient details
+   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:socialSecurityNumber
+   */
+  getPatientBySSN: async (socialSecurityNumber: string): Promise<unknown> => {
+    const response = await apiClient.get<unknown>(`/admin/patient/${socialSecurityNumber}`);
     return response.data;
   },
 };

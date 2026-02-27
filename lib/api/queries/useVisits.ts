@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
 // import type { User } from '@/types/entities/User';
 import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -20,7 +22,10 @@ const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
 export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWithRelations[], Error> => {
-  console.log('🔍 useGetPatientVisits called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
+  console.log('🔍 useGetPatientVisits called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA, 'isAdmin:', isAdmin);
 
   return useQuery({
     queryKey: [...VISITS_KEY, 'patient', patientId],
@@ -33,7 +38,12 @@ export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWith
         console.log('🔍 useGetPatientVisits - mock result:', result);
         return result;
       }
-      console.log('🔍 useGetPatientVisits - using real API');
+      console.log('🔍 useGetPatientVisits - using real API (isAdmin:', isAdmin, ')');
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getPatientVisits(patientId);
+        return response as VisitWithRelations[];
+      }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
       return response.data;
     },
@@ -84,6 +94,7 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
 export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto> => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
     mutationFn: async (data: CreateVisitDto) => {
@@ -100,29 +111,32 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
           vitals: { weight: 0 }, // Mock requires this
         };
         const mockResult = await mockVisitsAPI.createVisit(visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } });
-        
+
         // Transform mock response to match backend API response
         return {
           message: 'Visit Created Successfully',
           id: mockResult.global_id,
         };
       }
-      
-      // Real backend implementation
+
+      // Real backend implementation - ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return await adminApi.createVisit(data);
+      }
       return await doctorApi.createVisit(data);
     },
     onSuccess: (_response, variables) => {
       // Invalidate all visits queries
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-      
+
       // Invalidate patient-specific visits
-      queryClient.invalidateQueries({ 
-        queryKey: [...VISITS_KEY, 'patient', variables.patientId] 
+      queryClient.invalidateQueries({
+        queryKey: [...VISITS_KEY, 'patient', variables.patientId]
       });
-      
+
       // Invalidate patient details (may include visit count)
-      queryClient.invalidateQueries({ 
-        queryKey: ['patients', variables.patientId] 
+      queryClient.invalidateQueries({
+        queryKey: ['patients', variables.patientId]
       });
     },
     onError: (error) => {
@@ -190,6 +204,9 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
  * ```
  */
 export const useGetAllVisits = (params?: { page?: number; limit?: number }): UseQueryResult<PaginatedVisitsResponse, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery<PaginatedVisitsResponse>({
     queryKey: [...VISITS_KEY, 'all', params?.page || 1, params?.limit || 10],
     queryFn: async (): Promise<PaginatedVisitsResponse> => {
@@ -211,6 +228,11 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
       //     totalItems: 10,
       //   };
       // }
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getClinicVisits({ page: params?.page || 1, limit: params?.limit || 10 });
+        return response as PaginatedVisitsResponse;
+      }
       const response = await doctorApi.getAllVisits(params);
       return response as PaginatedVisitsResponse;
     },
@@ -219,6 +241,9 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
 };
 
 export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery<unknown[]>({
     queryKey: [...PATIENTS_KEY, 'all'],
     queryFn: async (): Promise<unknown[]> => {
@@ -226,6 +251,11 @@ export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
         // For mock data, get patients from mock API
         const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
         return users.filter((user: any) => user.role === 'patient');
+      }
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getClinicPatients({ page: 1, limit: 10000 });
+        return response.items;
       }
       const response = await doctorApi.getAllPatients();
       return response;

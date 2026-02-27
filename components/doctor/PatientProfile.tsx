@@ -70,7 +70,9 @@ export function PatientProfile({
   } = useGetPatientByNationalId(socialSecurityNumber);
 
   // Get patient ID (UUID/global_id) for subsequent queries
-  const patientId = patient?.global_id;
+  // Handle both admin (nested user.id) and doctor (flat id/global_id) patient structures
+  const patientAny = patient as any;
+  const patientId = patientAny?.global_id || patientAny?.id || (patientAny?.user ? patientAny.user.id : null);
 
   // Debug logging
   console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
@@ -82,11 +84,15 @@ export function PatientProfile({
   console.log('🔍 PatientProfile - Scanned Data:', scannedData);
 
   // Combine API patient data with scanned data (scanned data serves as fallback)
-  const patientName = patient?.name || scannedData?.name ||
+  // Handle both admin (nested user) and doctor (flat) patient structures
+  const patientUser = patientAny?.user || patientAny;
+  const patientName = patientAny?.name ||
+    (patientUser?.firstName && patientUser?.lastName ? `${patientUser.firstName} ${patientUser.lastName}` : '') ||
+    scannedData?.name ||
     (scannedData?.firstName && scannedData?.lastName ? `${scannedData.firstName} ${scannedData.lastName}` : '');
 
-  const patientGender = patient?.gender || scannedData?.gender;
-  const patientDateOfBirth = patient?.dateOfBirth || patient?.birthdate || scannedData?.birthdate || scannedData?.dateOfBirth;
+  const patientGender = patientAny?.gender ?? patientUser?.gender ?? scannedData?.gender;
+  const patientDateOfBirth = patientAny?.dateOfBirth || patientAny?.birthdate || patientUser?.dateOfBirth || patientUser?.birthdate || scannedData?.birthdate || scannedData?.dateOfBirth;
 
   // If this is a new patient (scanned but not registered yet), show registration UI
   const isScannedNewPatient = isNewPatient && !patient;

@@ -6,8 +6,11 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type { Scan } from '@/types/entities/Scan';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -52,7 +55,10 @@ const scansKeys = {
 export const useGetPatientScans = (
   patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientScans called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
+  console.log('🔍 useGetPatientScans called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA, 'isAdmin:', isAdmin);
 
   return useQuery({
     queryKey: scansKeys.patient(patientId),
@@ -65,7 +71,11 @@ export const useGetPatientScans = (
         console.log('🔍 useGetPatientScans - mock result:', result);
         return result;
       }
-      console.log('🔍 useGetPatientScans - using real API');
+      console.log('🔍 useGetPatientScans - using real API (isAdmin:', isAdmin, ')');
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return await adminApi.getPatientScans(patientId);
+      }
       return await doctorApi.getPatientScans(patientId);
     },
     enabled: !!patientId,
@@ -142,9 +152,17 @@ export const useCreateScan = (): UseMutationResult<
   { patientId: string; data: { name: string; comments: string; type: string } | FormData }
 > => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: ({ patientId, data }) => doctorApi.createScan(patientId, data),
+    mutationFn: ({ patientId, data }) => {
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return adminApi.createScan(patientId, data);
+      }
+      return doctorApi.createScan(patientId, data);
+    },
     onSuccess: (response, variables) => {
       // Invalidate patient scans list
       queryClient.invalidateQueries({

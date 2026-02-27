@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
+import { adminApi } from '@/lib/api/admin.service';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 import type { CreatePatientRequest } from '@/types/api';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 const PATIENTS_KEY = ['patients'];
 
@@ -14,6 +17,9 @@ interface PatientsResponse {
 }
 
 export const useSearchPatients = (filters: SearchFilters): UseQueryResult<PatientsResponse, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'search', filters],
     queryFn: async () => {
@@ -41,8 +47,11 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
       if (filters.maxAge !== undefined) params.append('max_age', filters.maxAge.toString());
       if (filters.nationalId) params.append('national_id', filters.nationalId);
 
-      // TODO: Verify endpoint path with backend team
-      // Possible endpoints: /doctor/patients, /clinic/patients, /patients
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await apiClient.get<PatientsResponse>(`/admin/patients?${params.toString()}`);
+        return response.data;
+      }
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);
       return response.data;
     },
@@ -53,9 +62,17 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
 };
 
 export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getPatientById(id.toString());
+        return response as unknown as Patient;
+      }
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
       return response.data;
     },
@@ -65,17 +82,26 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
 };
 
 export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient | null, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
-      console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}`);
+      console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}, isAdmin: ${isAdmin}`);
       try {
-        const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+        // ADMIN uses adminApi, DOCTOR uses doctorApi
+        let response;
+        if (isAdmin) {
+          response = await adminApi.getPatientBySSN(socialSecurityNumber);
+        } else {
+          response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+        }
         console.log(`✅ API Raw Response:`, response);
-        console.log(`✅ Patient fetched successfully:`, response.data);
+        console.log(`✅ Patient fetched successfully:`, response);
 
         // Handle both direct Patient object and wrapped response formats
-        const data = response.data;
+        const data = response as unknown as Patient;
 
         // If data is null or undefined, return null
         if (!data) {

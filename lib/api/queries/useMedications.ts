@@ -6,11 +6,14 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Query Key Factory for Medications
@@ -55,7 +58,10 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 export const useGetPatientMedications = (
   patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
+  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA, 'isAdmin:', isAdmin);
 
   return useQuery({
     queryKey: medicationsKeys.patient(patientId),
@@ -68,7 +74,11 @@ export const useGetPatientMedications = (
         console.log('🔍 useGetPatientMedications - mock result:', result);
         return result;
       }
-      console.log('🔍 useGetPatientMedications - using real API');
+      console.log('🔍 useGetPatientMedications - using real API (isAdmin:', isAdmin, ')');
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return await adminApi.getPatientMedications(patientId);
+      }
       return await doctorApi.getPatientMedications(patientId);
     },
     enabled: !!patientId, // Only run when patientId is provided
@@ -145,9 +155,17 @@ export const useCreateMedication = (): UseMutationResult<
   CreateMedicationDto
 > => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: (data: CreateMedicationDto) => doctorApi.createMedication(data),
+    mutationFn: (data: CreateMedicationDto) => {
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return adminApi.createMedication(data);
+      }
+      return doctorApi.createMedication(data);
+    },
     onSuccess: (response, variables) => {
       // Invalidate patient medications list
       // Note: medications are keyed by socialSecurityNumber, not patientId
