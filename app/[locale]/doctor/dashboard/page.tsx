@@ -93,11 +93,11 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     refetch: refetchPatients,
   } = useGetAllPatients();
 
-  // Admin-specific: Get doctors in admin's clinic
+  // Admin-specific: Get doctors in admin's clinic (backend reads clinic from JWT)
   const {
     data: clinicDoctors,
     isLoading: loadingClinicDoctors,
-  } = useGetClinicDoctors(clinicId || '', 1, 50);
+  } = useGetClinicDoctors(1, 50);
 
   // Admin-specific: Get clinic info
   const [clinics, setClinics] = React.useState<ClinicResponse[]>([]);

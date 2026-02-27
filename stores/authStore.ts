@@ -1,3 +1,4 @@
+import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Role, Language } from '@/lib/api/types';
@@ -76,6 +77,35 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+/**
+ * Hydration tracking
+ * 
+ * Zustand persist hydrates asynchronously — on the first render the store
+ * still has its default values (user: null, isAuthenticated: false).
+ * Any code that reads auth state must wait for hydration to finish,
+ * otherwise it will incorrectly treat the user as logged-out and redirect
+ * to the login page on every refresh.
+ */
+export const useHasHydrated = () => {
+  const [hydrated, setHydrated] = React.useState(false);
+
+  React.useEffect(() => {
+    // Zustand persist exposes an `onFinishHydration` listener.
+    const unsub = useAuthStore.persist.onFinishHydration(() => {
+      setHydrated(true);
+    });
+
+    // If hydration already completed before this effect ran, catch up.
+    if (useAuthStore.persist.hasHydrated()) {
+      setHydrated(true);
+    }
+
+    return unsub;
+  }, []);
+
+  return hydrated;
+};
 
 /**
  * Utility Hooks

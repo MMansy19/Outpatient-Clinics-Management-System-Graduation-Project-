@@ -17,7 +17,7 @@ All endpoints documented in `docs/23-1-2026.md` have been successfully integrate
 - ✅ `updateVisit` - PATCH /api/v1/doctor/visit/{visitId}
 - ✅ `getAllVisits` - GET /api/v1/doctor/visits (newly added)
 
-### 3. Medication Management
+### 3. Medication Management  
 - ✅ `createMedication` - POST /api/v1/doctor/medication/create
 - ✅ `getPatientMedications` - GET /api/v1/doctor/patient/{socialSecurityNumber}/medications
 - ✅ `getMedication` - GET /api/v1/doctor/medication/{medicationId}

@@ -22,23 +22,25 @@ export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClini
 };
 
 /**
- * Get doctors in a specific clinic (Admin role)
+ * Get doctors in the admin's clinic
  *
- * @param clinicId - Clinic UUID
+ * The backend determines the clinic from the JWT cookie.
+ * No clinicId query parameter needed.
+ *
+ * @param page - Page number (default 1)
+ * @param limit - Items per page (default 30)
  * @returns Paginated list of doctors in the clinic
  */
 export const useGetClinicDoctors = (
-  clinicId: string,
   page: number = 1,
   limit: number = 30
 ): UseQueryResult<PaginatedDoctorsResponse, Error> => {
   return useQuery({
-    queryKey: [...DOCTORS_KEY, 'clinic', clinicId, { page, limit }],
+    queryKey: [...DOCTORS_KEY, 'clinic', { page, limit }],
     queryFn: async () => {
-      const response = await adminApi.getClinicDoctors({ clinicId, page, limit });
+      const response = await adminApi.getClinicDoctors({ page, limit });
       return response;
     },
-    enabled: !!clinicId,
     staleTime: 5 * 60 * 1000,
   });
 };

@@ -90,33 +90,24 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
     queryFn: async () => {
       console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}, isAdmin: ${isAdmin}`);
       try {
-        // ADMIN uses adminApi, DOCTOR uses doctorApi
-        let response;
+        // ADMIN uses adminApi (already extracts .data), DOCTOR uses apiClient (returns AxiosResponse)
+        let patientData: Patient | null;
         if (isAdmin) {
-          response = await adminApi.getPatientBySSN(socialSecurityNumber);
+          patientData = await adminApi.getPatientBySSN(socialSecurityNumber) as Patient | null;
         } else {
-          response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+          const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+          patientData = response.data;
         }
-        console.log(`✅ API Raw Response:`, response);
-        console.log(`✅ Patient fetched successfully:`, response);
-
-        // Handle both direct Patient object and wrapped response formats
-        const data = response as unknown as Patient;
+        console.log(`✅ API Raw Response:`, patientData);
+        console.log(`✅ Patient fetched successfully:`, patientData);
 
         // If data is null or undefined, return null
-        if (!data) {
+        if (!patientData) {
           console.log(`Patient with National ID ${socialSecurityNumber} returned null data`);
           return null;
         }
 
-        // If data has a 'data' property (wrapped response), use that
-        if (data && typeof data === 'object') {
-          console.log(`✅ Using wrapped response data:`, data);
-          return data as Patient;
-        }
-
-        // Return direct patient data
-        return data as Patient;
+        return patientData;
       } catch (error) {
         console.error(`❌ Error fetching patient with National ID ${socialSecurityNumber}:`, error);
         // Check if it's a 404 (patient not found) or 500 (server error for not found)

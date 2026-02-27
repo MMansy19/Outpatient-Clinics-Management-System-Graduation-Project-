@@ -169,12 +169,11 @@ export const adminApi = {
    * @returns Paginated list of doctors in the clinic
    * @see docs/16-2-2026.md - GET /api/v1/admin/clinic/doctors
    */
-  getClinicDoctors: async (params: PaginationParams & { clinicId: string }): Promise<PaginatedDoctorsResponse> => {
+  getClinicDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
     const response = await apiClient.get<PaginatedDoctorsResponse>('/admin/clinic/doctors', {
       params: {
         page: params.page,
         limit: params.limit,
-        clinicId: params.clinicId,
       },
     });
     return response.data;
@@ -209,11 +208,30 @@ export const adminApi = {
   // ============================================================================
 
   /**
-   * Get all patients in the clinic (admin's clinic - paginated)
+   * Get all patients in the admin's clinic (paginated)
+   *
+   * The backend determines the clinic from the JWT cookie.
    *
    * @param params - Pagination parameters
    * @returns Paginated list of patients in the clinic
-   * @see GET /api/v1/apatientsInClinicparams - Pagination parameters
+   * @see GET /api/v1/admin/clinic/patients
+   */
+  getClinicPatients: async (params: PaginationParams): Promise<PaginatedPatientsResponse> => {
+    const response = await apiClient.get<PaginatedPatientsResponse>('/admin/clinic/patients', {
+      params: {
+        page: params.page,
+        limit: params.limit,
+      },
+    });
+    return response.data;
+  },
+
+  /**
+   * Get all visits in the admin's clinic (paginated)
+   *
+   * The backend determines the clinic from the JWT cookie.
+   *
+   * @param params - Pagination parameters
    * @returns Paginated list of visits in the clinic
    * @see GET /api/v1/admin/clinic/visits
    */
