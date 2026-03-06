@@ -133,7 +133,7 @@ export interface ApiError {
   message: string;
   statusCode: number;
   error?: string;
-}
+} 
 
 // ============================================================================
 // Doctor API DTOs
@@ -146,6 +146,7 @@ export interface ApiError {
 export interface CreateVisitDto {
   diagnoses: string;
   patientId: string; // UUID format
+  clinicId?: string; // UUID - required for admin, auto-set from JWT for doctors
 }
 
 export interface CreateVisitResponse {

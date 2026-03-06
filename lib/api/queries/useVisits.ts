@@ -121,7 +121,12 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
 
       // Real backend implementation - ADMIN uses adminApi, DOCTOR uses doctorApi
       if (isAdmin) {
-        return await adminApi.createVisit(data);
+        // Admin endpoint requires clinicId in body
+        const adminData = {
+          ...data,
+          clinicId: data.clinicId || user?.clinicId,
+        };
+        return await adminApi.createVisit(adminData);
       }
       return await doctorApi.createVisit(data);
     },
