@@ -119,7 +119,7 @@ export interface Doctor extends User {
   speciality: string;
   isApproved: boolean;
 }
-
+ 
 export interface Patient extends User {
   address?: string;
   job?: string;

@@ -18,17 +18,17 @@ import type { Lab } from '@/types/entities/Lab';
 import type { Scan } from '@/types/entities/Scan';
 
 /**
- * Admin API Service
+ * Super Admin API Service
  * 
- * Handles all admin-related API calls for managing doctors, patients, visits, and clinics.
+ * Handles all super-admin-related API calls for managing doctors, patients, visits, and clinics.
  */
 
 export const adminApi = {
   /**
-   * Check if Admin service is running
+   * Check if Super Admin service is running
    */
   isUp: async (): Promise<string> => {
-    const response = await apiClient.get<string>('/admin');
+    const response = await apiClient.get<string>('/super-admin');
     return response.data;
   },
 
@@ -39,7 +39,7 @@ export const adminApi = {
    * @returns Paginated list of doctors
    */
   getDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
-    const response = await apiClient.get<PaginatedDoctorsResponse>('/admin/doctors', {
+    const response = await apiClient.get<PaginatedDoctorsResponse>('/super-admin/doctors', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -55,7 +55,7 @@ export const adminApi = {
    * @returns Paginated list of patients
    */
   getPatients: async (params: PaginationParams): Promise<PaginatedPatientsResponse> => {
-    const response = await apiClient.get<PaginatedPatientsResponse>('/admin/patients', {
+    const response = await apiClient.get<PaginatedPatientsResponse>('/super-admin/patients', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -71,7 +71,7 @@ export const adminApi = {
    * @returns Paginated list of visits
    */
   getVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
-    const response = await apiClient.get<PaginatedVisitsResponse>('/admin/visits', {
+    const response = await apiClient.get<PaginatedVisitsResponse>('/super-admin/visits', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -87,7 +87,7 @@ export const adminApi = {
    * @returns Doctor details
    */
   getDoctorById: async (id: string): Promise<DoctorByIdResponse> => {
-    const response = await apiClient.get<DoctorByIdResponse>(`/admin/doctor/${id}`);
+    const response = await apiClient.get<DoctorByIdResponse>(`/super-admin/doctor/${id}`);
     return response.data;
   },
 
@@ -98,7 +98,7 @@ export const adminApi = {
    * @returns Patient details
    */
   getPatientById: async (id: string): Promise<PatientByIdResponse> => {
-    const response = await apiClient.get<PatientByIdResponse>(`/admin/patient/${id}`);
+    const response = await apiClient.get<PatientByIdResponse>(`/super-admin/patient/${id}`);
     return response.data;
   },
 
@@ -108,7 +108,7 @@ export const adminApi = {
    * @returns List of all clinics
    */
   getClinics: async (): Promise<ClinicResponse[]> => {
-    const response = await apiClient.get<ClinicResponse[]>('/admin/clinics');
+    const response = await apiClient.get<ClinicResponse[]>('/super-admin/clinics');
     return response.data;
   },
 
@@ -119,7 +119,7 @@ export const adminApi = {
    * @returns Success message with clinic ID
    */
   createClinic: async (data: CreateClinicDto): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/admin/clinic', data);
+    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/clinic', data);
     return response.data;
   },
 
@@ -131,7 +131,7 @@ export const adminApi = {
    * @returns Success message
    */
   updateClinic: async (id: string, data: UpdateClinicDto): Promise<{ message: string }> => {
-    const response = await apiClient.patch<{ message: string }>(`/admin/clinic/${id}`, data);
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/clinic/${id}`, data);
     return response.data;
   },
 
@@ -142,7 +142,7 @@ export const adminApi = {
    * @returns Success message
    */
   deleteClinic: async (id: string): Promise<{ message: string }> => {
-    const response = await apiClient.delete<{ message: string }>(`/admin/clinic/${id}`);
+    const response = await apiClient.delete<{ message: string }>(`/super-admin/clinic/${id}`);
     return response.data;
   },
 
@@ -154,12 +154,12 @@ export const adminApi = {
    * @returns Success message
    */
   updatePatient: async (id: string, data: { firstName?: string; lastName?: string; job?: string; address?: string }): Promise<{ message: string }> => {
-    const response = await apiClient.patch<{ message: string }>(`/admin/patient/${id}`, data);
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/patient/${id}`, data);
     return response.data;
   },
 
   // ============================================================================
-  // Admin - Clinic Doctor Management
+  // Super Admin - Clinic Doctor Management
   // ============================================================================
 
   /**
@@ -167,10 +167,10 @@ export const adminApi = {
    *
    * @param params - Pagination parameters with clinicId
    * @returns Paginated list of doctors in the clinic
-   * @see docs/16-2-2026.md - GET /api/v1/admin/clinic/doctors
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/clinic/doctors
    */
   getClinicDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
-    const response = await apiClient.get<PaginatedDoctorsResponse>('/admin/clinic/doctors', {
+    const response = await apiClient.get<PaginatedDoctorsResponse>('/super-admin/clinic/doctors', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -180,13 +180,13 @@ export const adminApi = {
   },
 
   /**
-   * Create a new doctor (Admin only)
+   * Create a new doctor (Super Admin)
    *
-   * Admin can create doctors assigned to their clinic.
+   * Super Admin can create doctors assigned to a clinic.
    *
    * @param data - Doctor creation data
    * @returns Success message with doctor ID
-   * @see docs/16-2-2026.md - POST /api/v1/admin/doctor
+   * @see docs/16-2-2026.md - POST /api/v1/super-admin/doctor
    */
   createDoctor: async (data: {
     firstName: string;
@@ -199,25 +199,23 @@ export const adminApi = {
     speciality: string;
     clinicId: string;
   }): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/admin/doctor', data);
+    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/doctor', data);
     return response.data;
   },
 
   // ============================================================================
-  // Admin - Clinic-scoped Patient Management
+  // Super Admin - Clinic-scoped Patient Management
   // ============================================================================
 
   /**
-   * Get all patients in the admin's clinic (paginated)
-   *
-   * The backend determines the clinic from the JWT cookie.
+   * Get all patients in a clinic (paginated)
    *
    * @param params - Pagination parameters
    * @returns Paginated list of patients in the clinic
-   * @see GET /api/v1/admin/clinic/patients
+   * @see GET /api/v1/super-admin/clinic/patients
    */
   getClinicPatients: async (params: PaginationParams): Promise<PaginatedPatientsResponse> => {
-    const response = await apiClient.get<PaginatedPatientsResponse>('/admin/clinic/patients', {
+    const response = await apiClient.get<PaginatedPatientsResponse>('/super-admin/clinic/patients', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -227,16 +225,14 @@ export const adminApi = {
   },
 
   /**
-   * Get all visits in the admin's clinic (paginated)
-   *
-   * The backend determines the clinic from the JWT cookie.
+   * Get all visits in a clinic (paginated)
    *
    * @param params - Pagination parameters
    * @returns Paginated list of visits in the clinic
-   * @see GET /api/v1/admin/clinic/visits
+   * @see GET /api/v1/super-admin/clinic/visits
    */
   getClinicVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
-    const response = await apiClient.get<PaginatedVisitsResponse>('/admin/clinic/visits', {
+    const response = await apiClient.get<PaginatedVisitsResponse>('/super-admin/clinic/visits', {
       params: {
         page: params.page,
         limit: params.limit,
@@ -246,7 +242,7 @@ export const adminApi = {
   },
 
   // ============================================================================
-  // Admin - Patient Visit Management
+  // Super Admin - Patient Visit Management
   // ============================================================================
 
   /**
@@ -256,10 +252,10 @@ export const adminApi = {
    *
    * @param data - Visit creation data
    * @returns Visit creation confirmation with UUID
-   * @see docs/16-2-2026.md - POST /api/v1/admin/visit
+   * @see docs/16-2-2026.md - POST /api/v1/super-admin/visit
    */
   createVisit: async (data: CreateVisitDto): Promise<CreateVisitResponse> => {
-    const response = await apiClient.post<CreateVisitResponse>('/admin/visit', data);
+    const response = await apiClient.post<CreateVisitResponse>('/super-admin/visit', data);
     return response.data;
   },
 
@@ -270,15 +266,15 @@ export const adminApi = {
    *
    * @param patientId - Patient's UUID (globalId)
    * @returns Array of patient visits
-   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/visits
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/patient/:id/visits
    */
   getPatientVisits: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/visits`);
+    const response = await apiClient.get<unknown[]>(`/super-admin/patient/${patientId}/visits`);
     return response.data;
   },
 
   // ============================================================================
-  // Admin - Patient Medication Management
+  // Super Admin - Patient Medication Management
   // ============================================================================
 
   /**
@@ -288,12 +284,12 @@ export const adminApi = {
    *
    * @param data - Medication creation data
    * @returns Medication creation confirmation
-   * @see docs/16-2-2026.md - POST /api/v1/admin/medication
+   * @see docs/16-2-2026.md - POST /api/v1/super-admin/medication
    */
   createMedication: async (
     data: CreateMedicationDto
   ): Promise<CreateMedicationResponse> => {
-    const response = await apiClient.post<CreateMedicationResponse>('/admin/medication', data);
+    const response = await apiClient.post<CreateMedicationResponse>('/super-admin/medication', data);
     return response.data;
   },
 
@@ -304,10 +300,10 @@ export const adminApi = {
    *
    * @param patientId - Patient's UUID (globalId)
    * @returns Array of patient medications
-   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/medications
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/patient/:id/medications
    */
   getPatientMedications: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/medications`);
+    const response = await apiClient.get<unknown[]>(`/super-admin/patient/${patientId}/medications`);
     return response.data;
   },
 
@@ -318,7 +314,7 @@ export const adminApi = {
    * @returns Medication details
    */
   getMedication: async (medicationId: string): Promise<unknown> => {
-    const response = await apiClient.get<unknown>(`/admin/medication/${medicationId}`);
+    const response = await apiClient.get<unknown>(`/super-admin/medication/${medicationId}`);
     return response.data;
   },
 
@@ -333,7 +329,7 @@ export const adminApi = {
     medicationId: string,
     data: Partial<CreateMedicationDto>
   ): Promise<unknown> => {
-    const response = await apiClient.patch<unknown>(`/admin/medication/${medicationId}`, data);
+    const response = await apiClient.patch<unknown>(`/super-admin/medication/${medicationId}`, data);
     return response.data;
   },
 
@@ -343,11 +339,11 @@ export const adminApi = {
    * @param medicationId - Medication UUID
    */
   deleteMedication: async (medicationId: string): Promise<void> => {
-    await apiClient.delete(`/admin/medication/${medicationId}`);
+    await apiClient.delete(`/super-admin/medication/${medicationId}`);
   },
 
   // ============================================================================
-  // Admin - Patient Lab Management
+  // Super Admin - Patient Lab Management
   // ============================================================================
 
   /**
@@ -357,10 +353,10 @@ export const adminApi = {
    *
    * @param patientId - Patient's UUID (globalId)
    * @returns Array of patient labs
-   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/labs
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/patient/:id/labs
    */
   getPatientLabs: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/labs`);
+    const response = await apiClient.get<unknown[]>(`/super-admin/patient/${patientId}/labs`);
     return response.data;
   },
 
@@ -372,7 +368,7 @@ export const adminApi = {
    * @param patientId - Patient's UUID (globalId)
    * @param data - Lab creation data
    * @returns Created lab details
-   * @see docs/16-2-2026.md - POST /api/v1/admin/lab
+   * @see docs/16-2-2026.md - POST /api/v1/super-admin/lab
    */
   createLab: async (
     patientId: string,
@@ -381,7 +377,7 @@ export const adminApi = {
     const isFormData = data instanceof FormData;
     // Add patientId to the data if not using FormData
     const payload = isFormData ? data : { ...data, patientId };
-    const response = await apiClient.post<unknown>('/admin/lab', payload, {
+    const response = await apiClient.post<unknown>('/super-admin/lab', payload, {
       headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
     });
     return response.data;
@@ -394,7 +390,7 @@ export const adminApi = {
    * @returns Lab details
    */
   getLab: async (labId: string): Promise<unknown> => {
-    const response = await apiClient.get<unknown>(`/admin/lab/${labId}`);
+    const response = await apiClient.get<unknown>(`/super-admin/lab/${labId}`);
     return response.data;
   },
 
@@ -406,7 +402,7 @@ export const adminApi = {
    * @returns Updated lab
    */
   updateLab: async (labId: string, data: Partial<Lab>): Promise<unknown> => {
-    const response = await apiClient.patch<unknown>(`/admin/lab/${labId}`, data);
+    const response = await apiClient.patch<unknown>(`/super-admin/lab/${labId}`, data);
     return response.data;
   },
 
@@ -416,11 +412,11 @@ export const adminApi = {
    * @param labId - Lab UUID
    */
   deleteLab: async (labId: string): Promise<void> => {
-    await apiClient.delete(`/admin/lab/${labId}`);
+    await apiClient.delete(`/super-admin/lab/${labId}`);
   },
 
   // ============================================================================
-  // Admin - Patient Scan Management
+  // Super Admin - Patient Scan Management
   // ============================================================================
 
   /**
@@ -430,10 +426,10 @@ export const adminApi = {
    *
    * @param patientId - Patient's UUID (globalId)
    * @returns Array of patient scans
-   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:id/scans
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/patient/:id/scans
    */
   getPatientScans: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/scans`);
+    const response = await apiClient.get<unknown[]>(`/super-admin/patient/${patientId}/scans`);
     return response.data;
   },
 
@@ -445,7 +441,7 @@ export const adminApi = {
    * @param patientId - Patient's UUID (globalId)
    * @param data - Scan creation data
    * @returns Created scan details
-   * @see docs/16-2-2026.md - POST /api/v1/admin/scan
+   * @see docs/16-2-2026.md - POST /api/v1/super-admin/scan
    */
   createScan: async (
     patientId: string,
@@ -454,7 +450,7 @@ export const adminApi = {
     const isFormData = data instanceof FormData;
     // Add patientId to the data if not using FormData
     const payload = isFormData ? data : { ...data, patientId };
-    const response = await apiClient.post<unknown>('/admin/scan', payload, {
+    const response = await apiClient.post<unknown>('/super-admin/scan', payload, {
       headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
     });
     return response.data;
@@ -467,7 +463,7 @@ export const adminApi = {
    * @returns Scan details
    */
   getScan: async (scanId: string): Promise<unknown> => {
-    const response = await apiClient.get<unknown>(`/admin/scan/${scanId}`);
+    const response = await apiClient.get<unknown>(`/super-admin/scan/${scanId}`);
     return response.data;
   },
 
@@ -479,7 +475,7 @@ export const adminApi = {
    * @returns Updated scan
    */
   updateScan: async (scanId: string, data: Partial<Scan>): Promise<unknown> => {
-    const response = await apiClient.patch<unknown>(`/admin/scan/${scanId}`, data);
+    const response = await apiClient.patch<unknown>(`/super-admin/scan/${scanId}`, data);
     return response.data;
   },
 
@@ -489,11 +485,11 @@ export const adminApi = {
    * @param scanId - Scan UUID
    */
   deleteScan: async (scanId: string): Promise<void> => {
-    await apiClient.delete(`/admin/scan/${scanId}`);
+    await apiClient.delete(`/super-admin/scan/${scanId}`);
   },
 
   // ============================================================================
-  // Admin - Patient Search
+  // Super Admin - Patient Search
   // ============================================================================
 
   /**
@@ -503,10 +499,10 @@ export const adminApi = {
    *
    * @param socialSecurityNumber - Patient's 14-digit SSN
    * @returns Patient details
-   * @see docs/16-2-2026.md - GET /api/v1/admin/patient/:socialSecurityNumber
+   * @see docs/16-2-2026.md - GET /api/v1/super-admin/patient/:socialSecurityNumber
    */
   getPatientBySSN: async (socialSecurityNumber: string): Promise<unknown> => {
-    const response = await apiClient.get<unknown>(`/admin/patient/${socialSecurityNumber}`);
+    const response = await apiClient.get<unknown>(`/super-admin/patient/${socialSecurityNumber}`);
     return response.data;
   },
 };

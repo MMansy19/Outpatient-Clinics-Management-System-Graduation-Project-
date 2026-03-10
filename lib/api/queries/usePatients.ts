@@ -49,7 +49,7 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
 
       // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
       if (isAdmin) {
-        const response = await apiClient.get<PatientsResponse>(`/admin/patients?${params.toString()}`);
+        const response = await apiClient.get<PatientsResponse>(`/super-admin/patients?${params.toString()}`);
         return response.data;
       }
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);

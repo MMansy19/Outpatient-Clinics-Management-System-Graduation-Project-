@@ -472,7 +472,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Admin Status</CardTitle>
-                    <CardDescription>GET /api/v1/admin</CardDescription>
+                    <CardDescription>GET /api/v1/super-admin</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -496,7 +496,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Doctors</CardTitle>
-                    <CardDescription>GET /api/v1/admin/doctors</CardDescription>
+                    <CardDescription>GET /api/v1/super-admin/doctors</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -527,7 +527,7 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/admin/doctors'}
+                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/doctors'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -538,7 +538,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Patients</CardTitle>
-                    <CardDescription>GET /api/v1/admin/patients</CardDescription>
+                    <CardDescription>GET /api/v1/super-admin/patients</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -569,7 +569,7 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/admin/patients'}
+                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/patients'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -580,7 +580,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Visits</CardTitle>
-                    <CardDescription>GET /api/v1/admin/visits</CardDescription>
+                    <CardDescription>GET /api/v1/super-admin/visits</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -611,7 +611,7 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/admin/visits'}
+                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/visits'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -622,7 +622,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Update Patient</CardTitle>
-                    <CardDescription>PATCH /api/v1/admin/patient/{'{id}'}</CardDescription>
+                    <CardDescription>PATCH /api/v1/super-admin/patient/{'{id}'}</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -698,7 +698,7 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Clinic Management</CardTitle>
-                    <CardDescription>POST /api/v1/admin/clinic</CardDescription>
+                    <CardDescription>POST /api/v1/super-admin/clinic</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
