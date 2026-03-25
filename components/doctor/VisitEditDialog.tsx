@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -12,13 +13,15 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
 import { useUpdateVisit } from '@/lib/api/queries/useVisits';
 import { useFormState } from '@/src/hooks/useFormState';
 import { z } from 'zod';
 
 const visitSchema = z.object({
-  diagnosis: z.string().min(1, 'Diagnosis is required'),
+  diagnosis: z.string().optional(),
   treatment_plan: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -31,6 +34,7 @@ interface VisitEditDialogProps {
   visit: {
     id: string;
     diagnosis: string;
+    diagnosesAudioUrl?: string;
     treatment_plan?: string;
     notes?: string;
   };
@@ -46,6 +50,9 @@ export function VisitEditDialog({
   const t = useTranslations('visit');
   const tCommon = useTranslations('common');
   const { mutate: updateVisit } = useUpdateVisit();
+  // Audio file state - setter used by VoiceFormField, value will be used for audio upload
+  const audioFileState = React.useState<File | null>(null);
+  const setAudioFile = audioFileState[1];
 
   const form = useForm<VisitEditFormData>({
     resolver: zodResolver(visitSchema),
@@ -59,6 +66,7 @@ export function VisitEditDialog({
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: t('visitUpdated'),
@@ -87,7 +95,10 @@ export function VisitEditDialog({
   return (
     <BaseFormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) setAudioFile(null);
+        onOpenChange(isOpen);
+      }}
       title={t('editVisit')}
       description={t('editVisitDescription')}
       isPending={isPending}
@@ -104,16 +115,25 @@ export function VisitEditDialog({
             <FormItem>
               <FormLabel>Diagnosis</FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder="Enter diagnosis..."
                   className="min-h-[100px]"
-                  {...field}
+                  rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {visit.diagnosesAudioUrl && (
+          <div>
+            <p className="text-sm font-medium mb-2">{t('existingAudioRecording')}</p>
+            <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+          </div>
+        )}
 
         <FormField
           control={form.control}
