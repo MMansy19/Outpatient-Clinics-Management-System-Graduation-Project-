@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -13,7 +14,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import {
   Select,
   SelectContent,
@@ -24,7 +26,11 @@ import {
 
 import { useUpdateMedication } from '@/lib/api/queries/useMedications';
 import { useFormState } from '@/src/hooks/useFormState';
-import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
+import {
+  medicationSchema,
+  getLocalizedPeriodOptions,
+  getLocalizedDosageOptions,
+} from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationEditDialogProps {
@@ -36,6 +42,7 @@ interface MedicationEditDialogProps {
     dosage: number;
     period: number;
     comments?: string;
+    commentsAudioUrl?: string;
   };
   onSuccess?: () => void;
 }
@@ -60,8 +67,8 @@ export function MedicationEditDialog({
     resolver: zodResolver(medicationSchema),
     defaultValues: {
       name: medication.name,
-      dosage: medication.dosage,
-      period: medication.period,
+      dosage: String(medication.dosage),
+      period: String(medication.period),
       comments: medication.comments || '',
     },
   });
@@ -69,26 +76,40 @@ export function MedicationEditDialog({
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: t('medicationUpdated'),
   });
 
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
+
   const onSubmit = (data: Partial<CreateMedicationDto>) => {
-    execute(
-      () => {
-        return new Promise((resolve, reject) => {
-          updateMedication(
-            { medicationId: medication.id, data, socialSecurityNumber: '' },
-            {
-              onSuccess: resolve,
-              onError: reject,
-            }
-          );
-        });
-      },
-      `${data.name} updated successfully`
-    );
+    execute(() => {
+      let payload: Partial<CreateMedicationDto> | FormData = data;
+      if (audioFile) {
+        const formData = new FormData();
+        if (data.name) formData.append('name', data.name);
+        if (data.dosage) formData.append('dosage', data.dosage.toString());
+        if (data.period) formData.append('period', data.period.toString());
+        if (data.comments) formData.append('comments', data.comments);
+        formData.append('audio', audioFile);
+        payload = formData;
+      }
+      return new Promise((resolve, reject) => {
+        updateMedication(
+          {
+            medicationId: medication.id,
+            data: payload as Partial<CreateMedicationDto>,
+            patientId: '', // patientId not required for invalidation in this context
+          },
+          {
+            onSuccess: resolve,
+            onError: reject,
+          }
+        );
+      });
+    }, `${data.name} updated successfully`);
   };
 
   return (
@@ -137,7 +158,10 @@ export function MedicationEditDialog({
                 </FormControl>
                 <SelectContent>
                   {dosageOptions.map((dosageOption) => (
-                    <SelectItem key={dosageOption.value} value={dosageOption.value.toString()}>
+                    <SelectItem
+                      key={dosageOption.value}
+                      value={dosageOption.value.toString()}
+                    >
                       {dosageOption.label}
                     </SelectItem>
                   ))}
@@ -167,7 +191,10 @@ export function MedicationEditDialog({
                 </FormControl>
                 <SelectContent>
                   {periodOptions.map((periodOption) => (
-                    <SelectItem key={periodOption.value} value={periodOption.value.toString()}>
+                    <SelectItem
+                      key={periodOption.value}
+                      value={periodOption.value.toString()}
+                    >
                       {periodOption.label}
                     </SelectItem>
                   ))}
@@ -189,17 +216,27 @@ export function MedicationEditDialog({
                 {t('notes')} ({tCommon('optional')})
               </FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={{ ...field, value: field.value || '' }}
                   placeholder={t('notesPlaceholder')}
                   className="min-h-[100px]"
-                  {...field}
-                  value={field.value || ''}
+                  rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {medication.commentsAudioUrl && (
+          <div>
+            <p className="text-sm font-medium mb-2">
+              {t('existingAudioRecording')}
+            </p>
+            <AudioPlayer src={medication.commentsAudioUrl} compact />
+          </div>
+        )}
       </div>
     </BaseFormDialog>
   );
