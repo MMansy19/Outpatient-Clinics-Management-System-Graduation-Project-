@@ -22,7 +22,7 @@ import {
   Briefcase,
   MapPin,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 import { EditPatientDialog } from './EditPatientDialog';
@@ -43,7 +43,7 @@ export function PatientTable() {
   const loadPatients = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await adminApi.getPatients({ page, limit });
+      const data = await superAdminApi.getPatients({ page, limit });
       setPatients(data.items);
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);

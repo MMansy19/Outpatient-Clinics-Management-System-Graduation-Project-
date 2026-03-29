@@ -43,7 +43,7 @@ import {
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
 import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
@@ -103,16 +103,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const [clinics, setClinics] = React.useState<ClinicResponse[]>([]);
   const [loadingClinics, setLoadingClinics] = React.useState(false);
 
-  React.useEffect(() => {
-    if (isAdmin && clinicId) {
-      loadClinics();
-    }
-  }, [isAdmin, clinicId]);
-
-  const loadClinics = async () => {
+  const loadClinics = React.useCallback(async () => {
     try {
       setLoadingClinics(true);
-      const data = await adminApi.getClinics();
+      const data = await superAdminApi.getClinics();
       // Filter to only admin's clinic
       const adminClinic = data.find(c => c.id === clinicId);
       if (adminClinic) {
@@ -125,7 +119,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     } finally {
       setLoadingClinics(false);
     }
-  };
+  }, [clinicId]);
+
+  React.useEffect(() => {
+    if (isAdmin && clinicId) {
+      loadClinics();
+    }
+  }, [isAdmin, clinicId, loadClinics]);
 
   // Calculate statistics
   const calculateStats = () => {

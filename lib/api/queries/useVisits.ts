@@ -25,21 +25,12 @@ export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWith
   const { user } = useAuthStore();
   const isAdmin = user?.role === Role.ADMIN;
 
-  console.log('🔍 useGetPatientVisits called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA, 'isAdmin:', isAdmin);
-
   return useQuery({
     queryKey: [...VISITS_KEY, 'patient', patientId],
     queryFn: async () => {
-      console.log('🔍 useGetPatientVisits - queryFn executing for patientId:', patientId);
-
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientVisits - using mock data');
-        const result = await mockVisitsAPI.getPatientVisits(patientId);
-        console.log('🔍 useGetPatientVisits - mock result:', result);
-        return result;
+        return await mockVisitsAPI.getPatientVisits(patientId);
       }
-      console.log('🔍 useGetPatientVisits - using real API (isAdmin:', isAdmin, ')');
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
       if (isAdmin) {
         const response = await adminApi.getPatientVisits(patientId);
         return response as VisitWithRelations[];

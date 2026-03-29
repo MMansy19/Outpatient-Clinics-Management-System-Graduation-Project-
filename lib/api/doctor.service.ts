@@ -113,7 +113,7 @@ export const doctorApi = {
    */
   createVisit: async (data: CreateVisitDto): Promise<CreateVisitResponse> => {
     const response = await apiClient.post<CreateVisitResponse>(
-      '/doctor/visit/create',
+      '/doctor/visit',
       data
     );
     return response.data;
@@ -222,7 +222,7 @@ export const doctorApi = {
     data: CreateMedicationDto
   ): Promise<CreateMedicationResponse> => {
     const response = await apiClient.post<CreateMedicationResponse>(
-      '/doctor/medication/create',
+      '/doctor/medication',
       data
     );
     return response.data;
@@ -448,9 +448,13 @@ export const doctorApi = {
     data: { name: string; comments: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
+    if (isFormData) {
+      (data as FormData).set('patientId', patientId);
+    }
+    const payload = isFormData ? data : { ...data, patientId };
     const response = await apiClient.post<unknown>(
-      `/doctor/lab/${patientId}`,
-      data,
+      '/doctor/lab',
+      payload,
       {
         headers: isFormData ? {
           'Content-Type': 'multipart/form-data',
@@ -556,9 +560,13 @@ export const doctorApi = {
     data: { name: string; comments: string; type: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
+    if (isFormData) {
+      (data as FormData).set('patientId', patientId);
+    }
+    const payload = isFormData ? data : { ...data, patientId };
     const response = await apiClient.post<unknown>(
-      `/doctor/scan/${patientId}`,
-      data,
+      '/doctor/scan',
+      payload,
       {
         headers: isFormData ? {
           'Content-Type': 'multipart/form-data',

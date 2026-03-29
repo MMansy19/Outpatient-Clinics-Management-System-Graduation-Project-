@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState, useEffect, useMemo, useCallback } from 'react';
+import { use, useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 // import { useRouter } from 'next/navigation';
 import {
@@ -29,8 +29,8 @@ import { DoctorTable } from '@/components/admin/DoctorTable';
 import { PatientTable } from '@/components/admin/PatientTable';
 import { VisitTable } from '@/components/admin/VisitTable';
 import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
-import { adminApi } from '@/lib/api/admin.service';
-import { useQuery } from '@tanstack/react-query';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import {
   DropdownMenu,
@@ -141,33 +141,40 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   const [activeTab, setActiveTab] = useState('clinics');
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
+  const queryClient = useQueryClient();
 
-  const { data: clinics, refetch: refetchClinics } = useQuery({
+  const refreshAllData = () => {
+    queryClient.invalidateQueries({ queryKey: ['clinics'] });
+    queryClient.invalidateQueries({ queryKey: ['doctors-all'] });
+    queryClient.invalidateQueries({ queryKey: ['patients-all'] });
+    queryClient.invalidateQueries({ queryKey: ['visits-all'] });
+  };
+
+  const { data: clinics } = useQuery({
     queryKey: ['clinics'],
-    queryFn: () => adminApi.getClinics(),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    queryFn: () => superAdminApi.getClinics(),
+    staleTime: 2 * 60 * 1000,
   });
 
-  const { data: doctorsData, refetch: refetchDoctors } = useQuery({
+  const { data: doctorsData } = useQuery({
     queryKey: ['doctors-all'],
-    queryFn: () => adminApi.getDoctors({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    queryFn: () => superAdminApi.getDoctors({ page: 1, limit: 200 }),
+    staleTime: 2 * 60 * 1000,
+    enabled: activeTab === 'doctors',
   });
 
-  const { data: patientsData, refetch: refetchPatients } = useQuery({
+  const { data: patientsData } = useQuery({
     queryKey: ['patients-all'],
-    queryFn: () => adminApi.getPatients({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    queryFn: () => superAdminApi.getPatients({ page: 1, limit: 200 }),
+    staleTime: 2 * 60 * 1000,
+    enabled: activeTab === 'patients',
   });
 
-  const { data: visitsData, refetch: refetchVisits } = useQuery({
+  const { data: visitsData } = useQuery({
     queryKey: ['visits-all'],
-    queryFn: () => adminApi.getVisits({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    queryFn: () => superAdminApi.getVisits({ page: 1, limit: 200 }),
+    staleTime: 2 * 60 * 1000,
+    enabled: activeTab === 'visits',
   });
 
   // Calculate daily and weekly visits
@@ -190,17 +197,6 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
 
     return { dailyVisits: daily, weeklyVisits: weekly };
   }, [visitsData?.items]);
-
-  const refreshAllData = useCallback(() => {
-    refetchClinics();
-    refetchDoctors();
-    refetchPatients();
-    refetchVisits();
-  }, [refetchClinics, refetchDoctors, refetchPatients, refetchVisits]);
-
-  useEffect(() => {
-    refreshAllData();
-  }, [activeTab, refreshAllData]);
 
   const stats = useMemo(
     () => [

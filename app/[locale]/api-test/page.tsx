@@ -21,7 +21,7 @@ import { Navbar } from '@/components/landing/Navbar';
 // Import API services
 import { authApi } from '@/lib/api/auth.service';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { apiClient } from '@/lib/api/client';
 
 export default function ApiTestPage() {
@@ -102,7 +102,7 @@ export default function ApiTestPage() {
     handleApiCall(() => authApi.isUp(), 'Auth Service Status');
 
   const testAdminStatus = () =>
-    handleApiCall(() => adminApi.isUp(), 'Admin Service Status');
+    handleApiCall(() => superAdminApi.isUp(), 'Admin Service Status');
 
   const testLogin = () =>
     handleApiCall(
@@ -149,26 +149,26 @@ export default function ApiTestPage() {
 
   const testGetDoctors = () =>
     handleApiCall(
-      () => adminApi.getDoctors({ page: adminPage, limit: adminLimit }),
+      () => superAdminApi.getDoctors({ page: adminPage, limit: adminLimit }),
       'Get All Doctors'
     );
 
   const testGetPatients = () =>
     handleApiCall(
-      () => adminApi.getPatients({ page: adminPage, limit: adminLimit }),
+      () => superAdminApi.getPatients({ page: adminPage, limit: adminLimit }),
       'Get All Patients'
     );
 
   const testGetVisits = () =>
     handleApiCall(
-      () => adminApi.getVisits({ page: adminPage, limit: adminLimit }),
+      () => superAdminApi.getVisits({ page: adminPage, limit: adminLimit }),
       'Get All Visits'
     );
 
   const testUpdatePatient = () =>
     handleApiCall(
       () =>
-        adminApi.updatePatient(updatePatientId, {
+        superAdminApi.updatePatient(updatePatientId, {
           firstName: updateFirstName,
           lastName: updateLastName,
           job: updateJob,
@@ -481,7 +481,7 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => handleApiCall(() => adminApi.isUp(), 'Admin Status')}
+                      onClick={() => handleApiCall(() => superAdminApi.isUp(), 'Admin Status')}
                       disabled={loading}
                       className="w-full"
                     >

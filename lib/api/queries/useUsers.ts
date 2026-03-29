@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { adminApi } from '@/lib/api/admin.service';
+import { authApi } from '@/lib/api/auth.service';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import type { PaginatedDoctorsResponse } from '@/lib/api/types';
+import type { PaginatedDoctorsResponse, CreateDoctorDto } from '@/lib/api/types';
 
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
@@ -64,7 +65,7 @@ export const useCreateDoctor = (): UseMutationResult<
 
   return useMutation({
     mutationFn: async (data) => {
-      const response = await adminApi.createDoctor(data);
+      const response = await authApi.createDoctor(data as CreateDoctorDto);
       return response;
     },
     onSuccess: () => {
@@ -81,7 +82,7 @@ export const useUpdateDoctor = (): UseMutationResult<Doctor, Error, { id: number
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await apiClient.patch<Doctor>(`/super-admin/doctors/${id}`, data);
+      const response = await apiClient.patch<Doctor>(`/super-admin/doctor/${id}`, data);
       return response.data;
     },
     onSuccess: () => {

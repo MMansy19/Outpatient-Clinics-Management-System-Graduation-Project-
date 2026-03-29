@@ -49,7 +49,7 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
 
       // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
       if (isAdmin) {
-        const response = await apiClient.get<PatientsResponse>(`/super-admin/patients?${params.toString()}`);
+        const response = await apiClient.get<PatientsResponse>(`/admin/patients?${params.toString()}`);
         return response.data;
       }
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);
@@ -68,10 +68,10 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
   return useQuery({
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      // ADMIN uses admin endpoint, DOCTOR uses doctorApi
       if (isAdmin) {
-        const response = await adminApi.getPatientById(id.toString());
-        return response as unknown as Patient;
+        const response = await apiClient.get<Patient>(`/admin/patient/${id}`);
+        return response.data;
       }
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
       return response.data;
@@ -88,9 +88,7 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
-      console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}, isAdmin: ${isAdmin}`);
       try {
-        // ADMIN uses adminApi (already extracts .data), DOCTOR uses apiClient (returns AxiosResponse)
         let patientData: Patient | null;
         if (isAdmin) {
           patientData = await adminApi.getPatientBySSN(socialSecurityNumber) as Patient | null;
@@ -98,32 +96,19 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
           const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
           patientData = response.data;
         }
-        console.log(`✅ API Raw Response:`, patientData);
-        console.log(`✅ Patient fetched successfully:`, patientData);
 
-        // If data is null or undefined, return null
         if (!patientData) {
-          console.log(`Patient with National ID ${socialSecurityNumber} returned null data`);
           return null;
         }
 
         return patientData;
       } catch (error) {
-        console.error(`❌ Error fetching patient with National ID ${socialSecurityNumber}:`, error);
-        // Check if it's a 404 (patient not found) or 500 (server error for not found)
-        // In both cases, treat as "patient not found" and return null
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;
-          const statusText = error.response?.statusText;
-          const responseData = error.response?.data;
-          console.log(`📊 API Response - Status: ${status}, StatusText: ${statusText}, Data:`, responseData);
-          // 404 = Not Found, 500 = Internal Server Error (often used when patient doesn't exist)
           if (status === 404 || status === 500) {
-            console.log(`Patient with National ID ${socialSecurityNumber} not found (API returned ${status})`);
             return null;
           }
         }
-        // For other errors, rethrow
         throw error;
       }
     },

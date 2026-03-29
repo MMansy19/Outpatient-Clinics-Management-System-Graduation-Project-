@@ -6,17 +6,6 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   
-  // API Proxy to avoid CORS issues in development
-  async rewrites() {
-    const backendUrl = process.env.BACKEND_API_URL;
-    return [
-      {
-        source: '/api/proxy/:path*',
-        destination: `${backendUrl}/:path*`,
-      },
-    ];
-  },
-  
   // Image optimization for medical scans/photos
   images: {
     remotePatterns: [

@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { z } from 'zod';
 
 const clinicSchema = z.object({
@@ -61,7 +61,7 @@ export function AddClinicDialog({
   const onSubmit = async (data: ClinicFormData) => {
     try {
       setIsPending(true);
-      await adminApi.createClinic({
+      await superAdminApi.createClinic({
         name: data.name,
         speciality: data.speciality,
       });

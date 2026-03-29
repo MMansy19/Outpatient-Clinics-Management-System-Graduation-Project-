@@ -58,21 +58,12 @@ export const useGetPatientLabs = (
   const { user } = useAuthStore();
   const isAdmin = user?.role === Role.ADMIN;
 
-  console.log('🔍 useGetPatientLabs called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA, 'isAdmin:', isAdmin);
-
   return useQuery({
     queryKey: labsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientLabs - queryFn executing for patientId:', patientId);
-
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientLabs - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientLabs(patientId);
-        console.log('🔍 useGetPatientLabs - mock result:', result);
-        return result;
+        return await mockMedicalHistoryAPI.getPatientLabs(patientId);
       }
-      console.log('🔍 useGetPatientLabs - using real API (isAdmin:', isAdmin, ')');
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
       if (isAdmin) {
         return await adminApi.getPatientLabs(patientId);
       }

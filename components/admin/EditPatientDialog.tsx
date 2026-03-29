@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
 
 interface EditPatientDialogProps {
@@ -58,7 +58,7 @@ export function EditPatientDialog({
 
     try {
       setLoading(true);
-      await adminApi.updatePatient(patient.id, formData);
+      await superAdminApi.updatePatient(patient.id, formData);
       toast.success(t('patientUpdatedSuccess'));
       onSuccess();
       onOpenChange(false);
