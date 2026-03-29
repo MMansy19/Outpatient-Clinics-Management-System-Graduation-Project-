@@ -30,25 +30,18 @@ export const medicationSchema = z.object({
    * Examples: 1, 2, 3
    */
   dosage: z
-    .number()
-    .int('Dosage must be a whole number')
-    .positive('Dosage must be greater than 0')
-    .min(1, 'Dosage must be at least 1')
-    .max(100, 'Dosage seems unusually high, please verify'),
+    .string()
+    .min(1, 'Dosage is required'),
 
   /**
    * Treatment Period
    * 
    * Number of days the medication should be taken.
-   * Must be a positive integer.
-   * Examples: 3 (short term), 7 (one week), 30 (one month)
+   * Examples: "3" (short term), "7" (one week), "30" (one month)
    */
   period: z
-    .number()
-    .int('Period must be a whole number')
-    .positive('Period must be greater than 0')
-    .min(1, 'Period must be at least 1 day')
-    .max(365, 'Period cannot exceed 365 days'),
+    .string()
+    .min(1, 'Period is required'),
 
   /**
    * Additional Comments/Instructions (Optional)
@@ -105,8 +98,8 @@ export type MedicationFormDataWithoutPatient = z.infer<
  */
 export const medicationDefaultValues: Partial<MedicationFormData> = {
   name: '',
-  dosage: 1,
-  period: 7, // Default to 1 week
+  dosage: '1',
+  period: '7', // Default to 1 week
   comments: '',
   patientId: '',
 };
@@ -172,17 +165,16 @@ export enum MedicationPeriod {
  */
 export const getLocalizedPeriodOptions = (t: (key: string) => string) => {
   return [
-    { label: t('periods.oneDay'), value: MedicationPeriod.ONE_DAY },
-    { label: t('periods.twoDays'), value: MedicationPeriod.TWO_DAYS },
-    { label: t('periods.threeDays'), value: MedicationPeriod.THREE_DAYS },
-    { label: t('periods.fiveDays'), value: MedicationPeriod.FIVE_DAYS },
-    { label: t('periods.oneWeek'), value: MedicationPeriod.ONE_WEEK },
-    { label: t('periods.tenDays'), value: MedicationPeriod.TEN_DAYS },
-    { label: t('periods.twoWeeks'), value: MedicationPeriod.TWO_WEEKS },
-    { label: t('periods.threeWeeks'), value: MedicationPeriod.THREE_WEEKS },
-    { label: t('periods.fourWeeks'), value: MedicationPeriod.FOUR_WEEKS },
-    { label: t('periods.chronic'), value: MedicationPeriod.CHRONIC },
-    { label: t('periods.custom'), value: 0 },
+    { label: t('periods.oneDay'), value: '1' },
+    { label: t('periods.twoDays'), value: '2' },
+    { label: t('periods.threeDays'), value: '3' },
+    { label: t('periods.fiveDays'), value: '5' },
+    { label: t('periods.oneWeek'), value: '7' },
+    { label: t('periods.tenDays'), value: '10' },
+    { label: t('periods.twoWeeks'), value: '14' },
+    { label: t('periods.threeWeeks'), value: '21' },
+    { label: t('periods.fourWeeks'), value: '28' },
+    { label: t('periods.chronic'), value: '0' },
   ];
 };
 
@@ -192,11 +184,12 @@ export const getLocalizedPeriodOptions = (t: (key: string) => string) => {
  */
 export const getLocalizedDosageOptions = (t: (key: string) => string) => {
   return [
-    { label: t('dosages.oneTablet'), value: 1 },
-    { label: t('dosages.twoTablets'), value: 2 },
-    { label: t('dosages.threeTablets'), value: 3 },
-    { label: t('dosages.fourTablets'), value: 4 },
-    { label: t('dosages.custom'), value: 0 },
+    { label: t('dosages.oneTablet'), value: '1' },
+    { label: t('dosages.twoTablets'), value: '2' },
+    { label: t('dosages.threeTablets'), value: '3' },
+    { label: t('dosages.fourTablets'), value: '4' },
+    { label: t('dosages.fiveTablets'), value: '5' },
+    { label: t('dosages.sixTablets'), value: '6' },
   ];
 };
 
@@ -277,8 +270,8 @@ export const isReasonablePeriod = (period: number): boolean => {
  * // Returns: "Panadol - 2 tablets for 7 days"
  */
 export const formatMedication = (medication: MedicationFormData): string => {
-  const unit = medication.dosage === 1 ? 'tablet' : 'tablets';
-  const duration = medication.period === 1 ? 'day' : 'days';
+  const unit = Number(medication.dosage) === 1 ? 'tablet' : 'tablets';
+  const duration = Number(medication.period) === 1 ? 'day' : 'days';
   return `${medication.name} - ${medication.dosage} ${unit} for ${medication.period} ${duration}`;
 };
 
