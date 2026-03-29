@@ -94,27 +94,26 @@ export const doctorApi = {
    * Creates a new patient visit record with diagnoses and treatment plan.
    * 
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/visit/create
+   * **Endpoint:** POST /api/v1/doctor/visit
    * 
    * @param {CreateVisitDto} data - Visit creation data
    * @param {string} data.diagnoses - Diagnoses and treatment plan
    * @param {string} data.patientId - Patient UUID from backend
    * @returns {Promise<CreateVisitResponse>} Visit creation confirmation with UUID
    * @throws {AxiosError} When request fails (401, 403, 400, 500)
-   * 
-   * @example
-   * ```typescript
-   * const result = await doctorApi.createVisit({
-   *   diagnoses: "Common cold, 3 Days rest, Panadol 500 mg twice per day for 3 days",
-   *   patientId: "0281ba4f-7592-477e-9d02-f2641aa89221"
-   * });
-   * console.log(result.id); // Visit UUID
-   * ```
    */
-  createVisit: async (data: CreateVisitDto): Promise<CreateVisitResponse> => {
+  createVisit: async (data: CreateVisitDto | FormData): Promise<CreateVisitResponse> => {
+    const isFormData = data instanceof FormData;
     const response = await apiClient.post<CreateVisitResponse>(
-      '/doctor/visit/create',
-      data
+      '/doctor/visit',
+      data,
+      {
+        headers: isFormData
+          ? {
+              'Content-Type': 'multipart/form-data',
+            }
+          : undefined,
+      }
     );
     return response.data;
   },
@@ -125,21 +124,15 @@ export const doctorApi = {
    * Retrieves all visits for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/visits
+   * **Endpoint:** GET /api/v1/doctor/patient/:id/visits
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @returns {Promise<Visit[]>} Array of patient visits
    * @throws {AxiosError} When request fails
-   *
-   * @example
-   * ```typescript
-   * const visits = await doctorApi.getPatientVisits("29512011234567");
-   * visits.forEach(visit => console.log(visit.diagnoses));
-   * ```
    */
-  getPatientVisits: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientVisits: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/visits`
+      `/doctor/patient/${patientId}/visits`
     );
     return response.data;
   },
@@ -195,7 +188,7 @@ export const doctorApi = {
    * Creates a new medication record for a patient.
    * 
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/medication/create
+   * **Endpoint:** POST /api/v1/doctor/medication
    * 
    * @param {CreateMedicationDto} data - Medication creation data
    * @param {string} data.name - Medication name (e.g., "Panadol")
@@ -219,11 +212,17 @@ export const doctorApi = {
    * ```
    */
   createMedication: async (
-    data: CreateMedicationDto
+    data: CreateMedicationDto | FormData
   ): Promise<CreateMedicationResponse> => {
+    const isFormData = data instanceof FormData;
     const response = await apiClient.post<CreateMedicationResponse>(
-      '/doctor/medication/create',
-      data
+      '/doctor/medication',
+      data,
+      {
+        headers: isFormData ? {
+          'Content-Type': 'multipart/form-data',
+        } : undefined,
+      }
     );
     return response.data;
   },
@@ -234,9 +233,9 @@ export const doctorApi = {
    * Retrieves all medications prescribed to a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/:socialSecurityNumber/medications
+   * **Endpoint:** GET /api/v1/doctor/patient/:id/medications
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @returns {Promise<Medication[]>} Array of patient medications
    * @throws {AxiosError} When request fails
    *
@@ -246,9 +245,9 @@ export const doctorApi = {
    * medications.forEach(med => console.log(`${med.name}: ${med.dosage}`));
    * ```
    */
-  getPatientMedications: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientMedications: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/medications`
+      `/doctor/patient/${patientId}/medications`
     );
     return response.data;
   },
@@ -414,15 +413,15 @@ export const doctorApi = {
    * Retrieves all lab records for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/labs
+   * **Endpoint:** GET /api/v1/doctor/patient/:id/labs
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @returns {Promise<any[]>} Array of patient labs
    * @throws {AxiosError} When request fails
    */
-  getPatientLabs: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientLabs: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/labs`
+      `/doctor/patient/${patientId}/labs`
     );
     return response.data;
   },
@@ -433,9 +432,9 @@ export const doctorApi = {
    * Creates a new lab record for a patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/lab/{socialSecurityNumber}
+   * **Endpoint:** POST /api/v1/doctor/lab
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @param {Object} data - Lab creation data
    * @param {string} data.name - Lab name
    * @param {string} data.comments - Lab comments
@@ -444,13 +443,23 @@ export const doctorApi = {
    * @throws {AxiosError} When request fails
    */
   createLab: async (
-    socialSecurityNumber: string,
+    patientId: string,
     data: { name: string; comments: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
+    const payload =
+      isFormData
+        ? (() => {
+            if (!data.has('patientId')) {
+              data.append('patientId', patientId);
+            }
+            return data;
+          })()
+        : { ...data, patientId };
+
     const response = await apiClient.post<unknown>(
-      `/doctor/lab/${socialSecurityNumber}`,
-      data,
+      '/doctor/lab',
+      payload,
       {
         headers: isFormData ? {
           'Content-Type': 'multipart/form-data',
@@ -521,15 +530,15 @@ export const doctorApi = {
    * Retrieves all scan records for a specific patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** GET /api/v1/doctor/patient/{socialSecurityNumber}/scans
+   * **Endpoint:** GET /api/v1/doctor/patient/:id/scans
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @returns {Promise<any[]>} Array of patient scans
    * @throws {AxiosError} When request fails
    */
-  getPatientScans: async (socialSecurityNumber: string): Promise<unknown[]> => {
+  getPatientScans: async (patientId: string): Promise<unknown[]> => {
     const response = await apiClient.get<unknown[]>(
-      `/doctor/patient/${socialSecurityNumber}/scans`
+      `/doctor/patient/${patientId}/scans`
     );
     return response.data;
   },
@@ -540,9 +549,9 @@ export const doctorApi = {
    * Creates a new scan record for a patient.
    *
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/scan/{socialSecurityNumber}
+   * **Endpoint:** POST /api/v1/doctor/scan
    *
-   * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+   * @param {string} patientId - Patient global id (UUID)
    * @param {Object} data - Scan creation data
    * @param {string} data.name - Scan name
    * @param {string} data.comments - Scan comments
@@ -552,13 +561,23 @@ export const doctorApi = {
    * @throws {AxiosError} When request fails
    */
   createScan: async (
-    socialSecurityNumber: string,
+    patientId: string,
     data: { name: string; comments: string; type: string; image?: File } | FormData
   ): Promise<unknown> => {
     const isFormData = data instanceof FormData;
+    const payload =
+      isFormData
+        ? (() => {
+            if (!data.has('patientId')) {
+              data.append('patientId', patientId);
+            }
+            return data;
+          })()
+        : { ...data, patientId };
+
     const response = await apiClient.post<unknown>(
-      `/doctor/scan/${socialSecurityNumber}`,
-      data,
+      '/doctor/scan',
+      payload,
       {
         headers: isFormData ? {
           'Content-Type': 'multipart/form-data',
