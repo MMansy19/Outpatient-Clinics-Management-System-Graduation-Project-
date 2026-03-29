@@ -19,25 +19,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
-export const useGetPatientVisits = (socialSecurityNumber: string): UseQueryResult<VisitWithRelations[], Error> => {
-  console.log('🔍 useGetPatientVisits called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWithRelations[], Error> => {
+  console.log('🔍 useGetPatientVisits called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: [...VISITS_KEY, 'patient', socialSecurityNumber],
+    queryKey: [...VISITS_KEY, 'patient', patientId],
     queryFn: async () => {
-      console.log('🔍 useGetPatientVisits - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientVisits - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientVisits - using mock data');
-        const result = await mockVisitsAPI.getPatientVisits(socialSecurityNumber);
+        console.log('🔍 useGetPatientVisits - using mock data (by SSN not supported with new contract)');
+        const result = await mockVisitsAPI.getPatientVisits(patientId);
         console.log('🔍 useGetPatientVisits - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientVisits - using real API');
-      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${socialSecurityNumber}/visits`);
+      const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
       return response.data;
     },
-    enabled: !!socialSecurityNumber,
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
   });
 };
@@ -100,27 +100,28 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
  * });
  * ```
  */
-export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto> => {
+export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto | FormData> => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
 
   return useMutation({
-    mutationFn: async (data: CreateVisitDto) => {
+    mutationFn: async (data: CreateVisitDto | FormData) => {
       if (USE_MOCK_DATA) {
+        const dto = data instanceof FormData
+          ? { diagnoses: data.get('diagnoses') as string || '', patientId: data.get('patientId') as string }
+          : data;
         // Mock implementation - transform to match mock API signature
         const visitData = {
-          ...data,
-          // Mock data expects different field names
-          patient_id: 1, // In mock, we use numeric ID
+          ...dto,
+          patient_id: 1,
           doctor_id: 1,
           clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
-          chief_complaint: '', // Mock requires this
-          diagnosis: data.diagnoses, // Map to mock field name
-          vitals: { weight: 0 }, // Mock requires this
+          chief_complaint: '',
+          diagnosis: dto.diagnoses,
+          vitals: { weight: 0 },
         };
         const mockResult = await mockVisitsAPI.createVisit(visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } });
         
-        // Transform mock response to match backend API response
         return {
           message: 'Visit Created Successfully',
           id: mockResult.global_id,
@@ -132,17 +133,16 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
       return await doctorApi.createVisit(data);
     },
     onSuccess: (_response, variables) => {
-      // Invalidate all visits queries to fetch new data with audio URLs
+      const patientId = variables instanceof FormData
+        ? variables.get('patientId') as string
+        : variables.patientId;
+
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-      
-      // Invalidate patient-specific visits
       queryClient.invalidateQueries({ 
-        queryKey: [...VISITS_KEY, 'patient', variables.patientId] 
+        queryKey: [...VISITS_KEY, 'patient', patientId] 
       });
-      
-      // Invalidate patient details (may include visit count)
       queryClient.invalidateQueries({ 
-        queryKey: ['patients', variables.patientId] 
+        queryKey: ['patients', patientId] 
       });
     },
     onError: (error) => {
