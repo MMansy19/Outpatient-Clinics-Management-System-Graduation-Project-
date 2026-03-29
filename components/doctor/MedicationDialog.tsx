@@ -55,8 +55,8 @@ export function MedicationDialog({
     defaultValues: {
       patientId: patientId,
       name: '',
-      dosage: 1,
-      period: 7,
+      dosage: '1',
+      period: '7',
       comments: '',
     },
   });
@@ -79,7 +79,7 @@ export function MedicationDialog({
           });
         });
       },
-      `${data.name} - ${data.dosage} ${data.dosage === 1 ? 'tablet' : 'tablets'} for ${data.period} days`
+      `${data.name} - ${data.dosage} ${Number(data.dosage) === 1 ? 'tablet' : 'tablets'} for ${data.period} days`
     );
   };
 
