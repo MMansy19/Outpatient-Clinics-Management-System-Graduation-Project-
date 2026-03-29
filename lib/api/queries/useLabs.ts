@@ -50,25 +50,25 @@ const labsKeys = {
  * ```
  */
 export const useGetPatientLabs = (
-  socialSecurityNumber: string
+  patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientLabs called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientLabs called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: labsKeys.patient(socialSecurityNumber),
+    queryKey: labsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientLabs - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientLabs - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientLabs - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientLabs(socialSecurityNumber);
+        const result = await mockMedicalHistoryAPI.getPatientLabs(patientId);
         console.log('🔍 useGetPatientLabs - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientLabs - using real API');
-      return await doctorApi.getPatientLabs(socialSecurityNumber);
+      return await doctorApi.getPatientLabs(patientId);
     },
-    enabled: !!socialSecurityNumber,
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -139,16 +139,16 @@ export const useGetLab = (
 export const useCreateLab = (): UseMutationResult<
   unknown,
   Error,
-  { socialSecurityNumber: string; data: { name: string; comments: string } | FormData }
+  { patientId: string; data: { name: string; comments: string } | FormData }
 > => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ socialSecurityNumber, data }) => doctorApi.createLab(socialSecurityNumber, data),
+    mutationFn: ({ patientId, data }) => doctorApi.createLab(patientId, data),
     onSuccess: (response, variables) => {
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -205,7 +205,7 @@ export const useCreateLab = (): UseMutationResult<
 export const useUpdateLab = (): UseMutationResult<
   unknown,
   Error,
-  { labId: string; data: Partial<Lab>; socialSecurityNumber: string }
+  { labId: string; data: Partial<Lab>; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -220,7 +220,7 @@ export const useUpdateLab = (): UseMutationResult<
 
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -262,7 +262,7 @@ export const useUpdateLab = (): UseMutationResult<
 export const useDeleteLab = (): UseMutationResult<
   void,
   Error,
-  { labId: string; socialSecurityNumber: string }
+  { labId: string; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -276,7 +276,7 @@ export const useDeleteLab = (): UseMutationResult<
 
       // Invalidate patient labs list
       queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.socialSecurityNumber),
+        queryKey: labsKeys.patient(variables.patientId),
       });
 
       // Invalidate all labs queries
@@ -314,10 +314,10 @@ export const useDeleteLab = (): UseMutationResult<
 export const usePrefetchPatientLabs = () => {
   const queryClient = useQueryClient();
 
-  return (socialSecurityNumber: string) => {
+  return (patientId: string) => {
     queryClient.prefetchQuery({
-      queryKey: labsKeys.patient(socialSecurityNumber),
-      queryFn: () => doctorApi.getPatientLabs(socialSecurityNumber),
+      queryKey: labsKeys.patient(patientId),
+      queryFn: () => doctorApi.getPatientLabs(patientId),
       staleTime: 5 * 60 * 1000,
     });
   };
