@@ -23,7 +23,7 @@ export interface Visit {
   vitals: Vitals;
   physical_examination?: string;
   diagnosis: string;
-  diagnosesAudioUrl?: string; 
+  diagnosesAudioUrl?: string;
   treatment_plan?: string;
   notes?: string;
   follow_up_date?: Date;
