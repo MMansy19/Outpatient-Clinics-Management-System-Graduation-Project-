@@ -71,8 +71,10 @@ export function PatientProfile({
 
   // Get patient ID (UUID/global_id) for subsequent queries
   // Handle both admin (nested user.id) and doctor (flat id/global_id) patient structures
+  // IMPORTANT: For admin API (PatientResponse), `id` is the patient entity ID, NOT the user UUID.
+  // The visits/meds/labs/scans endpoints expect the user UUID, so prefer user.id over id.
   const patientAny = patient as any;
-  const patientId = patientAny?.global_id || patientAny?.id || (patientAny?.user ? patientAny.user.id : null);
+  const patientId = patientAny?.global_id || patientAny?.user?.id || patientAny?.id || null;
 
   // Debug logging
   console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
@@ -151,6 +153,24 @@ export function PatientProfile({
   }
 
   // If patient not found (API returned null) and not a new scanned patient
+  if (patientError && !isScannedNewPatient) {
+    const errorMessage = (patientError as any)?.response?.data?.message || patientError.message;
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive mb-2 font-medium">{errorMessage}</p>
+          <p className="text-muted-foreground mb-4">{t('patientNotFound')}</p>
+          <Button
+            variant="outline"
+            onClick={() => refetchPatient()}
+          >
+            {t('tryAgain')}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!patient && !isScannedNewPatient) {
     return (
       <Card>
@@ -932,7 +952,7 @@ export function PatientProfile({
       <VisitDialog
         open={isVisitDialogOpen}
         onOpenChange={setIsVisitDialogOpen}
-        patientId={socialSecurityNumber}
+        patientId={patientId || ''}
         onSuccess={() => {
           setIsVisitDialogOpen(false);
         }}

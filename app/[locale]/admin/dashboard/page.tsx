@@ -28,6 +28,7 @@ import { ClinicTable } from '@/components/admin/ClinicTable';
 import { DoctorTable } from '@/components/admin/DoctorTable';
 import { PatientTable } from '@/components/admin/PatientTable';
 import { VisitTable } from '@/components/admin/VisitTable';
+import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -40,6 +41,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface AdminDashboardProps {
   params: Promise<{ locale: string }>;
@@ -139,6 +141,7 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   const t = useTranslations('admin');
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState('clinics');
+  const [selectedPatientSSN, setSelectedPatientSSN] = useState<string | null>(null);
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const queryClient = useQueryClient();
@@ -532,7 +535,23 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
               </TabsContent>
 
               <TabsContent value="patients" className="space-y-4 mt-4">
-                <PatientTable />
+                {selectedPatientSSN ? (
+                  <div className="space-y-4">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSelectedPatientSSN(null)}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      {t('patients')}
+                    </Button>
+                    <PatientProfile
+                      key={selectedPatientSSN}
+                      socialSecurityNumber={selectedPatientSSN}
+                    />
+                  </div>
+                ) : (
+                  <PatientTable onViewPatient={(ssn) => setSelectedPatientSSN(ssn)} />
+                )}
               </TabsContent>
 
               <TabsContent value="visits" className="space-y-4 mt-4">
