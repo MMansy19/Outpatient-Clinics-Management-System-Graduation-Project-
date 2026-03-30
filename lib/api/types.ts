@@ -252,7 +252,6 @@ export interface VisitResponse {
   doctorId: string;
   patientName?: string;
   doctorName?: string;
-  diagnosesAudioUrl?: string;
   createdAt: string; // ISO date string
   patientID: string;
   doctorID: string;

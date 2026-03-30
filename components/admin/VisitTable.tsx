@@ -21,10 +21,10 @@ import {
   Calendar,
 } from 'lucide-react';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
-import type { VisitResponse } from '@/lib/api/types';
+import type { SuperAdminVisitItem } from '@/lib/api/types';
 import { toast } from 'sonner';
 
-interface EnhancedVisit extends VisitResponse {
+interface EnhancedVisit extends SuperAdminVisitItem {
   patientName?: string;
   doctorName?: string;
 }
@@ -49,8 +49,8 @@ export function VisitTable() {
           data.items.map(async (visit) => {
             try {
               const [patient, doctor] = await Promise.all([
-                superAdminApi.getPatientById(visit.patientId).catch(() => null),
-                superAdminApi.getDoctorById(visit.doctorId).catch(() => null),
+                superAdminApi.getPatientById(visit.patient.id).catch(() => null),
+                superAdminApi.getDoctorById(visit.doctor.id).catch(() => null),
               ]);
 
               return {

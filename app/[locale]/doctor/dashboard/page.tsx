@@ -60,12 +60,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const tTable = useTranslations('table');
   const tCommon = useTranslations('common');
   const [currentView, setCurrentView] = useState<View>('visits');
-  const [selectedPatientId, setSelectedPatientId] = useState<number | null>(
-    null
-  );
-  const [selectedPatientNationalId, setSelectedPatientNationalId] = useState<
-    string | undefined
-  >(undefined);
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [isRegistrationSheetOpen, setIsRegistrationSheetOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);

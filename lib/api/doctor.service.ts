@@ -111,10 +111,12 @@ export const doctorApi = {
    * console.log(result.id); // Visit UUID
    * ```
    */
-  createVisit: async (data: CreateVisitDto): Promise<CreateVisitResponse> => {
+  createVisit: async (data: CreateVisitDto | FormData): Promise<CreateVisitResponse> => {
+    const isFormData = data instanceof FormData;
     const response = await apiClient.post<CreateVisitResponse>(
       '/doctor/visit',
-      data
+      data,
+      { headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined }
     );
     return response.data;
   },

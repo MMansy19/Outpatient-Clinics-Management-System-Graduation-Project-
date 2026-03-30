@@ -54,7 +54,7 @@ const scansKeys = {
  */
 export const useGetPatientScans = (
   patientId: string
-): UseQueryResult<unknown[], Error> => {
+): UseQueryResult<unknown, Error> => {
   const { user } = useAuthStore();
   const isAdmin = user?.role === Role.ADMIN;
 

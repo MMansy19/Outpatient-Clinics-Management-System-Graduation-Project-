@@ -33,7 +33,7 @@ export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWith
       }
       if (isAdmin) {
         const response = await adminApi.getPatientVisits(patientId);
-        return response as VisitWithRelations[];
+        return response as unknown as VisitWithRelations[];
       }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
       return response.data;
@@ -82,13 +82,21 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
  * });
  * ```
  */
-export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto> => {
+export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto | FormData> => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: async (data: CreateVisitDto) => {
+    mutationFn: async (data: CreateVisitDto | FormData) => {
+      if (data instanceof FormData) {
+        // FormData path - for audio uploads
+        if (isAdmin) {
+          return await adminApi.createVisit(data);
+        }
+        return await doctorApi.createVisit(data as unknown as CreateVisitDto);
+      }
+
       if (USE_MOCK_DATA) {
         // Mock implementation - transform to match mock API signature
         const visitData = {
@@ -124,14 +132,19 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
       // Invalidate all visits queries
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
 
+      const patientId =
+        variables instanceof FormData
+          ? (variables.get('patientId') as string)
+          : variables.patientId;
+
       // Invalidate patient-specific visits
       queryClient.invalidateQueries({
-        queryKey: [...VISITS_KEY, 'patient', variables.patientId]
+        queryKey: [...VISITS_KEY, 'patient', patientId]
       });
 
       // Invalidate patient details (may include visit count)
       queryClient.invalidateQueries({
-        queryKey: ['patients', variables.patientId]
+        queryKey: ['patients', patientId]
       });
     },
     onError: (error) => {
@@ -226,7 +239,7 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
       // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
       if (isAdmin) {
         const response = await adminApi.getClinicVisits({ page: params?.page || 1, limit: params?.limit || 10 });
-        return response as PaginatedVisitsResponse;
+        return response as unknown as PaginatedVisitsResponse;
       }
       const response = await doctorApi.getAllVisits(params);
       return response as PaginatedVisitsResponse;

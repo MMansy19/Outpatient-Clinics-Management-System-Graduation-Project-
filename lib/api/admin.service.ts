@@ -1,8 +1,15 @@
 import { apiClient } from './client';
 import type {
-  PaginatedDoctorsResponse,
-  PaginatedPatientsResponse,
-  PaginatedVisitsResponse,
+  AdminPaginatedPatientsResponse,
+  AdminPaginatedVisitsResponse,
+  AdminPatientVisitsResponse,
+  AdminPatientMedicationsResponse,
+  AdminPatientLabsResponse,
+  AdminPatientScansResponse,
+  AdminPatientSearchResponse,
+  AdminClinicDoctorsResponse,
+  AdminClinicPatientsResponse,
+  AdminClinicVisitsResponse,
   PaginationParams,
   CreateVisitDto,
   CreateVisitResponse,
@@ -41,16 +48,16 @@ export const adminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/admin/patients */
-  getPatients: async (params: PaginationParams): Promise<PaginatedPatientsResponse> => {
-    const response = await apiClient.get<PaginatedPatientsResponse>('/admin/patients', {
+  getPatients: async (params: PaginationParams): Promise<AdminPaginatedPatientsResponse> => {
+    const response = await apiClient.get<AdminPaginatedPatientsResponse>('/admin/patients', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
   },
 
   /** GET /api/v1/admin/visits */
-  getVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
-    const response = await apiClient.get<PaginatedVisitsResponse>('/admin/visits', {
+  getVisits: async (params: PaginationParams): Promise<AdminPaginatedVisitsResponse> => {
+    const response = await apiClient.get<AdminPaginatedVisitsResponse>('/admin/visits', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
@@ -61,24 +68,24 @@ export const adminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/admin/clinic/doctors */
-  getClinicDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
-    const response = await apiClient.get<PaginatedDoctorsResponse>('/admin/clinic/doctors', {
+  getClinicDoctors: async (params: PaginationParams): Promise<AdminClinicDoctorsResponse> => {
+    const response = await apiClient.get<AdminClinicDoctorsResponse>('/admin/clinic/doctors', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
   },
 
   /** GET /api/v1/admin/clinic/patients */
-  getClinicPatients: async (params: PaginationParams): Promise<PaginatedPatientsResponse> => {
-    const response = await apiClient.get<PaginatedPatientsResponse>('/admin/clinic/patients', {
+  getClinicPatients: async (params: PaginationParams): Promise<AdminClinicPatientsResponse> => {
+    const response = await apiClient.get<AdminClinicPatientsResponse>('/admin/clinic/patients', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
   },
 
   /** GET /api/v1/admin/clinic/visits */
-  getClinicVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
-    const response = await apiClient.get<PaginatedVisitsResponse>('/admin/clinic/visits', {
+  getClinicVisits: async (params: PaginationParams): Promise<AdminClinicVisitsResponse> => {
+    const response = await apiClient.get<AdminClinicVisitsResponse>('/admin/clinic/visits', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
@@ -89,8 +96,8 @@ export const adminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/admin/patient/{socialSecurityNumber} */
-  getPatientBySSN: async (socialSecurityNumber: string): Promise<unknown> => {
-    const response = await apiClient.get<unknown>(`/admin/patient/${socialSecurityNumber}`);
+  getPatientBySSN: async (socialSecurityNumber: string): Promise<AdminPatientSearchResponse> => {
+    const response = await apiClient.get<AdminPatientSearchResponse>(`/admin/patient/${socialSecurityNumber}`);
     return response.data;
   },
 
@@ -108,8 +115,8 @@ export const adminApi = {
   },
 
   /** GET /api/v1/admin/patient/{id}/visits */
-  getPatientVisits: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/visits`);
+  getPatientVisits: async (patientId: string): Promise<AdminPatientVisitsResponse> => {
+    const response = await apiClient.get<AdminPatientVisitsResponse>(`/admin/patient/${patientId}/visits`);
     return response.data;
   },
 
@@ -127,8 +134,8 @@ export const adminApi = {
   },
 
   /** GET /api/v1/admin/patient/{id}/medications */
-  getPatientMedications: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/medications`);
+  getPatientMedications: async (patientId: string): Promise<AdminPatientMedicationsResponse> => {
+    const response = await apiClient.get<AdminPatientMedicationsResponse>(`/admin/patient/${patientId}/medications`);
     return response.data;
   },
 
@@ -153,8 +160,8 @@ export const adminApi = {
   },
 
   /** GET /api/v1/admin/patient/{id}/labs */
-  getPatientLabs: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/labs`);
+  getPatientLabs: async (patientId: string): Promise<AdminPatientLabsResponse> => {
+    const response = await apiClient.get<AdminPatientLabsResponse>(`/admin/patient/${patientId}/labs`);
     return response.data;
   },
 
@@ -179,8 +186,8 @@ export const adminApi = {
   },
 
   /** GET /api/v1/admin/patient/{id}/scans */
-  getPatientScans: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(`/admin/patient/${patientId}/scans`);
+  getPatientScans: async (patientId: string): Promise<AdminPatientScansResponse> => {
+    const response = await apiClient.get<AdminPatientScansResponse>(`/admin/patient/${patientId}/scans`);
     return response.data;
   },
 };

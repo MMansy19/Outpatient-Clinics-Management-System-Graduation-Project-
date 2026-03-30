@@ -101,7 +101,7 @@ export function MedicationEditDialog({
           {
             medicationId: medication.id,
             data: payload as Partial<CreateMedicationDto>,
-            patientId: '', // patientId not required for invalidation in this context
+            socialSecurityNumber: '', // not required for invalidation in this context
           },
           {
             onSuccess: resolve,

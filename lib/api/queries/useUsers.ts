@@ -4,7 +4,7 @@ import { adminApi } from '@/lib/api/admin.service';
 import { authApi } from '@/lib/api/auth.service';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import type { PaginatedDoctorsResponse, CreateDoctorDto } from '@/lib/api/types';
+import type { CreateDoctorDto, AdminClinicDoctorsResponse } from '@/lib/api/types';
 
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
@@ -35,7 +35,7 @@ export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClini
 export const useGetClinicDoctors = (
   page: number = 1,
   limit: number = 30
-): UseQueryResult<PaginatedDoctorsResponse, Error> => {
+): UseQueryResult<AdminClinicDoctorsResponse, Error> => {
   return useQuery({
     queryKey: [...DOCTORS_KEY, 'clinic', { page, limit }],
     queryFn: async () => {

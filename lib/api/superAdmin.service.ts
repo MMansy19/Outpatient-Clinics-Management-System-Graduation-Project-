@@ -2,7 +2,8 @@ import { apiClient } from './client';
 import type {
   PaginatedDoctorsResponse,
   PaginatedPatientsResponse,
-  PaginatedVisitsResponse,
+  PaginatedAdminsResponse,
+  SuperAdminPaginatedVisitsResponse,
   PaginationParams,
   ClinicResponse,
   CreateClinicDto,
@@ -55,8 +56,8 @@ export const superAdminApi = {
   },
 
   /** GET /api/v1/super-admin/visits */
-  getVisits: async (params: PaginationParams): Promise<PaginatedVisitsResponse> => {
-    const response = await apiClient.get<PaginatedVisitsResponse>('/super-admin/visits', {
+  getVisits: async (params: PaginationParams): Promise<SuperAdminPaginatedVisitsResponse> => {
+    const response = await apiClient.get<SuperAdminPaginatedVisitsResponse>('/super-admin/visits', {
       params: { page: params.page, limit: params.limit },
     });
     return response.data;
@@ -121,6 +122,30 @@ export const superAdminApi = {
   /** DELETE /api/v1/super-admin/clinic/{id} — not yet in Swagger, kept for forward-compat */
   deleteClinic: async (id: string): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/super-admin/clinic/${id}`);
+    return response.data;
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Admin Management
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /** GET /api/v1/super-admin/admins */
+  getAdmins: async (params: PaginationParams): Promise<PaginatedAdminsResponse> => {
+    const response = await apiClient.get<PaginatedAdminsResponse>('/super-admin/admins', {
+      params: { page: params.page, limit: params.limit },
+    });
+    return response.data;
+  },
+
+  /** DELETE /api/v1/super-admin/admin/{id} */
+  deleteAdmin: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/super-admin/admin/${id}`);
+    return response.data;
+  },
+
+  /** DELETE /api/v1/super-admin/doctor/{id} */
+  deleteDoctor: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(`/super-admin/doctor/${id}`);
     return response.data;
   },
 };

@@ -57,7 +57,7 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  */
 export const useGetPatientMedications = (
   patientId: string
-): UseQueryResult<unknown[], Error> => {
+): UseQueryResult<unknown, Error> => {
   const { user } = useAuthStore();
   const isAdmin = user?.role === Role.ADMIN;
 
@@ -143,19 +143,19 @@ export const useGetMedication = (
 export const useCreateMedication = (): UseMutationResult<
   CreateMedicationResponse,
   Error,
-  CreateMedicationDto
+  CreateMedicationDto | FormData
 > => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
   const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: (data: CreateMedicationDto) => {
+    mutationFn: (data: CreateMedicationDto | FormData) => {
       // ADMIN uses adminApi, DOCTOR uses doctorApi
       if (isAdmin) {
         return adminApi.createMedication(data);
       }
-      return doctorApi.createMedication(data);
+      return doctorApi.createMedication(data as CreateMedicationDto);
     },
     onSuccess: (response, variables) => {
       // Invalidate patient medications list

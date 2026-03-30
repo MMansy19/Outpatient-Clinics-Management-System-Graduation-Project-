@@ -77,7 +77,7 @@ export const useAdminSearchPatientBySSN = (
     queryKey: adminKeys.patientSearch(socialSecurityNumber),
     queryFn: async () => {
       try {
-        return await adminApi.searchPatientBySSN(socialSecurityNumber);
+        return await adminApi.getPatientBySSN(socialSecurityNumber);
       } catch (error: unknown) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError?.response?.status === 404 || axiosError?.response?.status === 500) {
@@ -185,7 +185,10 @@ export const useAdminCreateLab = (): UseMutationResult<unknown, Error, FormData>
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => adminApi.createLab(data),
+    mutationFn: (data) => {
+      const patientId = data.get('patientId') as string;
+      return adminApi.createLab(patientId, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
@@ -196,7 +199,10 @@ export const useAdminCreateScan = (): UseMutationResult<unknown, Error, FormData
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data) => adminApi.createScan(data),
+    mutationFn: (data) => {
+      const patientId = data.get('patientId') as string;
+      return adminApi.createScan(patientId, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: adminKeys.all });
     },
