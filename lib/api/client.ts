@@ -97,20 +97,16 @@ class ApiClient {
         }
 
         // Handle 403 Forbidden (insufficient permissions)
+        // Log the error but let it propagate to the caller (React Query / component).
+        // The AuthGuard already handles page-level role checks; a 403 from a single
+        // API call should not forcibly navigate the user away from the page.
         if (error.response?.status === 403) {
-          console.error('[API Error] 403 Forbidden - Insufficient permissions');
-
-          // Redirect to unauthorized page
-          if (typeof window !== 'undefined') {
-            const pathParts = window.location.pathname.split('/');
-            const locale = pathParts[1] || 'en';
-            window.location.href = `/${locale}/unauthorized`;
-          }
+          console.warn('[API Error] 403 Forbidden - Insufficient permissions', error.config?.url);
         }
 
         // Handle network errors
         if (!error.response) {
-          console.error('[API Error] Network error or server unreachable');
+          console.warn('[API Error] Network error or server unreachable');
         }
 
         // Log error details in development
@@ -118,7 +114,7 @@ class ApiClient {
           const config = error.config as ExtendedAxiosRequestConfig | undefined;
           const startTime = config?.metadata?.startTime;
           const duration = startTime ? Date.now() - startTime : 0;
-          console.error('[API Error Details]', {
+          console.warn('[API Error Details]', {
             url: error.config?.url,
             method: error.config?.method,
             status: error.response?.status,

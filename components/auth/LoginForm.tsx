@@ -64,12 +64,12 @@ export function LoginForm({ locale }: LoginFormProps) {
           // Default redirects based on role
           switch (response.role) {
             case Role.SUPER_ADMIN:
-              redirectPath = `/${locale}/super-admin/dashboard`;
-              console.log('🔄 Redirecting to Super Admin Dashboard:', redirectPath);
-              break;
-            case Role.ADMIN:
               redirectPath = `/${locale}/admin/dashboard`;
               console.log('🔄 Redirecting to Admin Dashboard:', redirectPath);
+              break;
+            case Role.ADMIN:
+              redirectPath = `/${locale}/doctor/dashboard`;
+              console.log('🔄 Redirecting to Doctor Dashboard (Admin):', redirectPath);
               break;
             case Role.DOCTOR:
               redirectPath = `/${locale}/doctor/dashboard`;

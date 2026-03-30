@@ -20,7 +20,7 @@ import {
   FileText,
   Calendar,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { VisitResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 
@@ -43,14 +43,14 @@ export function VisitTable() {
     const loadVisits = async () => {
       try {
         setLoading(true);
-        const data = await adminApi.getVisits({ page, limit });
+        const data = await superAdminApi.getVisits({ page, limit });
 
         const enhancedVisits = await Promise.all(
           data.items.map(async (visit) => {
             try {
               const [patient, doctor] = await Promise.all([
-                adminApi.getPatientById(visit.patientId).catch(() => null),
-                adminApi.getDoctorById(visit.doctorId).catch(() => null),
+                superAdminApi.getPatientById(visit.patientId).catch(() => null),
+                superAdminApi.getDoctorById(visit.doctorId).catch(() => null),
               ]);
 
               return {

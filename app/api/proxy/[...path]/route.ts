@@ -1,0 +1,220 @@
+import { NextRequest } from 'next/server';
+
+const DEFAULT_BACKEND_API_URL = 'http://127.0.0.1:4000/api/v1';
+const DEFAULT_PROXY_TIMEOUT_MS = 120_000;
+
+const HOP_BY_HOP_HEADERS = new Set([
+  'connection',
+  'keep-alive',
+  'proxy-authenticate',
+  'proxy-authorization',
+  'te',
+  'trailer',
+  'transfer-encoding',
+  'upgrade',
+  'host',
+  'content-length',
+]);
+
+type ProxyRouteContext = {
+  params: Promise<{ path: string[] }>;
+};
+
+export const dynamic = 'force-dynamic';
+
+function getBackendBaseUrl(): string {
+  return (process.env.BACKEND_API_URL || DEFAULT_BACKEND_API_URL).trim().replace(/\/+$/, '');
+}
+
+function getCandidateBackendBaseUrls(): string[] {
+  const primary = getBackendBaseUrl();
+
+  try {
+    const url = new URL(primary);
+    const candidates = [primary];
+    const host = url.hostname;
+
+    const addCandidate = (nextHost: string) => {
+      const nextUrl = new URL(primary);
+      nextUrl.hostname = nextHost;
+      const value = nextUrl.toString().replace(/\/+$/, '');
+      if (!candidates.includes(value)) {
+        candidates.push(value);
+      }
+    };
+
+    if (host === '127.0.0.1') {
+      addCandidate('localhost');
+      addCandidate('::1');
+    } else if (host === 'localhost') {
+      addCandidate('127.0.0.1');
+      addCandidate('::1');
+    } else if (host === '::1') {
+      addCandidate('127.0.0.1');
+      addCandidate('localhost');
+    }
+
+    return candidates;
+  } catch {
+    return [primary];
+  }
+}
+
+function getProxyTimeoutMs(): number {
+  const value = Number(process.env.PROXY_UPSTREAM_TIMEOUT_MS || DEFAULT_PROXY_TIMEOUT_MS);
+  if (!Number.isFinite(value) || value <= 0) {
+    return DEFAULT_PROXY_TIMEOUT_MS;
+  }
+  return value;
+}
+
+function getForwardHeaders(request: NextRequest): Headers {
+  const headers = new Headers();
+
+  const forwardHeader = (name: string) => {
+    const value = request.headers.get(name);
+    if (value) {
+      headers.set(name, value);
+    }
+  };
+
+  // Forward only headers needed by the backend and custom tracing headers.
+  forwardHeader('accept');
+  forwardHeader('content-type');
+  forwardHeader('cookie');
+  forwardHeader('authorization');
+
+  for (const [name, value] of request.headers.entries()) {
+    if (name.startsWith('x-') && value) {
+      headers.set(name, value);
+    }
+  }
+
+  for (const header of HOP_BY_HOP_HEADERS) {
+    headers.delete(header);
+  }
+
+  return headers;
+}
+
+function getResponseHeaders(upstreamHeaders: Headers): Headers {
+  const headers = new Headers(upstreamHeaders);
+
+  for (const header of HOP_BY_HOP_HEADERS) {
+    headers.delete(header);
+  }
+
+  // Helps verify this route handles proxy responses in dev tools.
+  headers.set('x-proxy-handler', 'app-route');
+
+  return headers;
+}
+
+async function proxyRequest(request: NextRequest, context: ProxyRouteContext): Promise<Response> {
+  const resolvedParams = await context.params;
+  const path = resolvedParams.path?.join('/') || '';
+  const candidateBaseUrls = getCandidateBackendBaseUrls();
+
+  const method = request.method.toUpperCase();
+  const headers = getForwardHeaders(request);
+
+  let body: BodyInit | undefined;
+  if (method !== 'GET' && method !== 'HEAD') {
+    const rawBody = await request.arrayBuffer();
+    body = rawBody.byteLength > 0 ? Buffer.from(rawBody) : undefined;
+  }
+
+  let lastError: unknown;
+
+  for (const baseUrl of candidateBaseUrls) {
+    const targetUrl = `${baseUrl}/${path}${request.nextUrl.search}`;
+
+    try {
+      const upstreamResponse = await fetch(targetUrl, {
+        method,
+        headers,
+        body,
+        cache: 'no-store',
+        redirect: 'manual',
+        signal: AbortSignal.timeout(getProxyTimeoutMs()),
+      });
+
+      return new Response(upstreamResponse.body, {
+        status: upstreamResponse.status,
+        statusText: upstreamResponse.statusText,
+        headers: getResponseHeaders(upstreamResponse.headers),
+      });
+    } catch (error) {
+      lastError = error;
+      const errorName = error instanceof Error ? error.name : '';
+      const isTimeout = errorName === 'TimeoutError' || errorName === 'AbortError';
+
+      // Timeout indicates an upstream processing issue, not a host mismatch.
+      if (isTimeout) {
+        break;
+      }
+    }
+  }
+
+  {
+    const error = lastError;
+    const errorName = error instanceof Error ? error.name : '';
+    const isTimeout = errorName === 'TimeoutError' || errorName === 'AbortError';
+    const status = isTimeout ? 504 : 502;
+    const statusText = isTimeout ? 'Gateway Timeout' : 'Bad Gateway';
+    const rawCause = (error as { cause?: unknown } | undefined)?.cause;
+    const cause =
+      rawCause && typeof rawCause === 'object'
+        ? {
+            code: (rawCause as { code?: string }).code,
+            errno: (rawCause as { errno?: string | number }).errno,
+            address: (rawCause as { address?: string }).address,
+            port: (rawCause as { port?: number }).port,
+          }
+        : undefined;
+
+    console.error('[API Proxy Error]', {
+      candidateBaseUrls,
+      path,
+      method,
+      message: error instanceof Error ? error.message : 'Unknown proxy error',
+      cause,
+    });
+
+    return new Response(statusText, {
+      status,
+      headers: {
+        'content-type': 'text/plain; charset=utf-8',
+        'x-proxy-handler': 'app-route',
+      },
+    });
+  }
+}
+
+export async function GET(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function POST(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function PUT(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function PATCH(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function DELETE(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function OPTIONS(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}
+
+export async function HEAD(request: NextRequest, context: ProxyRouteContext) {
+  return proxyRequest(request, context);
+}

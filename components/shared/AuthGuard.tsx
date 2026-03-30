@@ -7,6 +7,21 @@ import { useSessionValidation } from '@/hooks/useSessionValidation';
 import { Role } from '@/lib/api/types';
 import { Loader2 } from 'lucide-react';
 
+/** Map string role names (as the backend may return) to the numeric Role enum */
+const ROLE_NAME_MAP: Record<string, Role> = {
+  SUPER_ADMIN: Role.SUPER_ADMIN,
+  ADMIN: Role.ADMIN,
+  PATIENT: Role.PATIENT,
+  DOCTOR: Role.DOCTOR,
+};
+
+function normalizeRole(role: unknown): Role | undefined {
+  if (role === undefined || role === null) return undefined;
+  if (typeof role === 'number' && role in Role) return role as Role;
+  if (typeof role === 'string' && role in ROLE_NAME_MAP) return ROLE_NAME_MAP[role];
+  return undefined;
+}
+
 interface AuthGuardProps {
   children: React.ReactNode;
   allowedRoles?: Role[];
@@ -33,9 +48,11 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
     }
 
     // Check role authorization
-    if (allowedRoles && allowedRoles.length > 0 && userRole) {
-      if (!allowedRoles.includes(userRole)) {
-        console.log(`[AuthGuard] User role ${userRole} not authorized. Required: ${allowedRoles.join(', ')}`);
+    const normalized = normalizeRole(userRole);
+    if (allowedRoles && allowedRoles.length > 0) {
+      console.log(`[AuthGuard] Role check — raw: ${userRole} (${typeof userRole}), normalized: ${normalized}, allowed: [${allowedRoles}]`);
+      if (normalized !== undefined && !allowedRoles.includes(normalized)) {
+        console.log(`[AuthGuard] User role ${normalized} not authorized. Required: ${allowedRoles.join(', ')}`);
         router.push(`/${locale}/unauthorized`);
       }
     }
@@ -66,7 +83,8 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
   }
 
   // Show loading if role doesn't match (will redirect)
-  if (allowedRoles && allowedRoles.length > 0 && userRole && !allowedRoles.includes(userRole)) {
+  const normalizedForRender = normalizeRole(userRole);
+  if (allowedRoles && allowedRoles.length > 0 && normalizedForRender !== undefined && !allowedRoles.includes(normalizedForRender)) {
     return null;
   }
 

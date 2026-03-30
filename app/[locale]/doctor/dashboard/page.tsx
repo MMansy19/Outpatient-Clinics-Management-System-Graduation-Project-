@@ -2,9 +2,10 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Plus, LogOut } from 'lucide-react';
+import { Users, Activity, Calendar, Plus, LogOut, Stethoscope, ClipboardList } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
+import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -36,10 +37,12 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
+import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import {
   useGetAllVisits,
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
+import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -48,7 +51,7 @@ interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
 }
 
-type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients';
+type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients' | 'doctors' | 'clinics';
 
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
@@ -73,6 +76,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     'scan' | 'manual'
   >('manual');
 
+  // Get user role and clinicId from auth store
+  const { user } = useAuthStore();
+  const userRole = user?.role;
+  const clinicId = user?.clinicId;
+  const isAdmin = userRole === Role.ADMIN;
+
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
     data: allVisits,
@@ -87,6 +96,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     error: patientsError,
     refetch: refetchPatients,
   } = useGetAllPatients();
+
+  // Admin-specific: Get doctors in admin's clinic (backend reads clinic from JWT)
+  const {
+    data: clinicDoctors,
+    isLoading: loadingClinicDoctors,
+  } = useGetClinicDoctors(1, 50);
 
   // Calculate statistics
   const calculateStats = () => {
@@ -127,17 +142,41 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
       return visitDate >= thisWeekStart;
     }).length;
 
+    // Admin-specific: Doctors in clinic
+    const doctorsInClinic = clinicDoctors?.items?.length || 0;
+
+    // Admin-specific: Total patients and visits in clinic
+    const clinicPatients = patientsList.length;
+    const clinicVisits = visitsList.length;
+
+    // Admin-specific: Clinic name
+    const clinicName = '';
+
     return {
       todaysPatients,
       pendingVisits,
       thisWeeksVisits,
+      doctorsInClinic,
+      clinicPatients,
+      clinicVisits,
+      clinicName,
     };
   };
 
   const stats = calculateStats();
 
   const handleSelectPatient = (patient: any) => {
-    setSelectedPatient(patient);
+    // Normalize patient data: handle both flat (doctor) and nested (admin) patient structures
+    const ssn = patient.socialSecurityNumber
+      || patient.user?.socialSecurityNumber
+      || (patient.national_id ? String(patient.national_id) : undefined);
+    const name = patient.name
+      || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '');
+    setSelectedPatient({
+      ...patient,
+      socialSecurityNumber: ssn,
+      name,
+    });
     setCurrentView('profile');
   };
 
@@ -207,7 +246,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   }, [ refetchPatients, refetchVisits]);
 
   return (
-    <AuthGuard allowedRoles={[Role.DOCTOR]} locale={locale}>
+    <AuthGuard allowedRoles={[Role.DOCTOR, Role.ADMIN]} locale={locale}>
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -216,10 +255,23 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               {t('dashboard')}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              {t('dashboardSubtitle')}
+              {isAdmin && stats.clinicName ? stats.clinicName : t('dashboardSubtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {/* Add Doctor button - only for ADMIN */}
+            {isAdmin && (
+              <CreateDoctorDialog
+                clinicId={clinicId}
+                trigger={
+                  <Button variant="outline" className="sm:flex-none">
+                    <Plus className="mr-2 h-5 w-5" />
+                    <span className="md:inline hidden">{t('addDoctor')}</span>
+                    <span className="inline md:hidden">{t('addDoctorMobile')}</span>
+                  </Button>
+                }
+              />
+            )}
             <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
@@ -228,7 +280,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               className="sm:flex-none "
             >
               <Plus className="mr-2 h-5 w-5" />
-              <span className="inline">{t('addNewPatient')}</span>
+              <span className="md:inline hidden">{t('addNewPatient')}</span>
+              <span className="inline md:hidden">{t('addNewPatientMobile')}</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
 
@@ -260,52 +313,126 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('todayPatients')}
-              </CardTitle>
-              <Users className="h-4 w-4 text-medical-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.todaysPatients}</div>
-              {patientsError && (
-                <p className="text-xs text-red-500 mt-1">
-                  Error: {String(patientsError.message)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {isAdmin ? (
+            /* Admin Stats: Clinic-level overview */
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('doctorsInClinic')}
+                  </CardTitle>
+                  <Stethoscope className="h-4 w-4 text-medical-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('doctorsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('pendingVisits')}
-              </CardTitle>
-              <Activity className="h-4 w-4 text-medical-secondary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.pendingVisits}</div>
-              {visitsError && (
-                <p className="text-xs text-red-500 mt-1">
-                  Error: {String(visitsError.message)}
-                </p>
-              )}
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('patientsInClinic')}
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-medical-info" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingAllPatients ? '...' : stats.clinicPatients}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('patientsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
 
-          <Card className="sm:col-span-2 md:col-span-1">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                {t('thisWeek')}
-              </CardTitle>
-              <Calendar className="h-4 w-4 text-medical-info" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
-            </CardContent>
-          </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('visitsInClinic')}
+                  </CardTitle>
+                  <ClipboardList className="h-4 w-4 text-medical-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {loadingAllVisits ? '...' : stats.clinicVisits}
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('visitsInClinicDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('thisWeek')}
+                  </CardTitle>
+                  <Calendar className="h-4 w-4 text-medical-success" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {t('thisWeekDescription')}
+                  </p>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            /* Doctor Stats: Personal activity */
+            <>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('todayPatients')}
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-medical-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.todaysPatients}</div>
+                  {patientsError && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Error: {String(patientsError.message)}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('pendingVisits')}
+                  </CardTitle>
+                  <Activity className="h-4 w-4 text-medical-secondary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.pendingVisits}</div>
+                  {visitsError && (
+                    <p className="text-xs text-red-500 mt-1">
+                      Error: {String(visitsError.message)}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    {t('thisWeek')}
+                  </CardTitle>
+                  <Calendar className="h-4 w-4 text-medical-info" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
 
         {/* Navigation Tabs */}
@@ -331,6 +458,18 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           >
             {t('searchPatients')}
           </Button>
+          {/* Admin-specific tabs */}
+          {isAdmin && (
+            <>
+              <Button
+                variant={currentView === 'doctors' ? 'default' : 'outline'}
+                onClick={() => setCurrentView('doctors')}
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-medical-primary whitespace-nowrap"
+              >
+                {t('doctors') || 'Doctors'}
+              </Button>
+            </>
+          )}
         </div>
 
         {/* Recent Visits */}
@@ -438,45 +577,54 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {patientsList.map((patient: any) => (
+                          {patientsList.map((patient: any) => {
+                            // Handle both admin (nested user) and doctor (flat) patient structures
+                            const patientName = patient.name || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '') || tCommon('unknown');
+                            const patientGender = patient.gender ?? patient.user?.gender;
+                            const patientDOB = patient.dateOfBirth || patient.user?.dateOfBirth;
+                            const patientSSN = patient.socialSecurityNumber || patient.user?.socialSecurityNumber;
+                            const patientAddress = patient.address || patient.user?.address;
+                            const patientJob = patient.job || patient.user?.job;
+
+                            return (
                             <TableRow
                               key={patient.id}
                               className="cursor-pointer hover:bg-muted/50"
                               onClick={() => handleSelectPatient(patient)}
                             >
                               <TableCell className="font-medium">
-                                {patient.name || tCommon('unknown')}
+                                {patientName}
                               </TableCell>
                               <TableCell>
-                                {patient.gender === 0
+                                {patientGender === 0
                                   ? tPatient('male')
-                                  : patient.gender === 1
+                                  : patientGender === 1
                                     ? tPatient('female')
                                     : tCommon('other')}
                               </TableCell>
                               <TableCell>
-                                {patient.dateOfBirth
+                                {patientDOB
                                   ? new Date(
-                                      patient.dateOfBirth
+                                      patientDOB
                                     ).toLocaleDateString()
                                   : tCommon('unknown')}
                               </TableCell>
                               <TableCell>
                                 <div className="font-mono text-sm">
-                                  {patient.socialSecurityNumber || tCommon('unknown')}
+                                  {patientSSN || tCommon('unknown')}
                                 </div>
                               </TableCell>
                               <TableCell className="max-w-[250px]">
                                 <div
                                   className="truncate"
-                                  title={patient.address}
+                                  title={patientAddress}
                                 >
-                                  {patient.address || tCommon('unknown')}
+                                  {patientAddress || tCommon('unknown')}
                                 </div>
                               </TableCell>
-                              <TableCell>{patient.job || tCommon('unknown')}</TableCell>
+                              <TableCell>{patientJob || tCommon('unknown')}</TableCell>
                             </TableRow>
-                          ))}
+                          )})}
                         </TableBody>
                       </Table>
                     </div>
@@ -515,6 +663,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToPatients')}
             </Button>
             <PatientProfile
+              key={selectedPatient.socialSecurityNumber}
               socialSecurityNumber={selectedPatient.socialSecurityNumber}
               isNewPatient={selectedPatient.isNewPatient}
               scannedData={selectedPatient.scannedData}
@@ -545,6 +694,72 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </Button>
           </div>
         )}
+
+        {/* Admin: Doctors View */}
+        {currentView === 'doctors' && isAdmin && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('doctors') || 'Doctors'}</CardTitle>
+              <CardDescription>
+                {t('doctorsInClinicDescription') || 'Doctors in your clinic'}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loadingClinicDoctors ? (
+                <div className="space-y-2">
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                  <div className="skeleton h-16 w-full" />
+                </div>
+              ) : clinicDoctors && clinicDoctors.items && clinicDoctors.items.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>{tTable('name')}</TableHead>
+                        <TableHead>{tTable('email')}</TableHead>
+                        <TableHead>{tTable('phone')}</TableHead>
+                        <TableHead>{tTable('speciality')}</TableHead>
+                        <TableHead>{tTable('status')}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {clinicDoctors.items.map((doctor: any) => (
+                        <TableRow key={doctor.id}>
+                          <TableCell className="font-medium">
+                            {doctor.user?.firstName} {doctor.user?.lastName}
+                          </TableCell>
+                          <TableCell>{doctor.email}</TableCell>
+                          <TableCell>{doctor.phone}</TableCell>
+                          <TableCell>{doctor.speciality}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                doctor.isApproved
+                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                              }`}
+                            >
+                              {doctor.isApproved ? 'Approved' : 'Pending'}
+                            </span>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-muted-foreground">
+                    {t('noDoctorsFound') || 'No doctors found in your clinic'}
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Admin: Clinics View — no dedicated endpoint exists for ADMIN to fetch clinic info */}
 
         <AddPatientDialog
           open={isAddPatientOpen}

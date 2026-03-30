@@ -39,6 +39,10 @@ export interface LoginResponse {
   name: string;
   language: Language;
   role: Role;
+  /**
+   * Clinic ID for ADMIN role. This is used to scope admin actions to their clinic.
+   */
+  clinicId?: string;
 }
 
 // ============================================================================
@@ -117,7 +121,7 @@ export interface Doctor extends User {
   speciality: string;
   isApproved: boolean;
 }
-
+ 
 export interface Patient extends User {
   address?: string;
   job?: string;
@@ -131,7 +135,7 @@ export interface ApiError {
   message: string;
   statusCode: number;
   error?: string;
-}
+} 
 
 // ============================================================================
 // Doctor API DTOs
@@ -144,6 +148,7 @@ export interface ApiError {
 export interface CreateVisitDto {
   diagnoses: string;
   patientId: string; // UUID format
+  clinicId?: string; // Optional - backend reads from JWT for admin/doctor
 }
 
 export interface CreateVisitResponse {

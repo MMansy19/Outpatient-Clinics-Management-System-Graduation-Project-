@@ -38,10 +38,17 @@ export function useLogin() {
     onSuccess: (data) => {
       // Update Zustand store with user data
       // Note: JWT token is in HTTP-only cookie, not returned in data
+      const loginData = data as unknown as Record<string, unknown>;
+      console.log('🔍 Login response data:', JSON.stringify(loginData));
+      const clinicId = data.clinicId
+        || (loginData.clinic_id as string)
+        || (loginData.clinicid as string)
+        || ((loginData.clinic as Record<string, unknown>)?.id as string);
       setUser({
         name: data.name,
-        language: data.language,
-        role: data.role,
+        language: Number(data.language) as typeof data.language,
+        role: Number(data.role) as typeof data.role,
+        clinicId,
       });
 
       // Invalidate queries that depend on auth state
