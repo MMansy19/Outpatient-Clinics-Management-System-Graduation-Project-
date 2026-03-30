@@ -111,15 +111,14 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
       }
 
       // Real backend implementation - ADMIN uses adminApi, DOCTOR uses doctorApi
+      // Only include clinicId if available — sending undefined fails backend validation
+      const clinicId = data.clinicId || user?.clinicId;
+      const payload: CreateVisitDto = { diagnoses: data.diagnoses, patientId: data.patientId };
+      if (clinicId) payload.clinicId = clinicId;
       if (isAdmin) {
-        // Admin endpoint requires clinicId in body
-        const adminData = {
-          ...data,
-          clinicId: data.clinicId || user?.clinicId,
-        };
-        return await adminApi.createVisit(adminData);
+        return await adminApi.createVisit(payload);
       }
-      return await doctorApi.createVisit(data);
+      return await doctorApi.createVisit(payload);
     },
     onSuccess: (_response, variables) => {
       // Invalidate all visits queries
