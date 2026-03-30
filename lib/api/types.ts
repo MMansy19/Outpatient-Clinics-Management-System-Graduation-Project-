@@ -146,7 +146,7 @@ export interface ApiError {
 export interface CreateVisitDto {
   diagnoses: string;
   patientId: string; // UUID format
-  clinicId?: string; // UUID - required for admin, auto-set from JWT for doctors
+  clinicId?: string; // Optional - backend reads from JWT for admin/doctor
 }
 
 export interface CreateVisitResponse {

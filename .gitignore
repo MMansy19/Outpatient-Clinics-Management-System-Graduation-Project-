@@ -9,8 +9,6 @@ build/
 dist/
 docs/
 # Environment
-.env
-.env.local
 .env.*.local
 
 # Debug
@@ -20,7 +18,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -37,3 +34,4 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 .worktrees/
+config.bat

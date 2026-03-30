@@ -94,7 +94,7 @@ export const doctorApi = {
    * Creates a new patient visit record with diagnoses and treatment plan.
    * 
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/visit/create
+   * **Endpoint:** POST /api/v1/doctor/visit
    * 
    * @param {CreateVisitDto} data - Visit creation data
    * @param {string} data.diagnoses - Diagnoses and treatment plan
@@ -195,7 +195,7 @@ export const doctorApi = {
    * Creates a new medication record for a patient.
    * 
    * **Authentication Required:** Yes (DOCTOR role)
-   * **Endpoint:** POST /api/v1/doctor/medication/create
+   * **Endpoint:** POST /api/v1/doctor/medication
    * 
    * @param {CreateMedicationDto} data - Medication creation data
    * @param {string} data.name - Medication name (e.g., "Panadol")
