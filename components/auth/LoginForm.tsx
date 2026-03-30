@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, UserCircle } from 'lucide-react';
 import { toast, toastMessages } from '@/lib/utils/toast';
 
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { useLogin } from '@/lib/api/hooks/useAuth';
 import { loginSchema, type LoginFormData } from '@/lib/schemas/auth.schemas';
-import { Role } from '@/lib/api/types';
+import { Role, Language } from '@/lib/api/types';
+import { useAuthStore } from '@/stores/authStore';
 
 interface LoginFormProps {
   locale: string;
@@ -30,8 +31,19 @@ export function LoginForm({ locale }: LoginFormProps) {
   const t = useTranslations('auth');
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login: setMockUser } = useAuthStore();
 
   const { mutate: login, isPending } = useLogin();
+
+  const handleMockPatientLogin = () => {
+    setMockUser({
+      name: 'Ahmed Mohamed',
+      role: Role.PATIENT,
+      language: Language.ENGLISH,
+    });
+    toast.success('Mock Patient Login', 'Logged in as patient (mock mode)');
+    router.push(`/${locale}/patient/dashboard`);
+  };
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -74,6 +86,10 @@ export function LoginForm({ locale }: LoginFormProps) {
             case Role.DOCTOR:
               redirectPath = `/${locale}/doctor/dashboard`;
               console.log('🔄 Redirecting to Doctor Dashboard:', redirectPath);
+              break;
+            case Role.PATIENT:
+              redirectPath = `/${locale}/patient/dashboard`;
+              console.log('🔄 Redirecting to Patient Dashboard:', redirectPath);
               break;
             default:
               redirectPath = `/${locale}/`;
@@ -181,6 +197,27 @@ export function LoginForm({ locale }: LoginFormProps) {
             ) : (
               t('login')
             )}
+          </Button>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={handleMockPatientLogin}
+          >
+            <UserCircle className="mr-2 h-4 w-4" />
+            Test as Patient (Mock)
           </Button>
         </form>
       </Form>
