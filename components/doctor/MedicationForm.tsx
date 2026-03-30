@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -16,7 +17,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -32,6 +32,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
 
 import { useCreateMedication } from '@/lib/api/queries/useMedications';
 import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
@@ -51,6 +52,7 @@ export function MedicationForm({
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
   const { mutate: createMedication, isPending } = useCreateMedication();
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   // Helper function to create translation function for medication namespace
   const getMedicationT = (key: string) => t(key);
@@ -63,23 +65,38 @@ export function MedicationForm({
     defaultValues: {
       patientId,
       name: '',
-      dosage: 1,
-      period: 7,
+      dosage: '1',
+      period: '7',
       comments: '',
     },
   });
 
   const onSubmit = (data: CreateMedicationDto) => {
     console.log('🔵 Creating medication:', data);
+
+    let submitData: CreateMedicationDto | FormData;
+    if (audioFile) {
+      const formData = new FormData();
+      formData.append('name', data.name);
+      formData.append('dosage', data.dosage);
+      formData.append('period', data.period);
+      formData.append('patientId', data.patientId);
+      if (data.comments) formData.append('comments', data.comments);
+      formData.append('audio', audioFile);
+      submitData = formData;
+    } else {
+      submitData = data;
+    }
     
-    createMedication(data, {
+    createMedication(submitData, {
       onSuccess: (response) => {
         console.log('✅ Medication created:', response);
-        const dosageUnit = data.dosage === 1 ? 'tablet' : 'tablets';
+        const dosageUnit = data.dosage === '1' ? 'tablet' : 'tablets';
         toast.success(t('medicationCreated'), {
           description: `${data.name} - ${data.dosage} ${dosageUnit} for ${data.period} days`,
         });
         form.reset();
+        setAudioFile(null);
         onSuccess?.(response.id);
       },
       onError: (error) => {
@@ -129,8 +146,8 @@ export function MedicationForm({
                 <FormItem>
                   <FormLabel>{t('dosage')}</FormLabel>
                   <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
-                    value={field.value?.toString()}
+                    onValueChange={field.onChange} 
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -164,7 +181,7 @@ export function MedicationForm({
                 <FormItem>
                   <FormLabel>{t('duration')}</FormLabel>
                   <Select 
-                    onValueChange={(value) => field.onChange(parseInt(value))} 
+                    onValueChange={field.onChange} 
                     value={field.value?.toString()}
                   >
                     <FormControl>
@@ -199,11 +216,12 @@ export function MedicationForm({
                 <FormItem>
                   <FormLabel>{t('notes')} ({tCommon('optional')})</FormLabel>
                   <FormControl>
-                    <Textarea 
+                    <VoiceFormField
+                      field={field}
                       placeholder={t('notesPlaceholder')}
                       className="min-h-[100px]"
-                      {...field}
-                      value={field.value || ''}
+                      rows={4}
+                      onAudioCaptured={setAudioFile}
                     />
                   </FormControl>
                   <FormMessage />

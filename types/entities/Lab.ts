@@ -7,6 +7,7 @@ export interface Lab {
   test_date: Date;
   result_url?: string;
   comments?: string;
+  commentsAudioUrl?: string;
   is_deleted: boolean;
   created_at: Date;
 }

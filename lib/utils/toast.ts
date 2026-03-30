@@ -112,6 +112,13 @@ export const toastMessages = {
     alreadyExists: '⚠️ Doctor already exists',
     alreadyExistsDescription: 'A doctor with this email or National ID already exists in the system.',
   },
+  admin: {
+    createSuccess: '👤 Admin created successfully!',
+    createSuccessDescription: (name: string) => `${name} has been added as an admin.`,
+    createError: '❌ Failed to create admin',
+    alreadyExists: '⚠️ Admin already exists',
+    alreadyExistsDescription: 'An admin with this email or National ID already exists in the system.',
+  },
   patient: {
     createSuccess: '🏥 Patient registered successfully!',
     createSuccessDescription: (name: string) => `${name} has been added to the system.`,

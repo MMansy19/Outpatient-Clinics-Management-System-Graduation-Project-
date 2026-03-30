@@ -53,25 +53,25 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  * ```
  */
 export const useGetPatientMedications = (
-  socialSecurityNumber: string
+  patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientMedications called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: medicationsKeys.patient(socialSecurityNumber),
+    queryKey: medicationsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientMedications - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientMedications - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientMedications - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientMedications(socialSecurityNumber);
+        const result = await mockMedicalHistoryAPI.getPatientMedications(patientId);
         console.log('🔍 useGetPatientMedications - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientMedications - using real API');
-      return await doctorApi.getPatientMedications(socialSecurityNumber);
+      return await doctorApi.getPatientMedications(patientId);
     },
-    enabled: !!socialSecurityNumber, // Only run when socialSecurityNumber is provided
+    enabled: !!patientId, // Only run when patientId is provided
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
@@ -142,29 +142,27 @@ export const useGetMedication = (
 export const useCreateMedication = (): UseMutationResult<
   CreateMedicationResponse,
   Error,
-  CreateMedicationDto
+  CreateMedicationDto | FormData
 > => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateMedicationDto) => doctorApi.createMedication(data),
+    mutationFn: (data: CreateMedicationDto | FormData) => doctorApi.createMedication(data),
     onSuccess: (response, variables) => {
-      // Invalidate patient medications list
-      // Note: medications are keyed by socialSecurityNumber, not patientId
       queryClient.invalidateQueries({
         queryKey: medicationsKeys.all,
       });
 
-      // Invalidate patient details (may include medication count)
       queryClient.invalidateQueries({
         queryKey: ['patients'],
       });
 
-      // Optionally set the new medication in cache
-      queryClient.setQueryData(
-        medicationsKeys.detail(response.id),
-        variables
-      );
+      if (!(variables instanceof FormData)) {
+        queryClient.setQueryData(
+          medicationsKeys.detail(response.id),
+          variables
+        );
+      }
     },
     onError: (error) => {
       console.error('[useCreateMedication] Error:', error);
@@ -203,7 +201,7 @@ export const useCreateMedication = (): UseMutationResult<
 export const useUpdateMedication = (): UseMutationResult<
   unknown,
   Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
+  { medicationId: string; data: Partial<CreateMedicationDto>; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -255,7 +253,7 @@ export const useUpdateMedication = (): UseMutationResult<
 export const useDeleteMedication = (): UseMutationResult<
   void,
   Error,
-  { medicationId: string; socialSecurityNumber: string }
+  { medicationId: string; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -361,10 +359,10 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
 export const usePrefetchPatientMedications = () => {
   const queryClient = useQueryClient();
 
-  return (socialSecurityNumber: string) => {
+  return (patientId: string) => {
     queryClient.prefetchQuery({
-      queryKey: medicationsKeys.patient(socialSecurityNumber),
-      queryFn: () => doctorApi.getPatientMedications(socialSecurityNumber),
+      queryKey: medicationsKeys.patient(patientId),
+      queryFn: () => doctorApi.getPatientMedications(patientId),
       staleTime: 5 * 60 * 1000,
     });
   };

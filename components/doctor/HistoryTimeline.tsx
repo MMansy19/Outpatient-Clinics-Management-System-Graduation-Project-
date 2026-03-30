@@ -7,6 +7,7 @@ import { Activity, Beaker, Image as ImageIcon, Pill, Calendar, Filter } from 'lu
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { useGetMedicalHistoryTimeline } from '@/lib/api/queries/useMedicalHistory';
 import { formatDate } from '@/lib/utils/formatDate';
 import type { VisitWithRelations } from '@/types/entities/Visit';
@@ -359,6 +360,11 @@ function TimelineCard({ record }: TimelineCardProps) {
                 </Badge>
                 <p className="font-medium">{(record.data as VisitWithRelations).chief_complaint}</p>
                 <p className="text-sm text-muted-foreground mt-1">{(record.data as VisitWithRelations).diagnosis}</p>
+                {(record.data as VisitWithRelations).diagnosesAudioUrl && (
+                  <div className="mt-2">
+                    <AudioPlayer src={(record.data as VisitWithRelations).diagnosesAudioUrl!} compact />
+                  </div>
+                )}
                 {(record.data as VisitWithRelations).doctor && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Dr. {(record.data as VisitWithRelations).doctor.username}
@@ -376,6 +382,11 @@ function TimelineCard({ record }: TimelineCardProps) {
                 <p className="text-sm text-muted-foreground mt-1">
                   {(record.data as Lab).comments || 'Results available'}
                 </p>
+                {(record.data as Lab).commentsAudioUrl && (
+                  <div className="mt-2">
+                    <AudioPlayer src={(record.data as Lab).commentsAudioUrl!} compact />
+                  </div>
+                )}
               </>
             )}
 
@@ -386,8 +397,13 @@ function TimelineCard({ record }: TimelineCardProps) {
                 </Badge>
                 <p className="font-medium">{(record.data as Scan).type || 'Imaging Study'}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {(record.data as Scan).radiology_report || 'Report available'}
+                  {(record.data as Scan).comments || 'Report available'}
                 </p>
+                {(record.data as Scan).commentsAudioUrl && (
+                  <div className="mt-2">
+                    <AudioPlayer src={(record.data as Scan).commentsAudioUrl!} compact />
+                  </div>
+                )}
               </>
             )}
 
@@ -399,8 +415,13 @@ function TimelineCard({ record }: TimelineCardProps) {
                 <p className="font-medium">{(record.data as Medication).name || 'Medication'}</p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {(record.data as Medication).dosage && `${(record.data as Medication).dosage} - `}
-                  {(record.data as Medication).frequency || 'As prescribed'}
+                  {(record.data as Medication).period || 'As prescribed'}
                 </p>
+                {(record.data as Medication).commentsAudioUrl && (
+                  <div className="mt-2">
+                    <AudioPlayer src={(record.data as Medication).commentsAudioUrl!} compact />
+                  </div>
+                )}
               </>
             )}
           </div>

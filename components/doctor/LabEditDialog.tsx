@@ -12,7 +12,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +34,7 @@ interface LabEditDialogProps {
     id: string;
     name: string;
     comments?: string;
+    commentsAudioUrl?: string;
     result_url?: string;
   };
   onSuccess?: () => void;
@@ -53,12 +55,14 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Lab updated successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: LabFormData) => {
     const formData = new FormData();
@@ -69,6 +73,9 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
+    if (audioFile) {
+      formData.append('audio', audioFile);
+    }
 
     execute(() => {
       return new Promise((resolve, reject) => {
@@ -76,7 +83,7 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
           {
             labId: lab.id,
             data: formData as any,
-            socialSecurityNumber: '',
+            patientId: '',
           },
           {
             onSuccess: resolve,
@@ -121,16 +128,25 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
             <FormItem>
               <FormLabel>{t('comments')}</FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
-                  {...field}
+                  rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {lab.commentsAudioUrl && (
+          <div>
+            <p className="text-sm font-medium mb-2">{t('existingAudioRecording')}</p>
+            <AudioPlayer src={lab.commentsAudioUrl} compact />
+          </div>
+        )}
 
         <ImageUploadField
           label="Lab Image (Optional)"

@@ -26,14 +26,13 @@ import { z } from 'zod';
 import { useCreateScan } from '@/lib/api/queries/useScans';
 import { useFormState } from '@/src/hooks/useFormState';
 
-
 const scanTypes = [
-  { label: 'MRI', value: "1" },
-  { label: 'CT', value: "2" },
-  { label: 'X-RAY', value: "3" },
-  { label: 'ULTRA SOUND', value: "4" },
-  { label: 'PET CT', value: "5" },
-  { label: 'MAMMOGRAPHY', value: "6" },
+  { label: 'MRI', value: '0' },
+  { label: 'CT', value: '1' },
+  { label: 'X-RAY', value: '2' },
+  { label: 'ULTRA SOUND', value: '3' },
+  { label: 'PET CT', value: '4' },
+  { label: 'MAMMOGRAPHY', value: '5' },
 ];
 
 const scanSchema = z.object({
@@ -48,11 +47,16 @@ type ScanFormData = z.infer<typeof scanSchema>;
 interface ScanFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  socialSecurityNumber: string;
+  patientId: string;
   onSuccess?: () => void;
 }
 
-export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }: ScanFormProps) {
+export function ScanForm({
+  open,
+  onOpenChange,
+  patientId,
+  onSuccess,
+}: ScanFormProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
@@ -68,12 +72,14 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Scan created successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: ScanFormData) => {
     const formData = new FormData();
@@ -85,12 +91,15 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
+    if (audioFile) {
+      formData.append('audio', audioFile);
+    }
 
     execute(() => {
       return new Promise((resolve, reject) => {
         createScanMutation.mutate(
           {
-            socialSecurityNumber,
+            patientId,
             data: formData,
           },
           {
@@ -142,12 +151,12 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
                     <SelectValue placeholder={t('selectScanType')} />
                   </SelectTrigger>
                 </FormControl>
-                 <SelectContent>
-              {scanTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
+                <SelectContent>
+                  {scanTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -167,6 +176,7 @@ export function ScanForm({ open, onOpenChange, socialSecurityNumber, onSuccess }
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
                   rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />

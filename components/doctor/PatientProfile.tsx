@@ -2,7 +2,15 @@
 
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { User, Calendar, Activity, Pill, TestTube2, ScanLine, Plus } from 'lucide-react';
+import {
+  User,
+  Calendar,
+  Activity,
+  Pill,
+  TestTube2,
+  ScanLine,
+  Plus,
+} from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +33,7 @@ import { VisitDialog } from '@/components/doctor/VisitDialog';
 import { MedicationDialog } from '@/components/doctor/MedicationDialog';
 import { LabForm } from '@/components/doctor/LabForm';
 import { ScanForm } from '@/components/doctor/ScanForm';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
 import {
   Table,
@@ -70,7 +79,10 @@ export function PatientProfile({
   } = useGetPatientByNationalId(socialSecurityNumber);
 
   // Debug logging
-  console.log('🔍 PatientProfile - socialSecurityNumber:', socialSecurityNumber);
+  console.log(
+    '🔍 PatientProfile - socialSecurityNumber:',
+    socialSecurityNumber
+  );
   console.log('🔍 PatientProfile - Fetched patient:', patient);
   console.log('🔍 PatientProfile - Loading:', loadingPatient);
   console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
@@ -78,11 +90,19 @@ export function PatientProfile({
   console.log('🔍 PatientProfile - Scanned Data:', scannedData);
 
   // Combine API patient data with scanned data (scanned data serves as fallback)
-  const patientName = patient?.name || scannedData?.name ||
-    (scannedData?.firstName && scannedData?.lastName ? `${scannedData.firstName} ${scannedData.lastName}` : '');
+  const patientName =
+    patient?.name ||
+    scannedData?.name ||
+    (scannedData?.firstName && scannedData?.lastName
+      ? `${scannedData.firstName} ${scannedData.lastName}`
+      : '');
 
   const patientGender = patient?.gender || scannedData?.gender;
-  const patientDateOfBirth = patient?.dateOfBirth || patient?.birthdate || scannedData?.birthdate || scannedData?.dateOfBirth;
+  const patientDateOfBirth =
+    patient?.dateOfBirth ||
+    patient?.birthdate ||
+    scannedData?.birthdate ||
+    scannedData?.dateOfBirth;
 
   // If this is a new patient (scanned but not registered yet), show registration UI
   const isScannedNewPatient = isNewPatient && !patient;
@@ -91,17 +111,23 @@ export function PatientProfile({
   // If patient is null and we're loading or fetching, show skeleton
   const showLoading = loadingPatient || (isRefetchingPatient && !patient);
 
-  const { data: visitsResponse, isLoading: loadingVisits } = useGetPatientVisits(String(socialSecurityNumber));
+  const patientId = patient?.id ? String(patient.id) : '';
+
+  const { data: visitsResponse, isLoading: loadingVisits } =
+    useGetPatientVisits(patientId);
 
   // Debug logging
   console.log('🔍 PatientProfile - Visits Query:', {
-    socialSecurityNumber,
+    patientId,
     visitsResponse,
-    isLoading: loadingVisits
+    isLoading: loadingVisits,
   });
 
   // Extract visits from the wrapped response structure
-  const visits = (visitsResponse as any)?.clinics?.flatMap((clinic: any) => clinic.visits || []) || [];
+  const visits =
+    (visitsResponse as any)?.clinics?.flatMap(
+      (clinic: any) => clinic.visits || []
+    ) || [];
 
   // Dialog states
   const [isVisitDialogOpen, setIsVisitDialogOpen] = useState(false);
@@ -111,9 +137,11 @@ export function PatientProfile({
   const [currentTab, setCurrentTab] = useState('visits');
 
   // Fetch additional data
-  const { data: medications, isLoading: loadingMedications } = useGetPatientMedications(socialSecurityNumber);
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(socialSecurityNumber);
-  const { data: scans, isLoading: loadingScans } = useGetPatientScans(socialSecurityNumber);
+  const { data: medications, isLoading: loadingMedications } =
+    useGetPatientMedications(patientId);
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(patientId);
+  const { data: scans, isLoading: loadingScans } =
+    useGetPatientScans(patientId);
 
   // Debug logging
   console.log('🔍 PatientProfile - Other Queries:', {
@@ -122,7 +150,7 @@ export function PatientProfile({
     scans,
     loadingMedications,
     loadingLabs,
-    loadingScans
+    loadingScans,
   });
 
   // Extract data from wrapped response structures
@@ -146,10 +174,7 @@ export function PatientProfile({
       <Card>
         <CardContent className="py-12 text-center">
           <p className="text-muted-foreground mb-4">{t('patientNotFound')}</p>
-          <Button
-            variant="outline"
-            onClick={() => refetchPatient()}
-          >
+          <Button variant="outline" onClick={() => refetchPatient()}>
             {t('tryAgain')}
           </Button>
         </CardContent>
@@ -191,33 +216,55 @@ export function PatientProfile({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {scannedData?.name &&
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">{tPatient('name')}</p>
-                <p className="text-lg">{scannedData.name}</p>
-              </div>}
-              {socialSecurityNumber &&
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">{tPatient('nationalId')}</p>
-                <p className="text-lg font-mono">{socialSecurityNumber}</p>
-              </div>
-              }{scannedData?.gender !== undefined &&
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">{tPatient('gender')}</p>
-                <p className="text-lg">
-                  {String(scannedData.gender) === '0' || scannedData.gender === 'male' ? tPatient('male') :
-                   String(scannedData.gender) === '1' || scannedData.gender === 'female' ? tPatient('female') : tCommon('other')}
-                </p>
-              </div>
-              }{scannedData?.dateOfBirth && calculateAge(scannedData.dateOfBirth) >= 1 &&
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">{tPatient('age')}</p>
-                <p className="text-lg">{calculateAge(scannedData.dateOfBirth)} {tPatient('years')}</p>
-              </div>
-              }
+              {scannedData?.name && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {tPatient('name')}
+                  </p>
+                  <p className="text-lg">{scannedData.name}</p>
+                </div>
+              )}
+              {socialSecurityNumber && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {tPatient('nationalId')}
+                  </p>
+                  <p className="text-lg font-mono">{socialSecurityNumber}</p>
+                </div>
+              )}
+              {scannedData?.gender !== undefined && (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {tPatient('gender')}
+                  </p>
+                  <p className="text-lg">
+                    {String(scannedData.gender) === '0' ||
+                    scannedData.gender === 'male'
+                      ? tPatient('male')
+                      : String(scannedData.gender) === '1' ||
+                          scannedData.gender === 'female'
+                        ? tPatient('female')
+                        : tCommon('other')}
+                  </p>
+                </div>
+              )}
+              {scannedData?.dateOfBirth &&
+                calculateAge(scannedData.dateOfBirth) >= 1 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      {tPatient('age')}
+                    </p>
+                    <p className="text-lg">
+                      {calculateAge(scannedData.dateOfBirth)}{' '}
+                      {tPatient('years')}
+                    </p>
+                  </div>
+                )}
               {scannedData?.address && (
                 <div className="space-y-2 md:col-span-2">
-                  <p className="text-sm font-medium text-muted-foreground">{tPatient('address')}</p>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    {tPatient('address')}
+                  </p>
                   <p className="text-lg">{scannedData.address}</p>
                 </div>
               )}
@@ -233,10 +280,30 @@ export function PatientProfile({
 
   // Tabs configuration
   const tabs = [
-    { value: 'visits', label: t('visits'), icon: Activity, count: visits?.length || 0 },
-    { value: 'medications', label: tPatient('medications'), icon: Pill, count: medicationsList?.length || 0 },
-    { value: 'labs', label: tPatient('labs'), icon: TestTube2, count: labsList?.length || 0 },
-    { value: 'scans', label: tPatient('scans'), icon: ScanLine, count: scansList?.length || 0 },
+    {
+      value: 'visits',
+      label: t('visits'),
+      icon: Activity,
+      count: visits?.length || 0,
+    },
+    {
+      value: 'medications',
+      label: tPatient('medications'),
+      icon: Pill,
+      count: medicationsList?.length || 0,
+    },
+    {
+      value: 'labs',
+      label: tPatient('labs'),
+      icon: TestTube2,
+      count: labsList?.length || 0,
+    },
+    {
+      value: 'scans',
+      label: tPatient('scans'),
+      icon: ScanLine,
+      count: scansList?.length || 0,
+    },
   ];
 
   return (
@@ -256,34 +323,53 @@ export function PatientProfile({
       )}
 
       {/* Header Card */}
-<Card className="sticky top-0 z-30 bg-background md:static md:top-auto">
+      <Card className="sticky top-0 z-30 bg-background md:static md:top-auto">
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="h-14 w-14 md:h-16 md:w-16 rounded-full bg-medical-primary/10 flex items-center justify-center shrink-0">
                 <User className="h-7 w-7 md:h-8 md:w-8 text-medical-primary" />
               </div>
-               <div className="min-w-0 flex-1">
-                <CardTitle className="text-xl md:text-2xl truncate">{patientName}</CardTitle>
+              <div className="min-w-0 flex-1">
+                <CardTitle className="text-xl md:text-2xl truncate">
+                  {patientName}
+                </CardTitle>
                 <CardDescription className="flex flex-row justify-between items-center gap-2 sm:gap-4">
-                <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
-                  <span className="text-xs sm:text-sm">{tPatient('nationalId')}: {socialSecurityNumber || patient?.socialSecurityNumber || patient?.national_id}</span>
-                  <Badge variant={String(patientGender) === '0' || patientGender === 'male' ? 'default' : 'secondary'} className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm">
-                    {String(patientGender) === '0' || patientGender === 'male' ? tPatient('male') : tPatient('female')}
-                  </Badge>
-
-                </div>
-{patientDateOfBirth &&
-
-              <div className="min-w-16">
-                <div className='flex flex-row gap-2 items-center'>
-                  <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
-                <p className="text-sm text-muted-foreground">{tPatient('age')}</p>
-                </div>
-                         <p className="font-medium truncate">{calculateAge(patientDateOfBirth)} {tPatient('years')}</p>
-           </div>
-}
-                </CardDescription>  
+                  <div className="flex flex-col gap-1 sm:gap-2 mt-1 ">
+                    <span className="text-xs sm:text-sm">
+                      {tPatient('nationalId')}:{' '}
+                      {socialSecurityNumber ||
+                        patient?.socialSecurityNumber ||
+                        patient?.national_id}
+                    </span>
+                    <Badge
+                      variant={
+                        String(patientGender) === '0' ||
+                        patientGender === 'male'
+                          ? 'default'
+                          : 'secondary'
+                      }
+                      className="w-fit max-w-40 px-2 py-1 text-xs sm:text-sm"
+                    >
+                      {String(patientGender) === '0' || patientGender === 'male'
+                        ? tPatient('male')
+                        : tPatient('female')}
+                    </Badge>
+                  </div>
+                  {patientDateOfBirth && (
+                    <div className="min-w-16">
+                      <div className="flex flex-row gap-2 items-center">
+                        <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <p className="text-sm text-muted-foreground">
+                          {tPatient('age')}
+                        </p>
+                      </div>
+                      <p className="font-medium truncate">
+                        {calculateAge(patientDateOfBirth)} {tPatient('years')}
+                      </p>
+                    </div>
+                  )}
+                </CardDescription>
               </div>
             </div>
             <div className="flex gap-2 sm:shrink-0">
@@ -318,27 +404,43 @@ export function PatientProfile({
           <CardContent className="max-h-[400px] overflow-y-auto">
             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
               <div className="medical-card">
-                <p className="text-sm text-muted-foreground">{tVisit('weight')}</p>
-                <p className="text-2xl font-bold text-medical-primary">{latestVitals.weight} {tVitals('kg')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {tVisit('weight')}
+                </p>
+                <p className="text-2xl font-bold text-medical-primary">
+                  {latestVitals.weight} {tVitals('kg')}
+                </p>
               </div>
               {latestVitals.height && (
                 <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{tVisit('height')}</p>
-                  <p className="text-2xl font-bold">{latestVitals.height} {tVitals('cm')}</p>
-                </div>
-              )}
-              {latestVitals.blood_pressure_systolic && latestVitals.blood_pressure_diastolic && (
-                <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{tVisit('bloodPressure')}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {tVisit('height')}
+                  </p>
                   <p className="text-2xl font-bold">
-                    {latestVitals.blood_pressure_systolic}/{latestVitals.blood_pressure_diastolic} {tVitals('mmHg')}
+                    {latestVitals.height} {tVitals('cm')}
                   </p>
                 </div>
               )}
+              {latestVitals.blood_pressure_systolic &&
+                latestVitals.blood_pressure_diastolic && (
+                  <div className="medical-card">
+                    <p className="text-sm text-muted-foreground">
+                      {tVisit('bloodPressure')}
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {latestVitals.blood_pressure_systolic}/
+                      {latestVitals.blood_pressure_diastolic} {tVitals('mmHg')}
+                    </p>
+                  </div>
+                )}
               {latestVitals.heart_rate && (
                 <div className="medical-card">
-                  <p className="text-sm text-muted-foreground">{tVisit('heartRate')}</p>
-                  <p className="text-2xl font-bold">{latestVitals.heart_rate} bpm</p>
+                  <p className="text-sm text-muted-foreground">
+                    {tVisit('heartRate')}
+                  </p>
+                  <p className="text-2xl font-bold">
+                    {latestVitals.heart_rate} bpm
+                  </p>
                 </div>
               )}
             </div>
@@ -377,10 +479,12 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{t('visits')}</CardTitle>
                     <CardDescription>
-                      {visits ? `${visits.length} ${t('totalVisits')}` : tCommon('loading')}
+                      {visits
+                        ? `${visits.length} ${t('totalVisits')}`
+                        : tCommon('loading')}
                     </CardDescription>
                   </div>
-                                    <Button
+                  <Button
                     size="sm"
                     onClick={() => setIsVisitDialogOpen(true)}
                     className="bg-medical-primary hover:bg-medical-primary/90"
@@ -410,9 +514,28 @@ export function PatientProfile({
                       {visits.map((visit: any, index: number) => (
                         <TableRow key={index}>
                           <TableCell>{formatDate(visit.createdAt)}</TableCell>
-                          <TableCell>Dr. {visit.doctor?.name || 'N/A'}</TableCell>
-                          <TableCell>{visit.doctor?.speciality || 'N/A'}</TableCell>
-                          <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
+                          <TableCell>
+                            Dr. {visit.doctor?.name || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            {visit.doctor?.speciality || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {visit.diagnoses && (
+                                <span>{visit.diagnoses}</span>
+                              )}
+                              {!visit.diagnoses && !visit.diagnosesAudioUrl && (
+                                <span>N/A</span>
+                              )}
+                              {visit.diagnosesAudioUrl && (
+                                <AudioPlayer
+                                  src={visit.diagnosesAudioUrl}
+                                  compact
+                                />
+                              )}
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -440,7 +563,9 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('medications')}</CardTitle>
                     <CardDescription>
-                      {medicationsList ? `${medicationsList.length} ${t('totalMedications')}` : tCommon('loading')}
+                      {medicationsList
+                        ? `${medicationsList.length} ${t('totalMedications')}`
+                        : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -473,11 +598,29 @@ export function PatientProfile({
                     <TableBody>
                       {medicationsList.map((medication: any, index: number) => (
                         <TableRow key={index}>
-                          <TableCell className="font-medium">{medication.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {medication.name}
+                          </TableCell>
                           <TableCell>{medication.dosage}</TableCell>
                           <TableCell>{medication.period} days</TableCell>
-                          <TableCell>Dr. {medication.doctor?.name || 'N/A'}</TableCell>
-                          <TableCell>{medication.comments || '-'}</TableCell>
+                          <TableCell>
+                            Dr. {medication.doctor?.name || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {medication.comments && (
+                                <span>{medication.comments}</span>
+                              )}
+                              {!medication.comments &&
+                                !medication.commentsAudioUrl && <span>-</span>}
+                              {medication.commentsAudioUrl && (
+                                <AudioPlayer
+                                  src={medication.commentsAudioUrl}
+                                  compact
+                                />
+                              )}
+                            </div>
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -504,7 +647,9 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('labs')}</CardTitle>
                     <CardDescription>
-                      {labsList ? `${labsList.length} ${t('totalLabs')}` : tCommon('loading')}
+                      {labsList
+                        ? `${labsList.length} ${t('totalLabs')}`
+                        : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -538,9 +683,24 @@ export function PatientProfile({
                       {labsList.map((lab: any, index: number) => (
                         <TableRow key={index}>
                           <TableCell>{formatDate(lab.createdAt)}</TableCell>
-                          <TableCell className="font-medium">{lab.name}</TableCell>
+                          <TableCell className="font-medium">
+                            {lab.name}
+                          </TableCell>
                           <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
-                          <TableCell>{lab.comments || '-'}</TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {lab.comments && <span>{lab.comments}</span>}
+                              {!lab.comments && !lab.commentsAudioUrl && (
+                                <span>-</span>
+                              )}
+                              {lab.commentsAudioUrl && (
+                                <AudioPlayer
+                                  src={lab.commentsAudioUrl}
+                                  compact
+                                />
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {lab.photoUrl && (
                               <a
@@ -579,7 +739,9 @@ export function PatientProfile({
                   <div>
                     <CardTitle>{tPatient('scans')}</CardTitle>
                     <CardDescription>
-                      {scansList ? `${scansList.length} ${t('totalScans')}` : tCommon('loading')}
+                      {scansList
+                        ? `${scansList.length} ${t('totalScans')}`
+                        : tCommon('loading')}
                     </CardDescription>
                   </div>
                   <Button
@@ -614,10 +776,27 @@ export function PatientProfile({
                       {scansList.map((scan: any, index: number) => (
                         <TableRow key={index}>
                           <TableCell>{formatDate(scan.createdAt)}</TableCell>
-                          <TableCell className="font-medium">{scan.name || '-'}</TableCell>
+                          <TableCell className="font-medium">
+                            {scan.name || '-'}
+                          </TableCell>
                           <TableCell>{scan.type || '-'}</TableCell>
-                          <TableCell>Dr. {scan.doctor?.name || 'N/A'}</TableCell>
-                          <TableCell>{scan.comments || '-'}</TableCell>
+                          <TableCell>
+                            Dr. {scan.doctor?.name || 'N/A'}
+                          </TableCell>
+                          <TableCell>
+                            <div className="space-y-1">
+                              {scan.comments && <span>{scan.comments}</span>}
+                              {!scan.comments && !scan.commentsAudioUrl && (
+                                <span>-</span>
+                              )}
+                              {scan.commentsAudioUrl && (
+                                <AudioPlayer
+                                  src={scan.commentsAudioUrl}
+                                  compact
+                                />
+                              )}
+                            </div>
+                          </TableCell>
                           <TableCell>
                             {scan.photoUrl && (
                               <a
@@ -682,15 +861,35 @@ export function PatientProfile({
                                 <Activity className="h-5 w-5 text-medical-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{visit.diagnoses || tVisit('diagnosis')}</p>
+                                <p className="font-medium truncate">
+                                  {visit.diagnoses || tVisit('diagnosis')}
+                                </p>
+                                {visit.diagnosesAudioUrl && (
+                                  <div className="mt-1">
+                                    <AudioPlayer
+                                      src={visit.diagnosesAudioUrl}
+                                      compact
+                                    />
+                                  </div>
+                                )}
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {visit.doctor?.name || tCommon('unknown')}
+                                    <span className="font-medium">
+                                      {tTable('doctor')}:
+                                    </span>{' '}
+                                    Dr.{' '}
+                                    {visit.doctor?.name || tCommon('unknown')}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('speciality')}:</span> {visit.doctor?.speciality || tCommon('unknown')}
+                                    <span className="font-medium">
+                                      {tTable('speciality')}:
+                                    </span>{' '}
+                                    {visit.doctor?.speciality ||
+                                      tCommon('unknown')}
                                   </p>
-                                  <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDate(visit.createdAt)}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -730,34 +929,60 @@ export function PatientProfile({
                       </div>
                     ) : medicationsList && medicationsList.length > 0 ? (
                       <div className="space-y-3">
-                        {medicationsList.map((medication: any, index: number) => (
-                          <div key={index} className="border rounded-lg p-3">
-                            <div className="flex items-start gap-3">
-                              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                                <Pill className="h-5 w-5 text-blue-600" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{medication.name}</p>
-                                <div className="mt-1 space-y-1">
-                                  <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('dosage')}:</span> {medication.dosage}
+                        {medicationsList.map(
+                          (medication: any, index: number) => (
+                            <div key={index} className="border rounded-lg p-3">
+                              <div className="flex items-start gap-3">
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                                  <Pill className="h-5 w-5 text-blue-600" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium truncate">
+                                    {medication.name}
                                   </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('duration')}:</span> {medication.period} {tPatient('days')}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {medication.doctor?.name || tCommon('unknown')}
-                                  </p>
-                                  {medication.comments && (
+                                  <div className="mt-1 space-y-1">
                                     <p className="text-sm text-muted-foreground">
-                                      <span className="font-medium">{tTable('comments')}:</span> {medication.comments}
+                                      <span className="font-medium">
+                                        {tTable('dosage')}:
+                                      </span>{' '}
+                                      {medication.dosage}
                                     </p>
-                                  )}
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">
+                                        {tTable('duration')}:
+                                      </span>{' '}
+                                      {medication.period} {tPatient('days')}
+                                    </p>
+                                    <p className="text-sm text-muted-foreground">
+                                      <span className="font-medium">
+                                        {tTable('doctor')}:
+                                      </span>{' '}
+                                      Dr.{' '}
+                                      {medication.doctor?.name ||
+                                        tCommon('unknown')}
+                                    </p>
+                                    {medication.comments && (
+                                      <p className="text-sm text-muted-foreground">
+                                        <span className="font-medium">
+                                          {tTable('comments')}:
+                                        </span>{' '}
+                                        {medication.comments}
+                                      </p>
+                                    )}
+                                    {medication.commentsAudioUrl && (
+                                      <div className="mt-1">
+                                        <AudioPlayer
+                                          src={medication.commentsAudioUrl}
+                                          compact
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        )}
                       </div>
                     ) : (
                       <EmptyState
@@ -799,18 +1024,37 @@ export function PatientProfile({
                                 <TestTube2 className="h-5 w-5 text-green-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{lab.name}</p>
+                                <p className="font-medium truncate">
+                                  {lab.name}
+                                </p>
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(lab.createdAt)}
+                                    <span className="font-medium">
+                                      {tTable('date')}:
+                                    </span>{' '}
+                                    {formatDate(lab.createdAt)}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {lab.doctor?.name || tCommon('unknown')}
+                                    <span className="font-medium">
+                                      {tTable('doctor')}:
+                                    </span>{' '}
+                                    Dr. {lab.doctor?.name || tCommon('unknown')}
                                   </p>
                                   {lab.comments && (
                                     <p className="text-sm text-muted-foreground">
-                                      <span className="font-medium">{tTable('comments')}:</span> {lab.comments}
+                                      <span className="font-medium">
+                                        {tTable('comments')}:
+                                      </span>{' '}
+                                      {lab.comments}
                                     </p>
+                                  )}
+                                  {lab.commentsAudioUrl && (
+                                    <div className="mt-1">
+                                      <AudioPlayer
+                                        src={lab.commentsAudioUrl}
+                                        compact
+                                      />
+                                    </div>
                                   )}
                                   {lab.photoUrl && (
                                     <a
@@ -868,21 +1112,44 @@ export function PatientProfile({
                                 <ScanLine className="h-5 w-5 text-purple-600" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">{scan.name || scan.type || tPatient('scans')}</p>
+                                <p className="font-medium truncate">
+                                  {scan.name || scan.type || tPatient('scans')}
+                                </p>
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('date')}:</span> {formatDate(scan.createdAt)}
+                                    <span className="font-medium">
+                                      {tTable('date')}:
+                                    </span>{' '}
+                                    {formatDate(scan.createdAt)}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('type')}:</span> {scan.type || '-'}
+                                    <span className="font-medium">
+                                      {tTable('type')}:
+                                    </span>{' '}
+                                    {scan.type || '-'}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
-                                    <span className="font-medium">{tTable('doctor')}:</span> Dr. {scan.doctor?.name || tCommon('unknown')}
+                                    <span className="font-medium">
+                                      {tTable('doctor')}:
+                                    </span>{' '}
+                                    Dr.{' '}
+                                    {scan.doctor?.name || tCommon('unknown')}
                                   </p>
                                   {scan.comments && (
                                     <p className="text-sm text-muted-foreground">
-                                      <span className="font-medium">{tTable('comments')}:</span> {scan.comments}
+                                      <span className="font-medium">
+                                        {tTable('comments')}:
+                                      </span>{' '}
+                                      {scan.comments}
                                     </p>
+                                  )}
+                                  {scan.commentsAudioUrl && (
+                                    <div className="mt-1">
+                                      <AudioPlayer
+                                        src={scan.commentsAudioUrl}
+                                        compact
+                                      />
+                                    </div>
                                   )}
                                   {scan.photoUrl && (
                                     <a
@@ -922,7 +1189,7 @@ export function PatientProfile({
       <VisitDialog
         open={isVisitDialogOpen}
         onOpenChange={setIsVisitDialogOpen}
-        patientId={socialSecurityNumber}
+        patientId={String(patient?.id ?? '')}
         onSuccess={() => {
           setIsVisitDialogOpen(false);
         }}
@@ -931,7 +1198,7 @@ export function PatientProfile({
       <MedicationDialog
         open={isMedicationDialogOpen}
         onOpenChange={setIsMedicationDialogOpen}
-        patientId={socialSecurityNumber}
+        patientId={String(patient?.id ?? '')}
         onSuccess={() => {
           setIsMedicationDialogOpen(false);
         }}
@@ -940,13 +1207,13 @@ export function PatientProfile({
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        socialSecurityNumber={socialSecurityNumber}
+        patientId={patientId}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        socialSecurityNumber={socialSecurityNumber}
+        patientId={patientId}
       />
     </div>
   );

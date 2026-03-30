@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { toast, toastMessages } from '@/lib/utils/toast';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, Info } from 'lucide-react';
 
 import {
   Dialog,
@@ -40,7 +40,7 @@ import {
 } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
 
 const MEDICAL_SPECIALITIES = [
@@ -93,10 +93,8 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
     },
   });
 
-  // Watch the national ID field to show extracted info
   const nationalId = form.watch('socialSecurityNumber');
 
-  // Load clinics when dialog opens
   useEffect(() => {
     if (open) {
       loadClinics();
@@ -106,7 +104,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   const loadClinics = async () => {
     try {
       setLoadingClinics(true);
-      const data = await adminApi.getClinics();
+      const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
       console.error('Failed to load clinics:', error);
@@ -117,11 +115,8 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   };
 
   const onSubmit = (data: CreateDoctorFormData) => {
-    console.log('🔍 Creating doctor with data:', data);
-
     createDoctor(data, {
-      onSuccess: (response) => {
-        console.log('✅ Doctor created successfully:', response);
+      onSuccess: () => {
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         toast.success(
           toastMessages.doctor.createSuccess,
@@ -131,9 +126,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         setOpen(false);
       },
       onError: (error: unknown) => {
-        console.error('❌ Create doctor error:', error);
-
-        // Handle different error cases
         if (
           error &&
           typeof error === 'object' &&
@@ -145,10 +137,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             data?: unknown;
             status?: number;
           };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
 
-          // Check if it's a "User already exists" error
           if (
             response.status === 400 &&
             typeof response.data === 'string' &&
@@ -161,7 +150,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             return;
           }
 
-          // Get error message from response
           const message =
             typeof response.data === 'string'
               ? response.data
@@ -197,6 +185,12 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
           <DialogTitle>{t('createDoctor')}</DialogTitle>
           <DialogDescription>{t('createDoctorDescription')}</DialogDescription>
         </DialogHeader>
+
+        {/* Pending approval notice */}
+        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
+          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+          <p>{t('doctorPendingApproval')}</p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -239,7 +233,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               />
             </div>
 
-            {/* National ID with extracted info */}
+            {/* National ID */}
             <FormField
               control={form.control}
               name="socialSecurityNumber"
@@ -262,7 +256,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               )}
             />
 
-            {/* Contact Information */}
+            {/* Email */}
             <FormField
               control={form.control}
               name="email"
@@ -282,6 +276,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               )}
             />
 
+            {/* Phone */}
             <FormField
               control={form.control}
               name="phone"

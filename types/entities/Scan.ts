@@ -3,17 +3,20 @@ export interface Scan {
   global_id: string;
   patient_id: number;
   doctor_id: number;
+  name: string;
   type: ScanType;
-  scan_date: Date;
-  image_url?: string;
-  radiology_report?: string;
+  photoUrl?: string;
+  comments?: string | null;
+  commentsAudioUrl?: string | null;
   is_deleted: boolean;
   created_at: Date;
 }
 
 export enum ScanType {
-  XRAY = 'X-Ray',
-  CT = 'CT Scan',
-  MRI = 'MRI',
-  ULTRASOUND = 'Ultrasound',
+  MRI = '0',
+  CT = '1',
+  X_RAY = '2',
+  ULTRA_SOUND = '3',
+  PET_CT = '4',
+  MAMOGRAPHY = '5',
 }

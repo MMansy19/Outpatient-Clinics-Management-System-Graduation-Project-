@@ -5,7 +5,6 @@ import { useTranslations } from 'next-intl';
 import {
   Mic,
   MicOff,
-  Loader2,
   Upload,
   FileAudio,
   X,
@@ -23,18 +22,18 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { asrApi } from '@/lib/api/asr.service';
 
 interface VoiceRecorderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onTranscriptionComplete: (text: string) => void;
+  onTranscriptionComplete?: (text: string) => void;
+  onAudioCaptured?: (file: File) => void;
 }
 
 export function VoiceRecorderDialog({
   open,
   onOpenChange,
-  onTranscriptionComplete,
+  onAudioCaptured,
 }: VoiceRecorderDialogProps) {
   const tCommon = useTranslations('common');
   const t = useTranslations('voiceRecorder');
@@ -45,10 +44,8 @@ export function VoiceRecorderDialog({
   const [recordingTime, setRecordingTime] = useState(0);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [isTranscribing, setIsTranscribing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [transcription, setTranscription] = useState<string | null>(null);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -150,7 +147,6 @@ export function VoiceRecorderDialog({
     setAudioBlob(null);
     setAudioUrl(null);
     setRecordingTime(0);
-    setTranscription(null);
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -183,63 +179,25 @@ export function VoiceRecorderDialog({
 
     setError(null);
     setSelectedFile(file);
-    setTranscription(null);
   };
 
-  const handleTranscribe = async () => {
-    const fileToTranscribe = activeTab === 'record' ? audioBlob : selectedFile;
+  const handleUseAudio = () => {
+    const fileToUse = activeTab === 'record' ? audioBlob : selectedFile;
+    if (!fileToUse) return;
 
-    if (!fileToTranscribe) {
-      toast.error(t('noAudioToTranscribe'));
-      return;
-    }
+    const file =
+      fileToUse instanceof Blob && !(fileToUse instanceof File)
+        ? new File([fileToUse], 'recording.webm', { type: fileToUse.type })
+        : (fileToUse as File);
 
-    try {
-      setIsTranscribing(true);
-      setError(null);
-
-      // Convert blob to file if needed
-      const file =
-        fileToTranscribe instanceof Blob && !(fileToTranscribe instanceof File)
-          ? new File([fileToTranscribe], 'recording.webm', {
-              type: fileToTranscribe.type,
-            })
-          : (fileToTranscribe as File);
-
-      const result = await asrApi.transcribe(file);
-
-      setTranscription(result.transcription);
-      toast.success(t('transcriptionComplete'));
-    } catch (err) {
-      console.error('Transcription error:', err);
-      const errorMessage =
-        (
-          err as {
-            response?: { data?: { message?: string } };
-            message?: string;
-          }
-        )?.response?.data?.message ||
-        (err as { message?: string })?.message ||
-        t('transcriptionFailed');
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-
-  const handleUseTranscription = () => {
-    if (transcription) {
-      onTranscriptionComplete(transcription);
-      handleClose();
-    }
+    onAudioCaptured?.(file);
+    handleClose();
   };
 
   const handleClose = () => {
     discardRecording();
     setSelectedFile(null);
     setError(null);
-    setTranscription(null);
     setActiveTab('record');
     onOpenChange(false);
   };
@@ -361,18 +319,6 @@ export function VoiceRecorderDialog({
                         <source src={audioUrl} />
                       </audio>
                     )}
-
-                    {transcription && (
-                      <Alert>
-                        <Check className="h-4 w-4" />
-                        <AlertDescription>
-                          <p className="font-medium mb-2">
-                            {t('transcription')}
-                          </p>
-                          <p className="text-sm">{transcription}</p>
-                        </AlertDescription>
-                      </Alert>
-                    )}
                   </div>
 
                   <div className="flex gap-3 w-full">
@@ -383,30 +329,13 @@ export function VoiceRecorderDialog({
                     >
                       {t('recordAgain')}
                     </Button>
-                    {!transcription ? (
-                      <Button
-                        onClick={handleTranscribe}
-                        disabled={isTranscribing}
-                        className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
-                      >
-                        {isTranscribing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t('transcribing')}
-                          </>
-                        ) : (
-                          t('transcribe')
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleUseTranscription}
-                        className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
-                      >
-                        <Check className="mr-2 h-4 w-4" />
-                        {t('useText')}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handleUseAudio}
+                      className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      {t('useAudio')}
+                    </Button>
                   </div>
                 </>
               )}
@@ -460,41 +389,14 @@ export function VoiceRecorderDialog({
                     </Button>
                   </div>
 
-                  {transcription && (
-                    <Alert>
-                      <Check className="h-4 w-4" />
-                      <AlertDescription>
-                        <p className="font-medium mb-2">{t('transcription')}</p>
-                        <p className="text-sm">{transcription}</p>
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
                   <div className="flex gap-3">
-                    {!transcription ? (
-                      <Button
-                        onClick={handleTranscribe}
-                        disabled={isTranscribing}
-                        className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
-                      >
-                        {isTranscribing ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            {t('transcribing')}
-                          </>
-                        ) : (
-                          t('transcribe')
-                        )}
-                      </Button>
-                    ) : (
-                      <Button
-                        onClick={handleUseTranscription}
-                        className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
-                      >
-                        <Check className="mr-2 h-4 w-4" />
-                        {t('useText')}
-                      </Button>
-                    )}
+                    <Button
+                      onClick={handleUseAudio}
+                      className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
+                    >
+                      <Check className="mr-2 h-4 w-4" />
+                      {t('useAudio')}
+                    </Button>
                   </div>
                 </>
               )}

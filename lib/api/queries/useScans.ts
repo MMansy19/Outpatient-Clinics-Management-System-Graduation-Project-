@@ -50,25 +50,25 @@ const scansKeys = {
  * ```
  */
 export const useGetPatientScans = (
-  socialSecurityNumber: string
+  patientId: string
 ): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientScans called with socialSecurityNumber:', socialSecurityNumber, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  console.log('🔍 useGetPatientScans called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
 
   return useQuery({
-    queryKey: scansKeys.patient(socialSecurityNumber),
+    queryKey: scansKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientScans - queryFn executing for socialSecurityNumber:', socialSecurityNumber);
+      console.log('🔍 useGetPatientScans - queryFn executing for patientId:', patientId);
 
       if (USE_MOCK_DATA) {
         console.log('🔍 useGetPatientScans - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientScans(socialSecurityNumber);
+        const result = await mockMedicalHistoryAPI.getPatientScans(patientId);
         console.log('🔍 useGetPatientScans - mock result:', result);
         return result;
       }
       console.log('🔍 useGetPatientScans - using real API');
-      return await doctorApi.getPatientScans(socialSecurityNumber);
+      return await doctorApi.getPatientScans(patientId);
     },
-    enabled: !!socialSecurityNumber,
+    enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -139,16 +139,16 @@ export const useGetScan = (
 export const useCreateScan = (): UseMutationResult<
   unknown,
   Error,
-  { socialSecurityNumber: string; data: { name: string; comments: string; type: string } | FormData }
+  { patientId: string; data: { name: string; comments: string; type: string } | FormData }
 > => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ socialSecurityNumber, data }) => doctorApi.createScan(socialSecurityNumber, data),
+    mutationFn: ({ patientId, data }) => doctorApi.createScan(patientId, data),
     onSuccess: (response, variables) => {
       // Invalidate patient scans list
       queryClient.invalidateQueries({
-        queryKey: scansKeys.patient(variables.socialSecurityNumber),
+        queryKey: scansKeys.patient(variables.patientId),
       });
 
       // Invalidate all scans queries
@@ -205,7 +205,7 @@ export const useCreateScan = (): UseMutationResult<
 export const useUpdateScan = (): UseMutationResult<
   unknown,
   Error,
-  { scanId: string; data: Partial<Scan>; socialSecurityNumber: string }
+  { scanId: string; data: Partial<Scan>; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -220,7 +220,7 @@ export const useUpdateScan = (): UseMutationResult<
 
       // Invalidate patient scans list
       queryClient.invalidateQueries({
-        queryKey: scansKeys.patient(variables.socialSecurityNumber),
+        queryKey: scansKeys.patient(variables.patientId),
       });
 
       // Invalidate all scans queries
@@ -262,7 +262,7 @@ export const useUpdateScan = (): UseMutationResult<
 export const useDeleteScan = (): UseMutationResult<
   void,
   Error,
-  { scanId: string; socialSecurityNumber: string }
+  { scanId: string; patientId: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -276,7 +276,7 @@ export const useDeleteScan = (): UseMutationResult<
 
       // Invalidate patient scans list
       queryClient.invalidateQueries({
-        queryKey: scansKeys.patient(variables.socialSecurityNumber),
+        queryKey: scansKeys.patient(variables.patientId),
       });
 
       // Invalidate all scans queries
@@ -314,10 +314,10 @@ export const useDeleteScan = (): UseMutationResult<
 export const usePrefetchPatientScans = () => {
   const queryClient = useQueryClient();
 
-  return (socialSecurityNumber: string) => {
+  return (patientId: string) => {
     queryClient.prefetchQuery({
-      queryKey: scansKeys.patient(socialSecurityNumber),
-      queryFn: () => doctorApi.getPatientScans(socialSecurityNumber),
+      queryKey: scansKeys.patient(patientId),
+      queryFn: () => doctorApi.getPatientScans(patientId),
       staleTime: 5 * 60 * 1000,
     });
   };

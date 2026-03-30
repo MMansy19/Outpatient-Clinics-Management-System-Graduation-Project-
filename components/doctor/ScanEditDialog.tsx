@@ -12,7 +12,8 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import {
   Select,
   SelectContent,
@@ -51,6 +52,7 @@ interface ScanEditDialogProps {
     name: string;
     type: string;
     comments?: string;
+    commentsAudioUrl?: string;
     image_url?: string;
   };
   onSuccess?: () => void;
@@ -72,12 +74,14 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Scan updated successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: ScanFormData) => {
     const formData = new FormData();
@@ -89,6 +93,9 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
+    if (audioFile) {
+      formData.append('audio', audioFile);
+    }
 
     execute(() => {
       return new Promise((resolve, reject) => {
@@ -96,7 +103,7 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
           {
             scanId: scan.id,
             data: formData as any,
-            socialSecurityNumber: '', // Required but not used in edit
+            patientId: '',
           },
           {
             onSuccess: resolve,
@@ -166,16 +173,25 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
             <FormItem>
               <FormLabel>{t('comments')}</FormLabel>
               <FormControl>
-                <Textarea
+                <VoiceFormField
+                  field={field}
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
-                  {...field}
+                  rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
+        {scan.commentsAudioUrl && (
+          <div>
+            <p className="text-sm font-medium mb-2">{t('existingAudioRecording')}</p>
+            <AudioPlayer src={scan.commentsAudioUrl} compact />
+          </div>
+        )}
 
         <ImageUploadField
           label="Scan Image (Optional)"

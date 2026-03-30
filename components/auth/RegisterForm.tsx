@@ -66,7 +66,9 @@ export function RegisterForm({ locale }: RegisterFormProps) {
         toast.success(t('registerSuccess'));
         
         // Redirect based on user role
-        if (response.user.role === UserRole.ADMIN) {
+        if (response.user.role === UserRole.SUPER_ADMIN) {
+          router.push(`/${locale}/super-admin/dashboard`);
+        } else if (response.user.role === UserRole.ADMIN) {
           router.push(`/${locale}/admin/dashboard`);
         } else if (response.user.role === UserRole.DOCTOR) {
           router.push(`/${locale}/doctor/dashboard`);

@@ -115,6 +115,11 @@ export const createAdminSchema = z.object({
   email: emailSchema,
   phone: phoneNumberSchema,
   password: passwordSchema,
+  speciality: z
+    .string()
+    .min(2, 'Speciality must be at least 2 characters')
+    .max(128, 'Speciality must not exceed 128 characters'),
+  clinicId: z.string().uuid('Please select a valid clinic'),
 });
 
 export type CreateAdminFormData = z.infer<typeof createAdminSchema>;

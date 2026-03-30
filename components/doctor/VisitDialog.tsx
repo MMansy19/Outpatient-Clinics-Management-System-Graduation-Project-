@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -15,11 +16,10 @@ import { VoiceFormField } from '@/components/shared/VoiceFormField';
 
 import { useCreateVisit } from '@/lib/api/queries/useVisits';
 import { useFormState } from '@/src/hooks/useFormState';
-import type { CreateVisitDto } from '@/lib/api/types';
 import { z } from 'zod';
 
 const visitSchema = z.object({
-  diagnoses: z.string().min(1, 'Diagnoses is required'),
+  diagnoses: z.string().optional(),
 });
 
 type VisitFormData = z.infer<typeof visitSchema>;
@@ -37,12 +37,11 @@ export function VisitDialog({
   patientId,
   onSuccess,
 }: VisitDialogProps) {
-  // Note: patientId prop is actually the socialSecurityNumber (National ID as string)
-  // This naming is for API consistency - the field in CreateVisitDto is called 'patientId'
-  // but it represents the socialSecurityNumber
   const t = useTranslations('visit');
   const tCommon = useTranslations('common');
   const { mutate: createVisit } = useCreateVisit();
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
+  const [validationError, setValidationError] = React.useState<string | null>(null);
 
   const form = useForm<VisitFormData>({
     resolver: zodResolver(visitSchema),
@@ -54,20 +53,35 @@ export function VisitDialog({
   const { isPending, execute } = useFormState({
     onSuccess: (visit) => {
       form.reset();
+      setAudioFile(null);
+      setValidationError(null);
       onSuccess?.(visit.id);
     },
     successMessage: t('visitCreated'),
   });
 
   const onSubmit = (data: VisitFormData) => {
-    const visitData: CreateVisitDto = {
-      diagnoses: data.diagnoses,
-      patientId: patientId,
-    };
+    const hasText = data.diagnoses && data.diagnoses.trim().length > 0;
+    const hasAudio = !!audioFile;
+
+    if (!hasText && !hasAudio) {
+      setValidationError(t('diagnosesOrAudioRequired'));
+      return;
+    }
+    setValidationError(null);
+
+    const formData = new FormData();
+    if (hasText) {
+      formData.append('diagnoses', data.diagnoses!);
+    }
+    if (hasAudio) {
+      formData.append('audio', audioFile);
+    }
+    formData.append('patientId', patientId);
 
     execute(() => {
       return new Promise((resolve, reject) => {
-        createVisit(visitData, {
+        createVisit(formData, {
           onSuccess: resolve,
           onError: reject,
         });
@@ -78,7 +92,13 @@ export function VisitDialog({
   return (
     <BaseFormDialog
       open={open}
-      onOpenChange={onOpenChange}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setAudioFile(null);
+          setValidationError(null);
+        }
+        onOpenChange(isOpen);
+      }}
       title={t('createVisit')}
       description={t('visitDescription')}
       isPending={isPending}
@@ -101,9 +121,13 @@ export function VisitDialog({
                   placeholder={t('enterDiagnosesTreatmentPlan')}
                   className="min-h-[150px]"
                   rows={6}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />
+              {validationError && (
+                <p className="text-sm font-medium text-destructive">{validationError}</p>
+              )}
             </FormItem>
           )}
         />

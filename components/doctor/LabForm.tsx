@@ -30,11 +30,16 @@ type LabFormData = z.infer<typeof labSchema>;
 interface LabFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  socialSecurityNumber: string;
+  patientId: string;
   onSuccess?: () => void;
 }
 
-export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }: LabFormProps) {
+export function LabForm({
+  open,
+  onOpenChange,
+  patientId,
+  onSuccess,
+}: LabFormProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<LabFormData>({
@@ -49,12 +54,14 @@ export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }:
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Lab created successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: LabFormData) => {
     const formData = new FormData();
@@ -65,12 +72,15 @@ export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }:
     if (selectedImage) {
       formData.append('image', selectedImage);
     }
+    if (audioFile) {
+      formData.append('audio', audioFile);
+    }
 
     execute(() => {
       return new Promise((resolve, reject) => {
         createLabMutation.mutate(
           {
-            socialSecurityNumber,
+            patientId,
             data: formData,
           },
           {
@@ -122,6 +132,7 @@ export function LabForm({ open, onOpenChange, socialSecurityNumber, onSuccess }:
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
                   rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />

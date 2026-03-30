@@ -9,7 +9,7 @@ import type { Lab } from '@/types/entities/Lab';
 import type { Scan } from '@/types/entities/Scan';
 import { ScanType } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
-import { MedicationFrequency } from '@/types/entities/Medication';
+import { MedicationPeriod, MedicationDosage } from '@/types/entities/Medication';
 import { UserRole } from '@/types/entities/User';
 // Storage keys
 export const STORAGE_KEYS = {
@@ -305,9 +305,8 @@ const initMedications = (): Medication[] => [
     patient_id: 1,
     doctor_id: 1,
     name: 'Aspirin',
-    dosage: '81mg',
-    frequency: MedicationFrequency.DAILY,
-    start_date: new Date('2024-11-20'),
+    dosage: MedicationDosage.ONCE_PER_DAY,
+    period: MedicationPeriod.ONE_DAY,
     is_deleted: false,
     created_at: new Date('2024-11-20'),
   },
@@ -317,9 +316,8 @@ const initMedications = (): Medication[] => [
     patient_id: 1,
     doctor_id: 1,
     name: 'Nitroglycerin',
-    dosage: '0.4mg sublingual',
-    frequency: MedicationFrequency.AS_NEEDED,
-    start_date: new Date('2024-11-20'),
+    dosage: MedicationDosage.ONCE_PER_DAY,
+    period: MedicationPeriod.CHRONIC,
     is_deleted: false,
     created_at: new Date('2024-11-20'),
   },
@@ -329,9 +327,8 @@ const initMedications = (): Medication[] => [
     patient_id: 2,
     doctor_id: 1,
     name: 'Metformin',
-    dosage: '1000mg',
-    frequency: MedicationFrequency.TWICE_DAILY,
-    start_date: new Date('2024-11-22'),
+    dosage: MedicationDosage.TWICE_PER_DAY,
+    period: MedicationPeriod.ONE_WEEK,
     is_deleted: false,
     created_at: new Date('2024-11-22'),
   },

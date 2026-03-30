@@ -4,18 +4,69 @@ export interface Medication {
   patient_id: number;
   doctor_id: number;
   name: string;
-  dosage: string;
-  frequency: MedicationFrequency;
-  start_date: Date;
-  end_date?: Date;
+  dosage: MedicationDosage;
+  period: MedicationPeriod;
+  comments?: string | null;
+  commentsAudioUrl?: string | null;
   is_deleted: boolean;
   created_at: Date;
 }
 
-export enum MedicationFrequency {
-  DAILY = 'Daily',
-  TWICE_DAILY = 'Twice Daily',
-  THREE_TIMES_DAILY = 'Three Times Daily',
-  WEEKLY = 'Weekly',
-  AS_NEEDED = 'As Needed',
+export enum MedicationDosage {
+  ONCE_PER_DAY = '1',
+  TWICE_PER_DAY = '2',
+  THREE_TIMES_PER_DAY = '3',
+  FOUR_TIMES_PER_DAY = '4',
+  FIVE_TIMES_PER_DAY = '5',
+  SIX_TIMES_PER_DAY = '6',
+}
+
+export enum MedicationPeriod {
+  CHRONIC = '0',
+  ONE_DAY = '1',
+  TWO_DAYS = '2',
+  THREE_DAYS = '3',
+  FOUR_DAYS = '4',
+  FIVE_DAYS = '5',
+  SIX_DAYS = '6',
+  ONE_WEEK = '7',
+  EIGHT_DAYS = '8',
+  NINE_DAYS = '9',
+  TEN_DAYS = '10',
+  ELEVEN_DAYS = '11',
+  TWELVE_DAYS = '12',
+  THIRTEEN_DAYS = '13',
+  TWO_WEEKS = '14',
+  FIFTEEN_DAYS = '15',
+  SIXTEEN_DAYS = '16',
+  SEVENTEEN_DAYS = '17',
+  EIGHTEEN_DAYS = '18',
+  NINETEEN_DAYS = '19',
+  TWENTY_DAYS = '20',
+  THREE_WEEKS = '21',
+  TWENTY_TWO_DAYS = '22',
+  TWENTY_THREE_DAYS = '23',
+  TWENTY_FOUR_DAYS = '24',
+  TWENTY_FIVE_DAYS = '25',
+  TWENTY_SIX_DAYS = '26',
+  TWENTY_SEVEN_DAYS = '27',
+  FOUR_WEEKS = '28',
+  TWENTY_NINE_DAYS = '29',
+  ONE_MONTH = '30',
+  FIVE_WEEKS = '35',
+  SIX_WEEKS = '42',
+  SEVEN_WEEKS = '49',
+  EIGHT_WEEKS = '56',
+  NINE_WEEKS = '63',
+  TEN_WEEKS = '70',
+  ELEVEN_WEEKS = '77',
+  TWELVE_WEEKS = '84',
+  TWO_MONTHS = '60',
+  THREE_MONTHS = '90',
+  FOUR_MONTHS = '120',
+  FIVE_MONTHS = '150',
+  SIX_MONTHS = '180',
+  SEVEN_MONTHS = '210',
+  EIGHT_MONTHS = '240',
+  NINE_MONTHS = '270',
 }
