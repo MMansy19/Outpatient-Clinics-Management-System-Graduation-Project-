@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
-import { adminApi } from '@/lib/api/admin.service';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 import type { CreatePatientRequest } from '@/types/api';
@@ -91,7 +90,25 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
       try {
         let patientData: Patient | null;
         if (isAdmin) {
-          patientData = await adminApi.getPatientBySSN(socialSecurityNumber) as Patient | null;
+          // Try the SSN-specific endpoint first (searches globally),
+          // fall back to clinic-scoped search if it errors
+          try {
+            const ssnResponse = await apiClient.get<Patient>(
+              `/admin/patient/${encodeURIComponent(socialSecurityNumber)}`
+            );
+            patientData = ssnResponse.data || null;
+          } catch {
+            // SSN endpoint failed — fall back to paginated search
+            const response = await apiClient.get<{ items?: any[]; patients?: any[] }>(
+              `/admin/patients?search=${encodeURIComponent(socialSecurityNumber)}`
+            );
+            const items = response.data?.items || response.data?.patients || [];
+            const match = items.find((p: any) =>
+              p.socialSecurityNumber === socialSecurityNumber ||
+              p.user?.socialSecurityNumber === socialSecurityNumber
+            );
+            patientData = match || null;
+          }
         } else {
           const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
           patientData = response.data;
@@ -105,7 +122,7 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
       } catch (error) {
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;
-          if (status === 404 || status === 500) {
+          if (status === 404) {
             return null;
           }
         }
@@ -113,9 +130,9 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
       }
     },
     enabled: !!socialSecurityNumber && socialSecurityNumber.length > 0,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
     refetchOnWindowFocus: true,
-    gcTime: 0, // Immediately remove from cache after unmount
+    gcTime: 0,
   });
 };
 

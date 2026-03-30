@@ -43,8 +43,6 @@ import {
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
 import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
-import type { ClinicResponse } from '@/lib/api/types';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -99,34 +97,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     isLoading: loadingClinicDoctors,
   } = useGetClinicDoctors(1, 50);
 
-  // Admin-specific: Get clinic info
-  const [clinics, setClinics] = React.useState<ClinicResponse[]>([]);
-  const [loadingClinics, setLoadingClinics] = React.useState(false);
-
-  const loadClinics = React.useCallback(async () => {
-    try {
-      setLoadingClinics(true);
-      const data = await superAdminApi.getClinics();
-      // Filter to only admin's clinic
-      const adminClinic = data.find(c => c.id === clinicId);
-      if (adminClinic) {
-        setClinics([adminClinic]);
-      } else {
-        setClinics(data);
-      }
-    } catch (error) {
-      console.error('Failed to load clinics:', error);
-    } finally {
-      setLoadingClinics(false);
-    }
-  }, [clinicId]);
-
-  React.useEffect(() => {
-    if (isAdmin && clinicId) {
-      loadClinics();
-    }
-  }, [isAdmin, clinicId, loadClinics]);
-
   // Calculate statistics
   const calculateStats = () => {
     const now = new Date();
@@ -174,7 +144,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     const clinicVisits = visitsList.length;
 
     // Admin-specific: Clinic name
-    const clinicName = clinics.length > 0 ? clinics[0].name : '';
+    const clinicName = '';
 
     return {
       todaysPatients,
@@ -190,7 +160,17 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const stats = calculateStats();
 
   const handleSelectPatient = (patient: any) => {
-    setSelectedPatient(patient);
+    // Normalize patient data: handle both flat (doctor) and nested (admin) patient structures
+    const ssn = patient.socialSecurityNumber
+      || patient.user?.socialSecurityNumber
+      || (patient.national_id ? String(patient.national_id) : undefined);
+    const name = patient.name
+      || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '');
+    setSelectedPatient({
+      ...patient,
+      socialSecurityNumber: ssn,
+      name,
+    });
     setCurrentView('profile');
   };
 
@@ -280,7 +260,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 trigger={
                   <Button variant="outline" className="sm:flex-none">
                     <Plus className="mr-2 h-5 w-5" />
-                    <span className="inline">{t('addDoctor') || 'Add Doctor'}</span>
+                    <span className="md:inline hidden">{t('addDoctor')}</span>
+                    <span className="inline md:hidden">{t('addDoctorMobile')}</span>
                   </Button>
                 }
               />
@@ -293,7 +274,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               className="sm:flex-none "
             >
               <Plus className="mr-2 h-5 w-5" />
-              <span className="inline">{t('addNewPatient')}</span>
+              <span className="md:inline hidden">{t('addNewPatient')}</span>
+              <span className="inline md:hidden">{t('addNewPatientMobile')}</span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
 
@@ -675,6 +657,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               ← {t('backToPatients')}
             </Button>
             <PatientProfile
+              key={selectedPatient.socialSecurityNumber}
               socialSecurityNumber={selectedPatient.socialSecurityNumber}
               isNewPatient={selectedPatient.isNewPatient}
               scannedData={selectedPatient.scannedData}
@@ -770,49 +753,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </Card>
         )}
 
-        {/* Admin: Clinics View */}
-        {currentView === 'clinics' && isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('clinics') || 'Clinics'}</CardTitle>
-              <CardDescription>
-                {t('clinicInfoDescription') || 'Your clinic information'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingClinics ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : clinics && clinics.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{tTable('name')}</TableHead>
-                        <TableHead>{tTable('speciality')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clinics.map((clinic: ClinicResponse) => (
-                        <TableRow key={clinic.id}>
-                          <TableCell className="font-medium">{clinic.name}</TableCell>
-                          <TableCell>{clinic.speciality}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {t('noClinicsFound') || 'No clinic information found'}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Admin: Clinics View — no dedicated endpoint exists for ADMIN to fetch clinic info */}
 
         <AddPatientDialog
           open={isAddPatientOpen}
