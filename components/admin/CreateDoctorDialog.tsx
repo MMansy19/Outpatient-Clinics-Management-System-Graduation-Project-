@@ -71,14 +71,13 @@ const MEDICAL_SPECIALITIES = [
 interface CreateDoctorDialogProps {
   trigger?: React.ReactNode;
   /**
-   * Optional clinic ID. If provided, hides the clinic selector
-   * and automatically assigns the doctor to this clinic.
-   * Useful for ADMIN role (clinic-scoped doctor creation).
+   * When true, auto-fetches the admin's own clinic via GET /admin/clinic
+   * and hides the clinic selector. Use for ADMIN (clinic manager) role.
    */
-  clinicId?: string;
+  autoFetchClinic?: boolean;
 }
 
-export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProps) {
+export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
@@ -86,7 +85,7 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
   // For ADMIN (clinic manager): fetch own clinic info
-  const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!clinicId);
+  const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!autoFetchClinic);
 
   const form = useForm<CreateDoctorFormData>({
     resolver: zodResolver(createDoctorSchema),
@@ -99,24 +98,24 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
       phone: '',
       password: '',
       speciality: '',
-      clinicId: clinicId || '',
+      clinicId: '',
     },
   });
 
   // When admin clinic info loads, set the clinicId in the form
   useEffect(() => {
-    if (adminClinic?.id && clinicId) {
+    if (adminClinic?.id && autoFetchClinic) {
       form.setValue('clinicId', adminClinic.id);
     }
-  }, [adminClinic, clinicId, form]);
+  }, [adminClinic, autoFetchClinic, form]);
 
   const nationalId = form.watch('socialSecurityNumber');
 
   useEffect(() => {
-    if (open && !clinicId) {
+    if (open && !autoFetchClinic) {
       loadClinics();
     }
-  }, [open, clinicId]);
+  }, [open, autoFetchClinic]);
 
   const loadClinics = async () => {
     try {
@@ -316,7 +315,7 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
             />
 
             {/* Clinic - Read-only display for ADMIN, selector for SUPER_ADMIN */}
-            {clinicId ? (
+            {autoFetchClinic ? (
               <FormItem>
                 <FormLabel>{t('clinic')}</FormLabel>
                 <FormControl>

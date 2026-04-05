@@ -74,7 +74,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   // Get user role and clinicId from auth store
   const { user } = useAuthStore();
   const userRole = user?.role;
-  const clinicId = user?.clinicId;
   const isAdmin = userRole === Role.ADMIN;
 
   // For ADMIN (clinic manager): fetch own clinic info
@@ -251,12 +250,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold text-medical-primary">
               {isAdmin && stats.clinicName
-                ? `${stats.clinicName} — ${t('dashboard')}`
+                ? t('clinicDashboardTitle', { clinicName: stats.clinicName })
                 : t('dashboard')}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
               {isAdmin && stats.clinicName
-                ? t('clinicManagerSubtitle')
+                ? t('clinicManagerSubtitle', { clinicName: stats.clinicName })
                 : t('dashboardSubtitle')}
             </p>
           </div>
@@ -264,7 +263,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             {/* Add Doctor button - only for ADMIN */}
             {isAdmin && (
               <CreateDoctorDialog
-                clinicId={clinicId}
+                autoFetchClinic
                 trigger={
                   <Button variant="outline" className="sm:flex-none">
                     <Plus className="mr-2 h-5 w-5" />
@@ -322,7 +321,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {t('doctorsInClinic')}
+                    {t('doctorsInClinic', { clinicName: stats.clinicName })}
                   </CardTitle>
                   <Stethoscope className="h-4 w-4 text-medical-primary" />
                 </CardHeader>
@@ -331,7 +330,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('doctorsInClinicDescription')}
+                    {t('doctorsInClinicDescription', { clinicName: stats.clinicName })}
                   </p>
                 </CardContent>
               </Card>
@@ -339,7 +338,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {t('patientsInClinic')}
+                    {t('patientsInClinic', { clinicName: stats.clinicName })}
                   </CardTitle>
                   <Users className="h-4 w-4 text-medical-info" />
                 </CardHeader>
@@ -348,7 +347,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingAllPatients ? '...' : stats.clinicPatients}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('patientsInClinicDescription')}
+                    {t('patientsInClinicDescription', { clinicName: stats.clinicName })}
                   </p>
                 </CardContent>
               </Card>
@@ -356,7 +355,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                   <CardTitle className="text-sm font-medium">
-                    {t('visitsInClinic')}
+                    {t('visitsInClinic', { clinicName: stats.clinicName })}
                   </CardTitle>
                   <ClipboardList className="h-4 w-4 text-medical-secondary" />
                 </CardHeader>
@@ -365,7 +364,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingAllVisits ? '...' : stats.clinicVisits}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('visitsInClinicDescription')}
+                    {t('visitsInClinicDescription', { clinicName: stats.clinicName })}
                   </p>
                 </CardContent>
               </Card>

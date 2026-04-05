@@ -68,6 +68,57 @@ function getProxyTimeoutMs(): number {
   return value;
 }
 
+const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || 'accessToken';
+
+/**
+ * Extract the raw JWT from a signed cookie value.
+ *
+ * Backend sets: `accessToken=s%3A<JWT>.<HMAC>` (cookie-signature format).
+ * Steps:
+ *  1. URL-decode → `s:<JWT>.<HMAC>`
+ *  2. Strip `s:` prefix
+ *  3. Remove the trailing `.<HMAC>` (last dot-segment)
+ *  4. Return the plain JWT
+ *
+ * If the cookie is NOT signed (no `s:` prefix) the whole value is returned.
+ */
+function extractJwtFromCookieHeader(cookieHeader: string | null): string | null {
+  if (!cookieHeader) return null;
+
+  // Parse the cookie header to find AUTH_COOKIE_NAME
+  const cookies = cookieHeader.split(';');
+  for (const cookie of cookies) {
+    const idx = cookie.indexOf('=');
+    if (idx === -1) continue;
+    const name = cookie.substring(0, idx).trim();
+    if (name !== AUTH_COOKIE_NAME) continue;
+
+    let value = cookie.substring(idx + 1).trim();
+    // URL-decode (e.g. s%3A → s:)
+    try { value = decodeURIComponent(value); } catch { /* keep as-is */ }
+
+    if (value.startsWith('s:')) {
+      // Signed cookie: s:<JWT>.<HMAC>
+      const payload = value.substring(2); // strip "s:"
+      const lastDot = payload.lastIndexOf('.');
+      // A valid JWT has 3 dot-separated parts (header.payload.signature)
+      // The HMAC added by cookie-signature sits after the 3rd "."
+      // So we need to find the HMAC boundary = the LAST dot
+      if (lastDot === -1) return payload;
+      const jwt = payload.substring(0, lastDot);
+      // Sanity: a JWT must contain at least 2 dots (3 parts)
+      if ((jwt.match(/\./g) || []).length >= 2) return jwt;
+      // Fallback: return full payload (maybe unsigned)
+      return payload;
+    }
+
+    // Not a signed cookie — return as-is (might be a plain JWT)
+    if (value && value.includes('.')) return value;
+    return null;
+  }
+  return null;
+}
+
 function getForwardHeaders(request: NextRequest): Headers {
   const headers = new Headers();
 
@@ -92,6 +143,16 @@ function getForwardHeaders(request: NextRequest): Headers {
 
   for (const header of HOP_BY_HOP_HEADERS) {
     headers.delete(header);
+  }
+
+  // If no Authorization header was provided by the client, extract the JWT
+  // from the signed cookie and inject it so the backend's passport-jwt
+  // strategy can authenticate the request.
+  if (!headers.get('authorization')) {
+    const jwt = extractJwtFromCookieHeader(request.headers.get('cookie'));
+    if (jwt) {
+      headers.set('authorization', `Bearer ${jwt}`);
+    }
   }
 
   return headers;

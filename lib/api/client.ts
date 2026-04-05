@@ -1,6 +1,9 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
+// Module-level flag to prevent multiple concurrent 401 redirects
+let isRedirecting401 = false;
+
 // Extend Axios request config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   metadata?: {
@@ -87,7 +90,11 @@ class ApiClient {
 
             if (isRecentLogin) {
               console.warn('[API Client] Skipping 401 redirect — recent login (cookie may still be processing)');
+            } else if (isRedirecting401) {
+              console.warn('[API Client] 401 redirect already in progress, skipping duplicate');
             } else if (!isLoginPage) {
+              isRedirecting401 = true;
+
               // Clear auth state
               useAuthStore.getState().logout();
 
