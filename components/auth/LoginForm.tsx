@@ -61,29 +61,35 @@ export function LoginForm({ locale }: LoginFormProps) {
         
         // Redirect based on user role
         const redirectParam = searchParams.get('redirect');
-        let redirectPath = redirectParam;
-        
-        if (!redirectPath) {
-          // Default redirects based on role
-          switch (response.role) {
-            case Role.SUPER_ADMIN:
-              redirectPath = `/${locale}/super-admin/dashboard`;
-              console.log('🔄 Redirecting to Super Admin Dashboard:', redirectPath);
-              break;
-            case Role.ADMIN:
-              redirectPath = `/${locale}/doctor/dashboard`;
-              console.log('🔄 Redirecting to Doctor Dashboard (Admin):', redirectPath);
-              break;
-            case Role.DOCTOR:
-              redirectPath = `/${locale}/doctor/dashboard`;
-              console.log('🔄 Redirecting to Doctor Dashboard:', redirectPath);
-              break;
-            default:
-              redirectPath = `/${locale}/`;
-              console.log('🔄 Redirecting to Home:', redirectPath);
-          }
+
+        // Determine the default redirect for this role
+        const roleRedirects: Record<number, string> = {
+          [Role.SUPER_ADMIN]: `/${locale}/admin/dashboard`,
+          [Role.ADMIN]: `/${locale}/doctor/dashboard`,
+          [Role.DOCTOR]: `/${locale}/doctor/dashboard`,
+        };
+        const defaultRedirect = roleRedirects[response.role] ?? `/${locale}/`;
+
+        // Only honour the redirect param if the target page belongs to
+        // the user's role scope. This prevents e.g. a super-admin from
+        // being sent to /doctor/dashboard via a stale ?redirect= param.
+        const rolePathPrefixes: Record<number, string[]> = {
+          [Role.SUPER_ADMIN]: ['/super-admin/', '/admin/'],
+          [Role.ADMIN]: ['/admin/', '/doctor/'],
+          [Role.DOCTOR]: ['/doctor/'],
+        };
+        const allowedPrefixes = rolePathPrefixes[response.role] ?? [];
+
+        let redirectPath: string;
+        if (
+          redirectParam &&
+          allowedPrefixes.some((prefix) => redirectParam.includes(prefix))
+        ) {
+          redirectPath = redirectParam;
+          console.log('🔄 Redirecting to (from param):', redirectPath);
         } else {
-          console.log('🔄 Redirecting to:', redirectPath);
+          redirectPath = defaultRedirect;
+          console.log('🔄 Redirecting to (role default):', redirectPath);
         }
         
         // Use hard navigation to ensure the browser fully processes the

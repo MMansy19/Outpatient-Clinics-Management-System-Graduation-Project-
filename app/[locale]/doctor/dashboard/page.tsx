@@ -244,7 +244,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   }, [ refetchPatients, refetchVisits]);
 
   return (
-    <AuthGuard allowedRoles={[Role.DOCTOR, Role.ADMIN]} locale={locale}>
+    <AuthGuard allowedRoles={[Role.DOCTOR, Role.ADMIN, Role.SUPER_ADMIN]} locale={locale}>
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
