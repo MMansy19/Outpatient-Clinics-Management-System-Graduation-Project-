@@ -1,5 +1,6 @@
 import { apiClient } from './client';
 import type {
+  AdminClinicInfoResponse,
   AdminPaginatedPatientsResponse,
   AdminPaginatedVisitsResponse,
   AdminPatientVisitsResponse,
@@ -40,6 +41,16 @@ export const adminApi = {
   /** GET /api/v1/admin */
   isUp: async (): Promise<string> => {
     const response = await apiClient.get<string>('/admin');
+    return response.data;
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Clinic Info (for clinic manager)
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /** GET /api/v1/admin/clinic — returns the clinic name and id for the logged-in admin */
+  getClinic: async (): Promise<AdminClinicInfoResponse> => {
+    const response = await apiClient.get<AdminClinicInfoResponse>('/admin/clinic');
     return response.data;
   },
 

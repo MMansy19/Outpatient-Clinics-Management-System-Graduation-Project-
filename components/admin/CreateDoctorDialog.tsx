@@ -41,6 +41,7 @@ import {
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useAdminGetClinic } from '@/lib/api/queries/useAdmin';
 import type { ClinicResponse } from '@/lib/api/types';
 
 const MEDICAL_SPECIALITIES = [
@@ -84,6 +85,9 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
   const [loadingClinics, setLoadingClinics] = useState(false);
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
+  // For ADMIN (clinic manager): fetch own clinic info
+  const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!clinicId);
+
   const form = useForm<CreateDoctorFormData>({
     resolver: zodResolver(createDoctorSchema),
     defaultValues: {
@@ -99,13 +103,20 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
     },
   });
 
+  // When admin clinic info loads, set the clinicId in the form
+  useEffect(() => {
+    if (adminClinic?.id && clinicId) {
+      form.setValue('clinicId', adminClinic.id);
+    }
+  }, [adminClinic, clinicId, form]);
+
   const nationalId = form.watch('socialSecurityNumber');
 
   useEffect(() => {
-    if (open) {
+    if (open && !clinicId) {
       loadClinics();
     }
-  }, [open]);
+  }, [open, clinicId]);
 
   const loadClinics = async () => {
     try {
@@ -304,8 +315,20 @@ export function CreateDoctorDialog({ trigger, clinicId }: CreateDoctorDialogProp
               )}
             />
 
-            {/* Clinic Selection - Hide when clinicId is provided (ADMIN role) */}
-            {!clinicId && (
+            {/* Clinic - Read-only display for ADMIN, selector for SUPER_ADMIN */}
+            {clinicId ? (
+              <FormItem>
+                <FormLabel>{t('clinic')}</FormLabel>
+                <FormControl>
+                  <Input
+                    value={loadingAdminClinic ? t('loading') : (adminClinic?.name || '')}
+                    disabled
+                    readOnly
+                    className="bg-muted"
+                  />
+                </FormControl>
+              </FormItem>
+            ) : (
               <FormField
                 control={form.control}
                 name="clinicId"

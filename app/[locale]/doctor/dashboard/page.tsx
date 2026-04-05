@@ -43,6 +43,7 @@ import {
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
 import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
+import { useAdminGetClinic } from '@/lib/api/queries/useAdmin';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -75,6 +76,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const userRole = user?.role;
   const clinicId = user?.clinicId;
   const isAdmin = userRole === Role.ADMIN;
+
+  // For ADMIN (clinic manager): fetch own clinic info
+  const { data: adminClinic } = useAdminGetClinic(isAdmin);
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
@@ -143,8 +147,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     const clinicPatients = patientsList.length;
     const clinicVisits = visitsList.length;
 
-    // Admin-specific: Clinic name
-    const clinicName = '';
+    // Admin-specific: Clinic name (from GET /admin/clinic)
+    const clinicName = adminClinic?.name || '';
 
     return {
       todaysPatients,
@@ -246,10 +250,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-2">
             <h1 className="text-2xl md:text-3xl font-bold text-medical-primary">
-              {t('dashboard')}
+              {isAdmin && stats.clinicName
+                ? `${stats.clinicName} — ${t('dashboard')}`
+                : t('dashboard')}
             </h1>
             <p className="text-sm md:text-base text-muted-foreground">
-              {isAdmin && stats.clinicName ? stats.clinicName : t('dashboardSubtitle')}
+              {isAdmin && stats.clinicName
+                ? t('clinicManagerSubtitle')
+                : t('dashboardSubtitle')}
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">

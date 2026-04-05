@@ -98,10 +98,24 @@ function getForwardHeaders(request: NextRequest): Headers {
 }
 
 function getResponseHeaders(upstreamHeaders: Headers): Headers {
-  const headers = new Headers(upstreamHeaders);
+  const headers = new Headers();
 
-  for (const header of HOP_BY_HOP_HEADERS) {
-    headers.delete(header);
+  // Copy all headers except hop-by-hop
+  for (const [name, value] of upstreamHeaders.entries()) {
+    if (!HOP_BY_HOP_HEADERS.has(name.toLowerCase())) {
+      headers.append(name, value);
+    }
+  }
+
+  // Explicitly forward Set-Cookie headers.
+  // Headers.entries() may merge multiple Set-Cookie values into one
+  // comma-separated string, which breaks cookies. Use getSetCookie()
+  // (available in Node 18.14.1+) to get each cookie individually.
+  if (typeof upstreamHeaders.getSetCookie === 'function') {
+    headers.delete('set-cookie');
+    for (const cookie of upstreamHeaders.getSetCookie()) {
+      headers.append('set-cookie', cookie);
+    }
   }
 
   // Helps verify this route handles proxy responses in dev tools.

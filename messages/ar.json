@@ -191,6 +191,7 @@
 "title": "تحويل الصوت إلى نص",    "viewImage": "عرض الصورة",
     "visits": "الزيارات",
     "dashboardSubtitle": "إدارة مرضاك وسير العمل السريري",
+    "clinicManagerSubtitle": "إدارة أطباء وم‏رضى وزيارات عيادتك",
     "patients": "المرضى",
     "addNewPatient": "إضافة مريض جديد",
     "scanID": "سكان البطاقة",

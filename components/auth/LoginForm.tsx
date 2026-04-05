@@ -2,7 +2,7 @@
 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import { Loader2 } from 'lucide-react';
@@ -28,7 +28,6 @@ interface LoginFormProps {
 
 export function LoginForm({ locale }: LoginFormProps) {
   const t = useTranslations('auth');
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const { mutate: login, isPending } = useLogin();
@@ -55,6 +54,10 @@ export function LoginForm({ locale }: LoginFormProps) {
           toastMessages.auth.loginSuccess,
           `${toastMessages.auth.loginSuccessDescription} Welcome, ${response.name}!`
         );
+
+        // Mark login timestamp so the 401 interceptor doesn't redirect
+        // during the grace period while the Set-Cookie is being processed.
+        sessionStorage.setItem('login-timestamp', String(Date.now()));
         
         // Redirect based on user role
         const redirectParam = searchParams.get('redirect');
@@ -64,8 +67,8 @@ export function LoginForm({ locale }: LoginFormProps) {
           // Default redirects based on role
           switch (response.role) {
             case Role.SUPER_ADMIN:
-              redirectPath = `/${locale}/admin/dashboard`;
-              console.log('🔄 Redirecting to Admin Dashboard:', redirectPath);
+              redirectPath = `/${locale}/super-admin/dashboard`;
+              console.log('🔄 Redirecting to Super Admin Dashboard:', redirectPath);
               break;
             case Role.ADMIN:
               redirectPath = `/${locale}/doctor/dashboard`;
@@ -83,7 +86,10 @@ export function LoginForm({ locale }: LoginFormProps) {
           console.log('🔄 Redirecting to:', redirectPath);
         }
         
-        router.push(redirectPath);
+        // Use hard navigation to ensure the browser fully processes the
+        // Set-Cookie header from the login response before the new page
+        // fires any API requests that depend on the JWT cookie.
+        window.location.href = redirectPath;
       },
       onError: (error: unknown) => {
         console.error('❌ Login Error:', error);

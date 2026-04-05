@@ -7,6 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/admin.service';
 import type {
+  AdminClinicInfoResponse,
   CreateVisitDto,
   CreateVisitResponse,
   CreateMedicationDto,
@@ -30,6 +31,7 @@ import type {
 
 const adminKeys = {
   all: ['admin'] as const,
+  clinic: ['admin', 'clinic'] as const,
   patients: ['admin', 'patients'] as const,
   visits: ['admin', 'visits'] as const,
   patientVisits: (id: string) => ['admin', 'patient', id, 'visits'] as const,
@@ -45,6 +47,18 @@ const adminKeys = {
 // ============================================================================
 // Admin's Own Patients & Visits
 // ============================================================================
+
+/** Fetch the admin's clinic name and id (GET /admin/clinic) */
+export const useAdminGetClinic = (
+  enabled = true
+): UseQueryResult<AdminClinicInfoResponse, Error> => {
+  return useQuery({
+    queryKey: adminKeys.clinic,
+    queryFn: () => adminApi.getClinic(),
+    staleTime: 5 * 60 * 1000,
+    enabled,
+  });
+};
 
 export const useAdminGetPatients = (
   params: PaginationParams

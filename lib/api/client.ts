@@ -76,12 +76,18 @@ class ApiClient {
         if (error.response?.status === 401) {
           console.error('[API Error] 401 Unauthorized - Token expired or invalid');
 
-          // Only redirect if we're not already on the login page
+          // Only redirect if we're not already on the login page and not
+          // within a grace period after login (prevents redirect loops when
+          // the Set-Cookie hasn't been fully processed by the browser yet).
           if (typeof window !== 'undefined') {
             const currentPath = window.location.pathname;
             const isLoginPage = currentPath.includes('/login');
+            const loginTimestamp = sessionStorage.getItem('login-timestamp');
+            const isRecentLogin = loginTimestamp && (Date.now() - Number(loginTimestamp)) < 5000;
 
-            if (!isLoginPage) {
+            if (isRecentLogin) {
+              console.warn('[API Client] Skipping 401 redirect — recent login (cookie may still be processing)');
+            } else if (!isLoginPage) {
               // Clear auth state
               useAuthStore.getState().logout();
 

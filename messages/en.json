@@ -189,6 +189,7 @@
     "title": "Voice to Text",
     "visits": "Visits",
     "dashboardSubtitle": "Manage your patients and clinical workflow",
+    "clinicManagerSubtitle": "Manage your clinic's doctors, patients, and visits",
     "patients": "Patients",
     "addNewPatient": "Add New Patient",
     "addNewPatientMobile": "Patient",

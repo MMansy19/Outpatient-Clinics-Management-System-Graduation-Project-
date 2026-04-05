@@ -258,6 +258,15 @@ export interface VisitResponse {
 }
 
 /**
+ * Admin Clinic Info Response (GET /admin/clinic)
+ * Returns the clinic name and id for the logged-in clinic manager.
+ */
+export interface AdminClinicInfoResponse {
+  name: string;
+  id: string;
+}
+
+/**
  * Clinic Response (from admin endpoint)
  */
 export interface ClinicResponse {
