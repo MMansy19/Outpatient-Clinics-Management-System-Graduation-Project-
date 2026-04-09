@@ -149,7 +149,16 @@ function getForwardHeaders(request: NextRequest): Headers {
   // from the signed cookie and inject it so the backend's passport-jwt
   // strategy can authenticate the request.
   if (!headers.get('authorization')) {
-    const jwt = extractJwtFromCookieHeader(request.headers.get('cookie'));
+    const cookieHeader = request.headers.get('cookie');
+    const jwt = extractJwtFromCookieHeader(cookieHeader);
+    // 🔍 DEBUG: Log auth chain for 401 diagnosis (remove after debugging)
+    console.log('[PROXY AUTH]', {
+      path: request.nextUrl.pathname,
+      hasCookie: !!cookieHeader,
+      cookieNames: cookieHeader?.split(';').map(c => c.trim().split('=')[0]).join(', ') || 'none',
+      jwtExtracted: !!jwt,
+      jwtPreview: jwt ? `${jwt.substring(0, 20)}...` : 'null',
+    });
     if (jwt) {
       headers.set('authorization', `Bearer ${jwt}`);
     }

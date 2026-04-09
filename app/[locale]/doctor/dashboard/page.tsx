@@ -702,7 +702,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <CardHeader>
               <CardTitle>{t('doctors') || 'Doctors'}</CardTitle>
               <CardDescription>
-                {t('doctorsInClinicDescription') || 'Doctors in your clinic'}
+                {t('doctorsInClinicDescription', { clinicName: stats.clinicName }) || 'Doctors in your clinic'}
               </CardDescription>
             </CardHeader>
             <CardContent>
