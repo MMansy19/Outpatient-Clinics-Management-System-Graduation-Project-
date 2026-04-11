@@ -246,7 +246,7 @@ export function AddPatientDialog({
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel required className="flex items-center gap-2">
                       {tPatient('firstName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
@@ -276,7 +276,7 @@ export function AddPatientDialog({
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel required className="flex items-center gap-2">
                       {tPatient('lastName')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">
@@ -307,7 +307,7 @@ export function AddPatientDialog({
                 name="socialSecurityNumber"
                 render={({ field }) => (
                   <FormItem className="md:col-span-2">
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel required className="flex items-center gap-2">
                       {tPatient('nationalId')}
                       {dataSource === 'scan' && prefilledData && (
                         <Badge variant="secondary" className="text-xs">

@@ -135,7 +135,7 @@ export function LoginForm({ locale }: LoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('email')}</FormLabel>
+                <FormLabel required>{t('email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -155,7 +155,7 @@ export function LoginForm({ locale }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('password')}</FormLabel>
+                <FormLabel required>{t('password')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"

@@ -131,7 +131,7 @@ export function MedicationEditDialog({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('name')}</FormLabel>
+              <FormLabel required>{t('name')}</FormLabel>
               <FormControl>
                 <Input placeholder={t('namePlaceholder')} {...field} />
               </FormControl>
@@ -146,7 +146,7 @@ export function MedicationEditDialog({
           name="dosage"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('dosage')}</FormLabel>
+              <FormLabel required>{t('dosage')}</FormLabel>
               <Select
                 onValueChange={(value) => field.onChange(parseInt(value))}
                 value={field.value?.toString()}
@@ -179,7 +179,7 @@ export function MedicationEditDialog({
           name="period"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('duration')}</FormLabel>
+              <FormLabel required>{t('duration')}</FormLabel>
               <Select
                 onValueChange={(value) => field.onChange(parseInt(value))}
                 value={field.value?.toString()}

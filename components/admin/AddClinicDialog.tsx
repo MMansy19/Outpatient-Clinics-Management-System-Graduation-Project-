@@ -100,7 +100,7 @@ export function AddClinicDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinicName')}</FormLabel>
+                  <FormLabel required>{t('clinicName')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
@@ -120,7 +120,7 @@ export function AddClinicDialog({
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('speciality')}</FormLabel>
+                  <FormLabel required>{t('speciality')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={

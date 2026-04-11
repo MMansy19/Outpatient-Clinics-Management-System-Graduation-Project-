@@ -113,7 +113,7 @@ export function EditClinicDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinicName')}</FormLabel>
+                  <FormLabel required>{t('clinicName')}</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} />
                   </FormControl>
@@ -127,7 +127,7 @@ export function EditClinicDialog({
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('speciality')}</FormLabel>
+                  <FormLabel required>{t('speciality')}</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} />
                   </FormControl>

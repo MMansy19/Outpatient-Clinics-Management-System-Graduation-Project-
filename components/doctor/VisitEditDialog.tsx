@@ -113,7 +113,7 @@ export function VisitEditDialog({
           name="diagnosis"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diagnosis</FormLabel>
+              <FormLabel required>Diagnosis</FormLabel>
               <FormControl>
                 <VoiceFormField
                   field={field}

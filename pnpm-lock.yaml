@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@breezystack/lamejs':
+        specifier: ^1.2.7
+        version: 1.2.7
       '@capacitor/camera':
         specifier: ^8.0.0
         version: 8.0.0(@capacitor/core@8.0.0)
@@ -86,9 +89,6 @@ importers:
       konsta:
         specifier: ^3.1.3
         version: 3.1.4
-      lamejs:
-        specifier: ^1.2.1
-        version: 1.2.1
       lucide-react:
         specifier: ^0.356.0
         version: 0.356.0(react@18.3.1)
@@ -197,6 +197,9 @@ packages:
   '@babel/helper-validator-identifier@7.28.5':
     resolution: {integrity: sha512-qSs4ifwzKJSV39ucNjsvc6WVHs6b7S03sOh2OcHF9UHfVPqWWALUsNUVzhSBiItjRZoLHx7nIarVjqKVusUZ1Q==}
     engines: {node: '>=6.9.0'}
+
+  '@breezystack/lamejs@1.2.7':
+    resolution: {integrity: sha512-6wc7ck65ctA75Hq7FYHTtTvGnYs6msgdxiSUICQ+A01nVOWg6rqouZB8IdyteRlfpYYiFovkf67dIeOgWIUzTA==}
 
   '@capacitor/camera@8.0.0':
     resolution: {integrity: sha512-Iu8j2oxoIhY2mLuoEckbL7PFgw1XFm1nqmeWdIkILpcT3H9A+BrSDUDlzWqM/EeaDKo6JnhR59tYHwUhOdXaUg==}
@@ -2437,9 +2440,6 @@ packages:
     resolution: {integrity: sha512-bVcy+BPRact12NYQjsozlZbljPQWy/dNRo1h+YILlShzQmeuo2MuEQascKc9SLY5glCRAD5xJ8BKg264oU7ZeQ==}
     engines: {node: '>= 4.7.0'}
 
-  lamejs@1.2.1:
-    resolution: {integrity: sha512-s7bxvjvYthw6oPLCm5pFxvA84wUROODB8jEO2+CE1adhKgrIvVOlmMgY8zyugxGrvRaDHNJanOiS21/emty6dQ==}
-
   language-subtag-registry@0.3.23:
     resolution: {integrity: sha512-0K65Lea881pHotoGEa5gDlMxt3pctLi2RplBb7Ezh4rRdLEOtgi7n4EwK9lamnUCkKBqaeKRVebTq6BAxSkpXQ==}
 
@@ -3341,9 +3341,6 @@ packages:
       '@types/react':
         optional: true
 
-  use-strict@1.0.1:
-    resolution: {integrity: sha512-IeiWvvEXfW5ltKVMkxq6FvNf2LojMKvB2OCeja6+ct24S1XOmQw2dGr2JyndwACWAGJva9B7yPHwAmeA9QCqAQ==}
-
   use-sync-external-store@1.6.0:
     resolution: {integrity: sha512-Pp6GSwGP/NrPIrxVFAIkOQeyw8lFenOHijQWkUTrDvrF4ALqylP2C/KCkeS9dpUM3KvYRQhna5vt7IL95+ZQ9w==}
     peerDependencies:
@@ -3469,6 +3466,8 @@ snapshots:
       picocolors: 1.1.1
 
   '@babel/helper-validator-identifier@7.28.5': {}
+
+  '@breezystack/lamejs@1.2.7': {}
 
   '@capacitor/camera@8.0.0(@capacitor/core@8.0.0)':
     dependencies:
@@ -5992,10 +5991,6 @@ snapshots:
 
   konsta@3.1.4: {}
 
-  lamejs@1.2.1:
-    dependencies:
-      use-strict: 1.0.1
-
   language-subtag-registry@0.3.23: {}
 
   language-tags@1.0.9:
@@ -6957,8 +6952,6 @@ snapshots:
       tslib: 2.8.1
     optionalDependencies:
       '@types/react': 18.3.27
-
-  use-strict@1.0.1: {}
 
   use-sync-external-store@1.6.0(react@18.3.1):
     dependencies:

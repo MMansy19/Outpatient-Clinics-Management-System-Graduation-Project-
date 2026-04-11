@@ -217,7 +217,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormLabel required>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -235,7 +235,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormLabel required>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -255,7 +255,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
+                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="30202041234567"
@@ -278,7 +278,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('email')}</FormLabel>
+                  <FormLabel required>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -298,7 +298,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
+                  <FormLabel required>{t('phoneNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('phonePlaceholder')}
@@ -317,7 +317,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
             {/* Clinic - Read-only display for ADMIN, selector for SUPER_ADMIN */}
             {autoFetchClinic ? (
               <FormItem>
-                <FormLabel>{t('clinic')}</FormLabel>
+                <FormLabel required>{t('clinic')}</FormLabel>
                 <FormControl>
                   <Input
                     value={loadingAdminClinic ? t('loading') : (adminClinic?.name || '')}
@@ -333,7 +333,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
                 name="clinicId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('clinic')}</FormLabel>
+                    <FormLabel required>{t('clinic')}</FormLabel>
                     <Select
                       onValueChange={field.onChange}
                       defaultValue={field.value}
@@ -376,7 +376,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('medicalSpeciality')}</FormLabel>
+                  <FormLabel required>{t('medicalSpeciality')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -406,7 +406,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('password')}</FormLabel>
+                  <FormLabel required>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"

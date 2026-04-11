@@ -126,7 +126,7 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('scanName')}</FormLabel>
+              <FormLabel required>{t('scanName')}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Chest X-Ray, Brain MRI" {...field} />
               </FormControl>
@@ -140,7 +140,7 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('scanType')}</FormLabel>
+              <FormLabel required>{t('scanType')}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>

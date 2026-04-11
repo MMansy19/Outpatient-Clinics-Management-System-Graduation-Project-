@@ -114,7 +114,7 @@ export function VisitDialog({
           name="diagnoses"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('diagnosesTreatmentPlan')}</FormLabel>
+              <FormLabel required>{t('diagnosesTreatmentPlan')}</FormLabel>
               <FormControl>
                 <VoiceFormField
                   field={field}

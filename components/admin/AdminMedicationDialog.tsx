@@ -113,7 +113,7 @@ export function AdminMedicationDialog({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('name')}</FormLabel>
+              <FormLabel required>{t('name')}</FormLabel>
               <FormControl>
                 <Input placeholder={t('namePlaceholder')} {...field} />
               </FormControl>
@@ -127,7 +127,7 @@ export function AdminMedicationDialog({
           name="dosage"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('dosage')}</FormLabel>
+              <FormLabel required>{t('dosage')}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -153,7 +153,7 @@ export function AdminMedicationDialog({
           name="period"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('duration')}</FormLabel>
+              <FormLabel required>{t('duration')}</FormLabel>
               <Select onValueChange={field.onChange} value={field.value?.toString()}>
                 <FormControl>
                   <SelectTrigger>

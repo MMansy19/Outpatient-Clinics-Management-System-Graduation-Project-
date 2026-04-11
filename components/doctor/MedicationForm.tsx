@@ -126,7 +126,7 @@ export function MedicationForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('name')}</FormLabel>
+                  <FormLabel required>{t('name')}</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder={t('namePlaceholder')}
@@ -144,7 +144,7 @@ export function MedicationForm({
               name="dosage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('dosage')}</FormLabel>
+                  <FormLabel required>{t('dosage')}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value}
@@ -179,7 +179,7 @@ export function MedicationForm({
               name="period"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('duration')}</FormLabel>
+                  <FormLabel required>{t('duration')}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value?.toString()}

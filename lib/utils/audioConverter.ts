@@ -1,4 +1,4 @@
-import lamejs from 'lamejs';
+import { Mp3Encoder } from '@breezystack/lamejs';
 
 /**
  * Convert an audio Blob (any browser-supported format like webm, mp4, ogg)
@@ -20,8 +20,8 @@ export async function convertBlobToMp3(blob: Blob): Promise<Blob> {
   }
 
   // Encode to MP3 (mono, 128 kbps)
-  const mp3Encoder = new lamejs.Mp3Encoder(1, sampleRate, 128);
-  const mp3Data: Int8Array[] = [];
+  const mp3Encoder = new Mp3Encoder(1, sampleRate, 128);
+  const mp3Data: Uint8Array[] = [];
 
   const blockSize = 1152; // lamejs processes in blocks of 1152 samples
   for (let i = 0; i < int16Samples.length; i += blockSize) {
@@ -39,5 +39,5 @@ export async function convertBlobToMp3(blob: Blob): Promise<Blob> {
 
   await audioContext.close();
 
-  return new Blob(mp3Data, { type: 'audio/mpeg' });
+  return new Blob(mp3Data as BlobPart[], { type: 'audio/mpeg' });
 }

@@ -106,7 +106,7 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('labName')}</FormLabel>
+              <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
                 <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
               </FormControl>
