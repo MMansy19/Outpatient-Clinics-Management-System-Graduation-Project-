@@ -728,7 +728,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                       {clinicDoctors.items.map((doctor: any) => (
                         <TableRow key={doctor.id}>
                           <TableCell className="font-medium">
-                            {doctor.user?.firstName} {doctor.user?.lastName}
+                            {doctor.name}
                           </TableCell>
                           <TableCell>{doctor.email}</TableCell>
                           <TableCell>{doctor.phone}</TableCell>
@@ -741,7 +741,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                   : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                               }`}
                             >
-                              {doctor.isApproved ? 'Approved' : 'Pending'}
+                              {doctor.isApproved ? tTable('approved') : tTable('pending')}
                             </span>
                           </TableCell>
                         </TableRow>

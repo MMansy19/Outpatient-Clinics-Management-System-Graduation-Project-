@@ -189,7 +189,7 @@
     "title": "Voice to Text",
     "visits": "Visits",
     "dashboardSubtitle": "Manage your patients and clinical workflow",
-    "clinicDashboardTitle": "Dashboard of Clinic \"{clinicName}\"",
+    "clinicDashboardTitle": "Dashboard of \"{clinicName}\"",
     "clinicManagerSubtitle": "Manage doctors, patients, and visits of \"{clinicName}\"",
     "patients": "Patients",
     "addNewPatient": "Add New Patient",
@@ -459,6 +459,8 @@
       "twoTablets": "2 tablets",
       "threeTablets": "3 tablets",
       "fourTablets": "4 tablets",
+      "fiveTablets": "5 tablets",
+      "sixTablets": "6 tablets",
       "custom": "Custom"
     },
     "periods": {
@@ -521,7 +523,13 @@
     "gender": "Gender",
     "dateOfBirth": "Date of Birth",
     "socialSecurityNumber": "Social Security Number",
-    "job":"Job"
+    "job":"Job",
+    "audio": "Audio",
+    "email": "Email",
+    "phone": "Phone",
+    "status": "Status",
+    "approved": "Approved",
+    "pending": "Pending"
   },
   "vitals": {
     "kg": "kg",
@@ -1008,7 +1016,8 @@
     "transcriptionComplete": "Transcription complete!",
     "transcriptionFailed": "Failed to transcribe audio",
     "invalidFileType": "Invalid file type. Please upload an audio or video file.",
-    "fileTooLarge": "File is too large. Maximum size is 50MB."
+    "fileTooLarge": "File is too large. Maximum size is 50MB.",
+    "conversionError": "Failed to process audio. Please try again."
   },
   "clinic": {
     "deletedSuccess": "Clinic deleted successfully",

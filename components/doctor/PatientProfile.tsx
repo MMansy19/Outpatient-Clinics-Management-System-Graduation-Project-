@@ -37,6 +37,7 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
 import { QuickActionCard } from '@/components/shared/QuickActionCard';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 
@@ -498,6 +499,7 @@ export function PatientProfile({
                         <TableHead>{tTable('duration')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -508,6 +510,11 @@ export function PatientProfile({
                           <TableCell>{medication.period} days</TableCell>
                           <TableCell>Dr. {medication.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>{medication.comments || '-'}</TableCell>
+                          <TableCell>
+                            {medication.commentsAudioUrl && (
+                              <AudioPlayer src={medication.commentsAudioUrl} compact />
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -561,6 +568,7 @@ export function PatientProfile({
                         <TableHead>{tTable('name')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                         <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -571,6 +579,11 @@ export function PatientProfile({
                           <TableCell className="font-medium">{lab.name}</TableCell>
                           <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>{lab.comments || '-'}</TableCell>
+                          <TableCell>
+                            {lab.commentsAudioUrl && (
+                              <AudioPlayer src={lab.commentsAudioUrl} compact />
+                            )}
+                          </TableCell>
                           <TableCell>
                             {lab.photoUrl && (
                               <a
@@ -637,6 +650,7 @@ export function PatientProfile({
                         <TableHead>{tTable('type')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                         <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -648,6 +662,11 @@ export function PatientProfile({
                           <TableCell>{scan.type || '-'}</TableCell>
                           <TableCell>Dr. {scan.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>{scan.comments || '-'}</TableCell>
+                          <TableCell>
+                            {scan.commentsAudioUrl && (
+                              <AudioPlayer src={scan.commentsAudioUrl} compact />
+                            )}
+                          </TableCell>
                           <TableCell>
                             {scan.photoUrl && (
                               <a
@@ -783,6 +802,11 @@ export function PatientProfile({
                                       <span className="font-medium">{tTable('comments')}:</span> {medication.comments}
                                     </p>
                                   )}
+                                  {medication.commentsAudioUrl && (
+                                    <div className="mt-2">
+                                      <AudioPlayer src={medication.commentsAudioUrl} compact />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -851,6 +875,11 @@ export function PatientProfile({
                                     >
                                       {tCommon('viewImage')}
                                     </a>
+                                  )}
+                                  {lab.commentsAudioUrl && (
+                                    <div className="mt-2">
+                                      <AudioPlayer src={lab.commentsAudioUrl} compact />
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -923,6 +952,11 @@ export function PatientProfile({
                                     >
                                       {tCommon('viewImage')}
                                     </a>
+                                  )}
+                                  {scan.commentsAudioUrl && (
+                                    <div className="mt-2">
+                                      <AudioPlayer src={scan.commentsAudioUrl} compact />
+                                    </div>
                                   )}
                                 </div>
                               </div>

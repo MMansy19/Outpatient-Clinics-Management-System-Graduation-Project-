@@ -459,6 +459,8 @@
       "twoTablets": "قرصان",
       "threeTablets": "ثلاثة أقراص",
       "fourTablets": "أربعة أقراص",
+      "fiveTablets": "خمسة أقراص",
+      "sixTablets": "ستة أقراص",
       "custom": "مخصص"
     },
     "periods": {
@@ -521,7 +523,13 @@
     "gender": "الجنس",
     "dateOfBirth": "تاريخ الميلاد",
     "socialSecurityNumber": "الرقم القومي",
-    "job":"الوظيفة"
+    "job":"الوظيفة",
+    "audio": "صوت",
+    "email": "البريد الإلكتروني",
+    "phone": "الهاتف",
+    "status": "الحالة",
+    "approved": "مُعتمد",
+    "pending": "قيد الانتظار"
   },
   "vitals": {
     "kg": "كجم",
@@ -1008,7 +1016,8 @@
     "transcriptionComplete": "اكتمل تحويل الصوت إلى نص!",
     "transcriptionFailed": "فشل تحويل الصوت إلى نص",
     "invalidFileType": "نوع ملف غير صالح. يرجى رفع ملف صوتي أو فيديو.",
-    "fileTooLarge": "حجم الملف كبير جدًا. الحد الأقصى 50 ميجابايت."
+    "fileTooLarge": "حجم الملف كبير جدًا. الحد الأقصى 50 ميجابايت.",
+    "conversionError": "فشل معالجة الصوت. يرجى المحاولة مرة أخرى."
   },
   "clinic": {
     "deletedSuccess": "تم حذف العيادة بنجاح",

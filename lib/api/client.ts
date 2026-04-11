@@ -49,6 +49,12 @@ class ApiClient {
         // Add timestamp for caching
         config.metadata = { startTime: Date.now() };
 
+        // When sending FormData, delete the default JSON Content-Type so the
+        // browser/axios can auto-set multipart/form-data with the correct boundary.
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+        }
+
         // Log requests in development
         if (process.env.NODE_ENV === 'development') {
           console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);

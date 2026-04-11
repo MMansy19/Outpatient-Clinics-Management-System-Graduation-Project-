@@ -68,12 +68,14 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Scan created successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: ScanFormData) => {
     const formData = new FormData();
@@ -84,6 +86,9 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
     }
     if (selectedImage) {
       formData.append('image', selectedImage);
+    }
+    if (audioFile) {
+      formData.append('audio', audioFile);
     }
 
     execute(() => {
@@ -167,6 +172,7 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
                   rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />

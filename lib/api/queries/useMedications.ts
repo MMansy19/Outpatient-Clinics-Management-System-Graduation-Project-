@@ -155,7 +155,7 @@ export const useCreateMedication = (): UseMutationResult<
       if (isAdmin) {
         return adminApi.createMedication(data);
       }
-      return doctorApi.createMedication(data as CreateMedicationDto);
+      return doctorApi.createMedication(data);
     },
     onSuccess: (response, variables) => {
       // Invalidate patient medications list

@@ -4,6 +4,8 @@ import type {
   CreateVisitResponse,
   CreateMedicationDto,
   CreateMedicationResponse,
+  AdminPatientLabsResponse,
+  AdminPatientScansResponse,
 } from './types';
 import type {
   ScanNationalIdResponse,
@@ -74,12 +76,7 @@ export const doctorApi = {
 
     const response = await apiClient.post<ScanNationalIdResponse>(
       '/ocr/process-id',
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      }
+      formData
     );
     return response.data;
   },
@@ -112,11 +109,9 @@ export const doctorApi = {
    * ```
    */
   createVisit: async (data: CreateVisitDto | FormData): Promise<CreateVisitResponse> => {
-    const isFormData = data instanceof FormData;
     const response = await apiClient.post<CreateVisitResponse>(
       '/doctor/visit',
-      data,
-      { headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined }
+      data
     );
     return response.data;
   },
@@ -221,7 +216,7 @@ export const doctorApi = {
    * ```
    */
   createMedication: async (
-    data: CreateMedicationDto
+    data: CreateMedicationDto | FormData
   ): Promise<CreateMedicationResponse> => {
     const response = await apiClient.post<CreateMedicationResponse>(
       '/doctor/medication',
@@ -422,8 +417,8 @@ export const doctorApi = {
    * @returns {Promise<any[]>} Array of patient labs
    * @throws {AxiosError} When request fails
    */
-  getPatientLabs: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(
+  getPatientLabs: async (patientId: string): Promise<AdminPatientLabsResponse> => {
+    const response = await apiClient.get<AdminPatientLabsResponse>(
       `/doctor/patient/${patientId}/labs`
     );
     return response.data;
@@ -456,12 +451,7 @@ export const doctorApi = {
     const payload = isFormData ? data : { ...data, patientId };
     const response = await apiClient.post<unknown>(
       '/doctor/lab',
-      payload,
-      {
-        headers: isFormData ? {
-          'Content-Type': 'multipart/form-data',
-        } : undefined,
-      }
+      payload
     );
     return response.data;
   },
@@ -533,8 +523,8 @@ export const doctorApi = {
    * @returns {Promise<any[]>} Array of patient scans
    * @throws {AxiosError} When request fails
    */
-  getPatientScans: async (patientId: string): Promise<unknown[]> => {
-    const response = await apiClient.get<unknown[]>(
+  getPatientScans: async (patientId: string): Promise<AdminPatientScansResponse> => {
+    const response = await apiClient.get<AdminPatientScansResponse>(
       `/doctor/patient/${patientId}/scans`
     );
     return response.data;
@@ -568,12 +558,7 @@ export const doctorApi = {
     const payload = isFormData ? data : { ...data, patientId };
     const response = await apiClient.post<unknown>(
       '/doctor/scan',
-      payload,
-      {
-        headers: isFormData ? {
-          'Content-Type': 'multipart/form-data',
-        } : undefined,
-      }
+      payload
     );
     return response.data;
   },

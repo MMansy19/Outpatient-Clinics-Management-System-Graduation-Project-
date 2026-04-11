@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -43,6 +44,7 @@ export function MedicationDialog({
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
   const { mutate: createMedication } = useCreateMedication();
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   // Helper function to create translation function for medication namespace
   const getMedicationT = (key: string) => t(key);
@@ -64,16 +66,29 @@ export function MedicationDialog({
   const { isPending, execute } = useFormState({
     onSuccess: (response) => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.(response.id);
     },
     successMessage: t('medicationCreated'),
   });
 
   const onSubmit = (data: CreateMedicationDto) => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('dosage', data.dosage);
+    formData.append('period', data.period);
+    formData.append('patientId', data.patientId);
+    if (data.comments) {
+      formData.append('comments', data.comments);
+    }
+    if (audioFile) {
+      formData.append('audio', audioFile);
+    }
+
     execute(
       () => {
         return new Promise((resolve, reject) => {
-          createMedication(data, {
+          createMedication(formData, {
             onSuccess: resolve,
             onError: reject,
           });
@@ -120,7 +135,7 @@ export function MedicationDialog({
             <FormItem>
               <FormLabel>{t('dosage')}</FormLabel>
               <Select
-                onValueChange={(value) => field.onChange(parseInt(value))}
+                onValueChange={field.onChange}
                 value={field.value?.toString()}
               >
                 <FormControl>
@@ -150,7 +165,7 @@ export function MedicationDialog({
             <FormItem>
               <FormLabel>{t('duration')}</FormLabel>
               <Select
-                onValueChange={(value) => field.onChange(parseInt(value))}
+                onValueChange={field.onChange}
                 value={field.value?.toString()}
               >
                 <FormControl>
@@ -179,7 +194,7 @@ export function MedicationDialog({
           render={({ field }) => (
             <FormItem>
               <FormLabel>
-                {t('notes')} ({tCommon('optional')})
+                {t('notes')}
               </FormLabel>
               <FormControl>
                 <VoiceFormField
@@ -187,6 +202,7 @@ export function MedicationDialog({
                   placeholder={t('notesPlaceholder')}
                   className="min-h-[100px]"
                   rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />

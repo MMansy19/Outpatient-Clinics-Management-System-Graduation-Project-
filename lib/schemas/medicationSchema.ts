@@ -44,7 +44,7 @@ export const medicationSchema = z.object({
     .min(1, 'Period is required'),
 
   /**
-   * Additional Comments/Instructions (Optional)
+   * Additional Comments/Instructions
    * 
    * Special instructions, warnings, or notes.
    * Examples:
@@ -56,7 +56,6 @@ export const medicationSchema = z.object({
     .string()
     .max(500, 'Comments cannot exceed 500 characters')
     .trim()
-    .optional()
     .or(z.literal('')), // Allow empty string
 
   /**

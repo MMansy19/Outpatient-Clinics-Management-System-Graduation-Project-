@@ -49,12 +49,14 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
   const { isPending, execute } = useFormState({
     onSuccess: () => {
       form.reset();
+      setAudioFile(null);
       onSuccess?.();
     },
     successMessage: 'Lab created successfully',
   });
 
   const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
+  const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: LabFormData) => {
     const formData = new FormData();
@@ -64,6 +66,9 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
     }
     if (selectedImage) {
       formData.append('image', selectedImage);
+    }
+    if (audioFile) {
+      formData.append('audio', audioFile);
     }
 
     execute(() => {
@@ -122,6 +127,7 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
                   placeholder={t('optionalComments')}
                   className="min-h-[100px]"
                   rows={4}
+                  onAudioCaptured={setAudioFile}
                 />
               </FormControl>
               <FormMessage />

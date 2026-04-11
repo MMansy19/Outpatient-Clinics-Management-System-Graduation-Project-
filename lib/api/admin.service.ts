@@ -118,10 +118,7 @@ export const adminApi = {
 
   /** POST /api/v1/admin/visit  (multipart/form-data) */
   createVisit: async (data: CreateVisitDto | FormData): Promise<CreateVisitResponse> => {
-    const isFormData = data instanceof FormData;
-    const response = await apiClient.post<CreateVisitResponse>('/admin/visit', data, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await apiClient.post<CreateVisitResponse>('/admin/visit', data);
     return response.data;
   },
 
@@ -137,10 +134,7 @@ export const adminApi = {
 
   /** POST /api/v1/admin/medication  (multipart/form-data) */
   createMedication: async (data: CreateMedicationDto | FormData): Promise<CreateMedicationResponse> => {
-    const isFormData = data instanceof FormData;
-    const response = await apiClient.post<CreateMedicationResponse>('/admin/medication', data, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await apiClient.post<CreateMedicationResponse>('/admin/medication', data);
     return response.data;
   },
 
@@ -164,9 +158,7 @@ export const adminApi = {
       (data as FormData).set('patientId', patientId);
     }
     const payload = isFormData ? data : { ...data, patientId };
-    const response = await apiClient.post<unknown>('/admin/lab', payload, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await apiClient.post<unknown>('/admin/lab', payload);
     return response.data;
   },
 
@@ -190,9 +182,7 @@ export const adminApi = {
       (data as FormData).set('patientId', patientId);
     }
     const payload = isFormData ? data : { ...data, patientId };
-    const response = await apiClient.post<unknown>('/admin/scan', payload, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await apiClient.post<unknown>('/admin/scan', payload);
     return response.data;
   },
 
