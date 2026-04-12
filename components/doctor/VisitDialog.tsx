@@ -44,11 +44,16 @@ export function VisitDialog({
   const [validationError, setValidationError] = React.useState<string | null>(null);
 
   const form = useForm<VisitFormData>({
+    mode: 'onChange',
     resolver: zodResolver(visitSchema),
     defaultValues: {
       diagnoses: '',
     },
   });
+
+  const diagnosesValue = form.watch('diagnoses');
+  const visitContentReady =
+    (diagnosesValue?.trim()?.length ?? 0) > 0 || !!audioFile;
 
   const { isPending, execute } = useFormState({
     onSuccess: (visit) => {
@@ -102,6 +107,7 @@ export function VisitDialog({
       title={t('createVisit')}
       description={t('visitDescription')}
       isPending={isPending}
+      submitDisabled={!visitContentReady}
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={t('saveVisit')}
       cancelLabel={tCommon('cancel')}

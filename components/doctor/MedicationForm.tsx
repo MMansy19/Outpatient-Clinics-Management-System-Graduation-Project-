@@ -61,6 +61,7 @@ export function MedicationForm({
   const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<CreateMedicationDto>({
+    mode: 'onChange',
     resolver: zodResolver(medicationSchema),
     defaultValues: {
       patientId,
@@ -241,7 +242,10 @@ export function MedicationForm({
                 {tCommon('cancel')}
               </Button>
             )}
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending || !form.formState.isValid}
+            >
               {isPending ? tCommon('saving') : t('addMedication')}
             </Button>
           </CardFooter>

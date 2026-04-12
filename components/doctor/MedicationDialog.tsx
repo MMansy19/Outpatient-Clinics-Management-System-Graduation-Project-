@@ -53,6 +53,7 @@ export function MedicationDialog({
   const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<CreateMedicationDto>({
+    mode: 'onChange',
     resolver: zodResolver(medicationSchema),
     defaultValues: {
       patientId: patientId,
@@ -105,6 +106,7 @@ export function MedicationDialog({
       title={t('addMedication')}
       description={t('medicationDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={t('addMedication')}
       cancelLabel={tCommon('cancel')}

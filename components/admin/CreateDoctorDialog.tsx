@@ -88,6 +88,7 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
   const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!autoFetchClinic);
 
   const form = useForm<CreateDoctorFormData>({
+    mode: 'onChange',
     resolver: zodResolver(createDoctorSchema),
     defaultValues: {
       firstName: '',
@@ -426,7 +427,15 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending || loadingClinics}>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  loadingClinics ||
+                  (autoFetchClinic && loadingAdminClinic) ||
+                  !form.formState.isValid
+                }
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

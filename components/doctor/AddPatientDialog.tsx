@@ -63,6 +63,7 @@ export function AddPatientDialog({
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm<CreatePatientFormData>({
+    mode: 'onChange',
     resolver: zodResolver(createPatientSchema),
     defaultValues: prefilledData
       ? {
@@ -404,7 +405,10 @@ export function AddPatientDialog({
               >
                 {tCommon('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button
+                type="submit"
+                disabled={isPending || !form.formState.isValid}
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

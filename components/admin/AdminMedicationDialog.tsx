@@ -54,6 +54,7 @@ export function AdminMedicationDialog({
   const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<MedicationFormDataWithoutPatient>({
+    mode: 'onChange',
     resolver: zodResolver(medicationSchemaWithoutPatient),
     defaultValues: {
       name: '',
@@ -101,6 +102,7 @@ export function AdminMedicationDialog({
       title={t('addMedication')}
       description={t('medicationDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={t('addMedication')}
       cancelLabel={tCommon('cancel')}

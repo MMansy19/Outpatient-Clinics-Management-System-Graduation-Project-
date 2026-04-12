@@ -19,6 +19,8 @@ interface BaseFormDialogProps {
   title: string;
   description?: string;
   isPending?: boolean;
+  /** When true, the primary submit button is disabled (e.g. until required fields pass validation). */
+  submitDisabled?: boolean;
   onSubmit?: (e: React.FormEvent) => void;
   onCancel?: () => void;
   submitLabel?: string;
@@ -43,6 +45,7 @@ export function BaseFormDialog({
   title,
   description,
   isPending = false,
+  submitDisabled = false,
   onSubmit,
   onCancel,
   submitLabel = 'Save',
@@ -95,7 +98,7 @@ export function BaseFormDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || submitDisabled}
                 className="w-full sm:w-auto bg-medical-primary hover:bg-medical-primary/90"
               >
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
