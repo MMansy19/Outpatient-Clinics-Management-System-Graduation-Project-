@@ -55,7 +55,6 @@ export function DoctorTable() {
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);
     } catch (error) {
-      console.error('Failed to load doctors:', error);
       toast.error('Failed to load doctors');
     } finally {
       setLoading(false);
@@ -72,7 +71,6 @@ export function DoctorTable() {
       toast.success('Doctor deleted successfully');
       loadDoctors();
     } catch (error) {
-      console.error('Failed to delete doctor:', error);
       toast.error('Failed to delete doctor');
     }
   };
@@ -182,7 +180,11 @@ export function DoctorTable() {
               <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
                       <Trash2 className="h-4 w-4 mr-1" />
                       {t('delete')}
                     </Button>
@@ -191,12 +193,17 @@ export function DoctorTable() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t('deleteDoctorConfirmation', { name: `${doctor.user.firstName} ${doctor.user.lastName}` })}
+                        {t('deleteDoctorConfirmation', {
+                          name: `${doctor.user.firstName} ${doctor.user.lastName}`,
+                        })}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(doctor.id)} className="bg-red-600 hover:bg-red-700">
+                      <AlertDialogAction
+                        onClick={() => handleDelete(doctor.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
                         {t('delete')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -261,20 +268,31 @@ export function DoctorTable() {
                     <TableCell>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {t('confirmDelete')}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              {t('deleteDoctorConfirmation', { name: `${doctor.user.firstName} ${doctor.user.lastName}` })}
+                              {t('deleteDoctorConfirmation', {
+                                name: `${doctor.user.firstName} ${doctor.user.lastName}`,
+                              })}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(doctor.id)} className="bg-red-600 hover:bg-red-700">
+                            <AlertDialogAction
+                              onClick={() => handleDelete(doctor.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
                               {t('delete')}
                             </AlertDialogAction>
                           </AlertDialogFooter>

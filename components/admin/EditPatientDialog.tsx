@@ -63,7 +63,6 @@ export function EditPatientDialog({
       onSuccess();
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to update patient:', error);
       toast.error(t('patientUpdateFailed'));
     } finally {
       setLoading(false);
@@ -78,7 +77,8 @@ export function EditPatientDialog({
         <DialogHeader>
           <DialogTitle>{t('editPatient')}</DialogTitle>
           <DialogDescription>
-            {t('updatePatientInformation')} (ID: {patient.id.substring(0, 8)}...)
+            {t('updatePatientInformation')} (ID: {patient.id.substring(0, 8)}
+            ...)
           </DialogDescription>
         </DialogHeader>
 
@@ -114,7 +114,9 @@ export function EditPatientDialog({
             <Input
               id="job"
               value={formData.job}
-              onChange={(e) => setFormData({ ...formData, job: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, job: e.target.value })
+              }
             />
           </div>
 

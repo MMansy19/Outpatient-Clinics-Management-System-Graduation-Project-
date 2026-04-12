@@ -71,7 +71,6 @@ export function AddClinicDialog({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error('Failed to create clinic:', error);
       const err = error as { response?: { data?: { message?: string } } };
       toast.error(
         err?.response?.data?.message ||

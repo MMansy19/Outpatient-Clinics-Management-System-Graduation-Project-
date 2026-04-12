@@ -1,9 +1,9 @@
 /**
  * Mock National ID Scan Data Service
- * 
+ *
  * Provides realistic mock OCR responses for development
  * until the backend AI model endpoint is ready.
- * 
+ *
  * Usage: Set NEXT_PUBLIC_USE_MOCK_SCAN=true in .env.local
  */
 
@@ -87,7 +87,7 @@ function simulateNetworkDelay(): number {
 /**
  * Mock National ID scan function
  * Simulates OCR processing with realistic delay and random data selection
- * 
+ *
  * @param imageBase64 - Base64 encoded image (not used in mock, but kept for API compatibility)
  * @returns Promise resolving to mock scan data
  */
@@ -96,25 +96,16 @@ export async function mockScanNationalId(
 ): Promise<ScanNationalIdResponse> {
   // imageBase64 parameter kept for API compatibility but not used in mock
   void imageBase64;
-  
+
   // Simulate network/processing delay
   const delay = simulateNetworkDelay();
-  
+
   return new Promise((resolve) => {
     setTimeout(() => {
       // Randomly select mock data to simulate different ID cards
       const randomIndex = Math.floor(Math.random() * MOCK_DATA_POOL.length);
       const mockData = MOCK_DATA_POOL[randomIndex];
-      
-      // Log for development visibility
-      console.log('🔧 Mock National ID Scan:', {
-        firstName: mockData.firstName,
-        lastName: mockData.lastName,
-        location: mockData.location,
-        socialSecurityNumber: mockData.socialSecurityNumber,
-        processingTime: `${delay.toFixed(0)}ms`,
-      });
-      
+
       resolve(mockData);
     }, delay);
   });
@@ -123,7 +114,7 @@ export async function mockScanNationalId(
 /**
  * Simulate OCR failure for testing error handling
  * Use this to test error states in development
- * 
+ *
  * @param errorType - Type of error to simulate
  * @returns Promise rejecting with specific error
  */
@@ -131,18 +122,30 @@ export async function mockScanNationalIdError(
   errorType: 'low_quality' | 'invalid_format' | 'network_error' = 'low_quality'
 ): Promise<never> {
   const delay = simulateNetworkDelay();
-  
+
   return new Promise((_, reject) => {
     setTimeout(() => {
       switch (errorType) {
         case 'low_quality':
-          reject(new Error('Image quality too low. Please retake in better lighting.'));
+          reject(
+            new Error(
+              'Image quality too low. Please retake in better lighting.'
+            )
+          );
           break;
         case 'invalid_format':
-          reject(new Error('Could not detect National ID. Ensure the card is clearly visible.'));
+          reject(
+            new Error(
+              'Could not detect National ID. Ensure the card is clearly visible.'
+            )
+          );
           break;
         case 'network_error':
-          reject(new Error('Network error. Please check your connection and try again.'));
+          reject(
+            new Error(
+              'Network error. Please check your connection and try again.'
+            )
+          );
           break;
         default:
           reject(new Error('Unknown error occurred during scan.'));
@@ -158,7 +161,6 @@ export async function mockScanNationalIdError(
  */
 export function getMockDataByIndex(index: number): ScanNationalIdResponse {
   if (index < 0 || index >= MOCK_DATA_POOL.length) {
-    console.warn(`Mock data index ${index} out of range. Using index 0.`);
     return MOCK_DATA_POOL[0];
   }
   return MOCK_DATA_POOL[index];

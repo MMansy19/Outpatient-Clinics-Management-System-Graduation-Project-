@@ -1,26 +1,26 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '../auth.service';
-import type { 
-  LoginDto, 
-  CreateAdminDto, 
-  CreateDoctorDto, 
-  CreatePatientDto 
+import type {
+  LoginDto,
+  CreateAdminDto,
+  CreateDoctorDto,
+  CreatePatientDto,
 } from '../types';
 
 /**
  * React Query Hooks for Authentication
- * 
+ *
  * These hooks use TanStack Query for caching and state management.
  * They integrate with the cookie-based backend authentication.
  */
 
 /**
  * Login Hook
- * 
+ *
  * Usage:
  * const { mutate: login, isPending, error } = useLogin();
- * 
+ *
  * login({ email, password }, {
  *   onSuccess: (data) => {
  *     router.push('/dashboard');
@@ -39,11 +39,11 @@ export function useLogin() {
       // Update Zustand store with user data
       // Note: JWT token is in HTTP-only cookie, not returned in data
       const loginData = data as unknown as Record<string, unknown>;
-      console.log('🔍 Login response data:', JSON.stringify(loginData));
-      const clinicId = data.clinicId
-        || (loginData.clinic_id as string)
-        || (loginData.clinicid as string)
-        || ((loginData.clinic as Record<string, unknown>)?.id as string);
+      const clinicId =
+        data.clinicId ||
+        (loginData.clinic_id as string) ||
+        (loginData.clinicid as string) ||
+        ((loginData.clinic as Record<string, unknown>)?.id as string);
       setUser({
         name: data.name,
         language: Number(data.language) as typeof data.language,
@@ -55,8 +55,6 @@ export function useLogin() {
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
     onError: (error: unknown) => {
-      console.error('[Login Error]', error);
-      
       // Clear any stale auth state
       useAuthStore.getState().logout();
     },
@@ -65,7 +63,7 @@ export function useLogin() {
 
 /**
  * Logout Hook
- * 
+ *
  * Usage:
  * const { mutate: logout } = useLogout();
  * logout();
@@ -81,7 +79,7 @@ export function useLogout() {
     onSuccess: () => {
       // Clear user state
       clearUser();
-      
+
       // Clear all cached queries
       queryClient.clear();
     },
@@ -90,9 +88,9 @@ export function useLogout() {
 
 /**
  * Create Admin Hook
- * 
+ *
  * Requires SUPER_ADMIN role.
- * 
+ *
  * Usage:
  * const { mutate: createAdmin, isPending } = useCreateAdmin();
  * createAdmin(adminData, {
@@ -117,9 +115,9 @@ export function useCreateAdmin() {
 
 /**
  * Create Doctor Hook
- * 
+ *
  * Requires SUPER_ADMIN or ADMIN role.
- * 
+ *
  * Usage:
  * const { mutate: createDoctor, isPending } = useCreateDoctor();
  * createDoctor(doctorData, {
@@ -144,9 +142,9 @@ export function useCreateDoctor() {
 
 /**
  * Create Patient Hook
- * 
+ *
  * Requires SUPER_ADMIN, ADMIN, or DOCTOR role.
- * 
+ *
  * Usage:
  * const { mutate: createPatient, isPending } = useCreatePatient();
  * createPatient(patientData, {
@@ -164,7 +162,6 @@ export function useCreatePatient() {
     },
     onSuccess: (data) => {
       // Invalidate all patient queries to ensure fresh data
-      console.log('🔄 Invalidating patient queries after creation...');
       queryClient.invalidateQueries({ queryKey: ['patients'] });
 
       // Also invalidate the specific nationalId query using the socialSecurityNumber from the response
@@ -172,7 +169,6 @@ export function useCreatePatient() {
         queryClient.invalidateQueries({
           queryKey: ['patients', 'nationalId', data.socialSecurityNumber],
         });
-        console.log(`🔄 Invalidated query for nationalId: ${data.socialSecurityNumber}`);
       }
     },
   });
@@ -180,7 +176,7 @@ export function useCreatePatient() {
 
 /**
  * Auth Status Check Hook (for development/debugging)
- * 
+ *
  * Usage:
  * const { data: status, isLoading } = useAuthStatus();
  */

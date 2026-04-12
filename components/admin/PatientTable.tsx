@@ -53,7 +53,6 @@ export function PatientTable({ onViewPatient }: PatientTableProps = {}) {
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);
     } catch (error) {
-      console.error('Failed to load patients:', error);
       toast.error('Failed to load patients');
     } finally {
       setLoading(false);
@@ -126,7 +125,9 @@ export function PatientTable({ onViewPatient }: PatientTableProps = {}) {
               <div className="flex items-start justify-between mb-3">
                 <div
                   className={`flex items-start gap-3 flex-1 min-w-0 ${onViewPatient ? 'cursor-pointer' : ''}`}
-                  onClick={() => onViewPatient?.(patient.user.socialSecurityNumber)}
+                  onClick={() =>
+                    onViewPatient?.(patient.user.socialSecurityNumber)
+                  }
                 >
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <User className="h-6 w-6 text-white" />
@@ -144,7 +145,9 @@ export function PatientTable({ onViewPatient }: PatientTableProps = {}) {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => onViewPatient(patient.user.socialSecurityNumber)}
+                      onClick={() =>
+                        onViewPatient(patient.user.socialSecurityNumber)
+                      }
                       className="flex-shrink-0 h-8 w-8 p-0"
                     >
                       <Eye className="h-4 w-4" />
@@ -242,7 +245,9 @@ export function PatientTable({ onViewPatient }: PatientTableProps = {}) {
                   <TableRow
                     key={patient.id}
                     className={`hover:bg-gray-50 dark:hover:bg-gray-900/30 ${onViewPatient ? 'cursor-pointer' : ''}`}
-                    onClick={() => onViewPatient?.(patient.user.socialSecurityNumber)}
+                    onClick={() =>
+                      onViewPatient?.(patient.user.socialSecurityNumber)
+                    }
                   >
                     <TableCell className="font-medium">
                       {patient.user.firstName} {patient.user.lastName}

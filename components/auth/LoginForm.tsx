@@ -45,13 +45,6 @@ export function LoginForm({ locale }: LoginFormProps) {
   const onSubmit = (data: LoginFormData) => {
     login(data, {
       onSuccess: (response) => {
-        console.log('✅ Login Response:', response);
-        console.log('📋 User Details:', {
-          name: response.name,
-          role: response.role,
-          language: response.language
-        });
-        
         toast.success(
           toastMessages.auth.loginSuccess,
           `${toastMessages.auth.loginSuccessDescription} Welcome, ${response.name}!`
@@ -60,7 +53,7 @@ export function LoginForm({ locale }: LoginFormProps) {
         // Mark login timestamp so the 401 interceptor doesn't redirect
         // during the grace period while the Set-Cookie is being processed.
         sessionStorage.setItem('login-timestamp', String(Date.now()));
-        
+
         // Redirect based on user role
         const redirectParam = searchParams.get('redirect');
 
@@ -88,24 +81,30 @@ export function LoginForm({ locale }: LoginFormProps) {
           allowedPrefixes.some((prefix) => redirectParam.includes(prefix))
         ) {
           redirectPath = redirectParam;
-          console.log('🔄 Redirecting to (from param):', redirectPath);
         } else {
           redirectPath = defaultRedirect;
-          console.log('🔄 Redirecting to (role default):', redirectPath);
         }
-        
+
         // Use hard navigation to ensure the browser fully processes the
         // Set-Cookie header from the login response before the new page
         // fires any API requests that depend on the JWT cookie.
         window.location.href = redirectPath;
       },
       onError: (error: unknown) => {
-        console.error('❌ Login Error:', error);
-        const message = (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data && typeof error.response.data.message === 'string') ? error.response.data.message : toastMessages.auth.loginErrorDescription;
-        toast.error(
-          toastMessages.auth.loginError,
-          message
-        );
+        const message =
+          error &&
+          typeof error === 'object' &&
+          'response' in error &&
+          error.response &&
+          typeof error.response === 'object' &&
+          'data' in error.response &&
+          error.response.data &&
+          typeof error.response.data === 'object' &&
+          'message' in error.response.data &&
+          typeof error.response.data.message === 'string'
+            ? error.response.data.message
+            : toastMessages.auth.loginErrorDescription;
+        toast.error(toastMessages.auth.loginError, message);
       },
     });
   };
@@ -173,7 +172,9 @@ export function LoginForm({ locale }: LoginFormProps) {
                       onClick={() => setShowPassword((prev) => !prev)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                       tabIndex={-1}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      aria-label={
+                        showPassword ? 'Hide password' : 'Show password'
+                      }
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />

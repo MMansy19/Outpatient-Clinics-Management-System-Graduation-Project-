@@ -74,13 +74,10 @@ export default function ApiTestPage() {
     setResult(null);
 
     try {
-      console.log(`[API Test] Starting: ${testName}`);
       const response = await apiFunction();
-      console.log(`[API Test] Success:`, response);
       setResult(response);
       toast.success(`${testName} - Success!`);
     } catch (err: unknown) {
-      console.error(`[API Test] Error:`, err);
       const error = err as {
         response?: { data?: { message?: string } };
         message?: string;
@@ -178,22 +175,13 @@ export default function ApiTestPage() {
     );
 
   const testGetVisitsData = () =>
-    handleApiCall(
-      () => apiClient.get('/visits'),
-      'Get Visits Data'
-    );
+    handleApiCall(() => apiClient.get('/visits'), 'Get Visits Data');
 
   const testGetLabsData = () =>
-    handleApiCall(
-      () => apiClient.get('/labs'),
-      'Get Labs Data'
-    );
+    handleApiCall(() => apiClient.get('/labs'), 'Get Labs Data');
 
   const testGetScansData = () =>
-    handleApiCall(
-      () => apiClient.get('/scans'),
-      'Get Scans Data'
-    );
+    handleApiCall(() => apiClient.get('/scans'), 'Get Scans Data');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -321,31 +309,58 @@ export default function ApiTestPage() {
             <Tabs defaultValue="admin-create-admin" className="space-y-4">
               <div className="overflow-x-auto">
                 <TabsList className="inline-flex md:space-x-2 space-x-1">
-                  <TabsTrigger value="admin-create-admin" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-create-admin"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Create Admin
                   </TabsTrigger>
-                  <TabsTrigger value="admin-create-doctor" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-create-doctor"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Create Doctor
                   </TabsTrigger>
-                  <TabsTrigger value="admin-create-patient" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-create-patient"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Create Patient
                   </TabsTrigger>
-                  <TabsTrigger value="admin-status" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-status"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Admin Status
                   </TabsTrigger>
-                  <TabsTrigger value="admin-doctors" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-doctors"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Get Doctors
                   </TabsTrigger>
-                  <TabsTrigger value="admin-patients" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-patients"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Get Patients
                   </TabsTrigger>
-                  <TabsTrigger value="admin-visits" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-visits"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Get Visits
                   </TabsTrigger>
-                  <TabsTrigger value="admin-update-patient" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-update-patient"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Update Patient
                   </TabsTrigger>
-                  <TabsTrigger value="admin-clinic" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="admin-clinic"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Clinic
                   </TabsTrigger>
                 </TabsList>
@@ -356,7 +371,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Create Admin</CardTitle>
-                    <CardDescription>POST /api/v1/auth/admin/create</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/auth/admin/create
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -365,7 +382,11 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => toast.info('Admin creation endpoint - Implement as needed')}
+                      onClick={() =>
+                        toast.info(
+                          'Admin creation endpoint - Implement as needed'
+                        )
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -380,7 +401,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Create Doctor</CardTitle>
-                    <CardDescription>POST /api/v1/auth/doctor/create</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/auth/doctor/create
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -389,7 +412,11 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => toast.info('Doctor creation endpoint - Implement as needed')}
+                      onClick={() =>
+                        toast.info(
+                          'Doctor creation endpoint - Implement as needed'
+                        )
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -404,7 +431,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Create Patient</CardTitle>
-                    <CardDescription>POST /api/v1/auth/patient/create</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/auth/patient/create
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -425,7 +454,9 @@ export default function ApiTestPage() {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="nationalId">National ID (14 digits)</Label>
+                        <Label htmlFor="nationalId">
+                          National ID (14 digits)
+                        </Label>
                         <Input
                           id="nationalId"
                           value={patientNationalId}
@@ -459,8 +490,8 @@ export default function ApiTestPage() {
                     </Button>
                     <Alert>
                       <AlertDescription>
-                        💡 After creating a patient, copy the returned UUID to use
-                        in other tests
+                        💡 After creating a patient, copy the returned UUID to
+                        use in other tests
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -481,7 +512,12 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => handleApiCall(() => superAdminApi.isUp(), 'Admin Status')}
+                      onClick={() =>
+                        handleApiCall(
+                          () => superAdminApi.isUp(),
+                          'Admin Status'
+                        )
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -496,7 +532,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Doctors</CardTitle>
-                    <CardDescription>GET /api/v1/super-admin/doctors</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/super-admin/doctors
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -507,7 +545,9 @@ export default function ApiTestPage() {
                           type="number"
                           min="1"
                           value={adminPage}
-                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminPage(parseInt(e.target.value))
+                          }
                         />
                       </div>
                       <div>
@@ -518,7 +558,9 @@ export default function ApiTestPage() {
                           min="1"
                           max="100"
                           value={adminLimit}
-                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminLimit(parseInt(e.target.value))
+                          }
                         />
                       </div>
                     </div>
@@ -527,7 +569,9 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/doctors'}
+                      {loading
+                        ? 'Loading...'
+                        : 'GET /api/v1/super-admin/doctors'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -538,7 +582,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Patients</CardTitle>
-                    <CardDescription>GET /api/v1/super-admin/patients</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/super-admin/patients
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -549,7 +595,9 @@ export default function ApiTestPage() {
                           type="number"
                           min="1"
                           value={adminPage}
-                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminPage(parseInt(e.target.value))
+                          }
                         />
                       </div>
                       <div>
@@ -560,7 +608,9 @@ export default function ApiTestPage() {
                           min="1"
                           max="100"
                           value={adminLimit}
-                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminLimit(parseInt(e.target.value))
+                          }
                         />
                       </div>
                     </div>
@@ -569,7 +619,9 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/patients'}
+                      {loading
+                        ? 'Loading...'
+                        : 'GET /api/v1/super-admin/patients'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -580,7 +632,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get All Visits</CardTitle>
-                    <CardDescription>GET /api/v1/super-admin/visits</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/super-admin/visits
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -591,7 +645,9 @@ export default function ApiTestPage() {
                           type="number"
                           min="1"
                           value={adminPage}
-                          onChange={(e) => setAdminPage(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminPage(parseInt(e.target.value))
+                          }
                         />
                       </div>
                       <div>
@@ -602,7 +658,9 @@ export default function ApiTestPage() {
                           min="1"
                           max="100"
                           value={adminLimit}
-                          onChange={(e) => setAdminLimit(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setAdminLimit(parseInt(e.target.value))
+                          }
                         />
                       </div>
                     </div>
@@ -611,7 +669,9 @@ export default function ApiTestPage() {
                       disabled={loading}
                       className="w-full"
                     >
-                      {loading ? 'Loading...' : 'GET /api/v1/super-admin/visits'}
+                      {loading
+                        ? 'Loading...'
+                        : 'GET /api/v1/super-admin/visits'}
                     </Button>
                   </CardContent>
                 </Card>
@@ -622,7 +682,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Update Patient</CardTitle>
-                    <CardDescription>PATCH /api/v1/super-admin/patient/{'{id}'}</CardDescription>
+                    <CardDescription>
+                      PATCH /api/v1/super-admin/patient/{'{id}'}
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -698,7 +760,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Clinic Management</CardTitle>
-                    <CardDescription>POST /api/v1/super-admin/clinic</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/super-admin/clinic
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -707,7 +771,9 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => toast.info('Clinic endpoint - Implement as needed')}
+                      onClick={() =>
+                        toast.info('Clinic endpoint - Implement as needed')
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -724,25 +790,46 @@ export default function ApiTestPage() {
             <Tabs defaultValue="doctor-status" className="space-y-4">
               <div className="overflow-x-auto">
                 <TabsList className="inline-flex md:space-x-2 space-x-1">
-                  <TabsTrigger value="doctor-status" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-status"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Doctor Status
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-visit" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-visit"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Create Visit
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-medication" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-medication"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Create Med
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-visits-data" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-visits-data"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Visits Data
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-medications-data" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-medications-data"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Meds Data
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-scans-data" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-scans-data"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Scans Data
                   </TabsTrigger>
-                  <TabsTrigger value="doctor-labs-data" className="flex-shrink-0 text-xs">
+                  <TabsTrigger
+                    value="doctor-labs-data"
+                    className="flex-shrink-0 text-xs"
+                  >
                     Labs Data
                   </TabsTrigger>
                 </TabsList>
@@ -762,7 +849,9 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => handleApiCall(() => doctorApi.isUp(), 'Doctor Status')}
+                      onClick={() =>
+                        handleApiCall(() => doctorApi.isUp(), 'Doctor Status')
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -777,7 +866,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Create Visit</CardTitle>
-                    <CardDescription>POST /api/v1/doctor/visit/create</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/doctor/visit/create
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -814,7 +905,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Create Medication</CardTitle>
-                    <CardDescription>POST /api/v1/doctor/medication/create</CardDescription>
+                    <CardDescription>
+                      POST /api/v1/doctor/medication/create
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
@@ -841,7 +934,9 @@ export default function ApiTestPage() {
                           id="dosage"
                           type="number"
                           value={medicationDosage}
-                          onChange={(e) => setMedicationDosage(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setMedicationDosage(parseInt(e.target.value))
+                          }
                         />
                       </div>
                       <div>
@@ -850,7 +945,9 @@ export default function ApiTestPage() {
                           id="period"
                           type="number"
                           value={medicationPeriod}
-                          onChange={(e) => setMedicationPeriod(parseInt(e.target.value))}
+                          onChange={(e) =>
+                            setMedicationPeriod(parseInt(e.target.value))
+                          }
                         />
                       </div>
                       <div>
@@ -858,7 +955,9 @@ export default function ApiTestPage() {
                         <Input
                           id="comments"
                           value={medicationComments}
-                          onChange={(e) => setMedicationComments(e.target.value)}
+                          onChange={(e) =>
+                            setMedicationComments(e.target.value)
+                          }
                         />
                       </div>
                     </div>
@@ -878,12 +977,15 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get Patient Visits</CardTitle>
-                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/visits</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/doctor/patient/{'{ssn}'}/visits
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
                       <AlertDescription>
-                        📋 This endpoint returns patient visits with clinic data.
+                        📋 This endpoint returns patient visits with clinic
+                        data.
                       </AlertDescription>
                     </Alert>
                     <Button
@@ -902,7 +1004,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get Patient Medications</CardTitle>
-                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/medications</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/doctor/patient/{'{ssn}'}/medications
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -911,7 +1015,12 @@ export default function ApiTestPage() {
                       </AlertDescription>
                     </Alert>
                     <Button
-                      onClick={() => handleApiCall(() => apiClient.get('/medications'), 'Get Medications')}
+                      onClick={() =>
+                        handleApiCall(
+                          () => apiClient.get('/medications'),
+                          'Get Medications'
+                        )
+                      }
                       disabled={loading}
                       className="w-full"
                     >
@@ -926,7 +1035,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get Patient Scans</CardTitle>
-                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/scans</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/doctor/patient/{'{ssn}'}/scans
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>
@@ -950,7 +1061,9 @@ export default function ApiTestPage() {
                 <Card>
                   <CardHeader>
                     <CardTitle>Get Patient Labs</CardTitle>
-                    <CardDescription>GET /api/v1/doctor/patient/{'{ssn}'}/labs</CardDescription>
+                    <CardDescription>
+                      GET /api/v1/doctor/patient/{'{ssn}'}/labs
+                    </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <Alert>

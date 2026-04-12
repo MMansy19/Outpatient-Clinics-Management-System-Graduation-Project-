@@ -49,7 +49,9 @@ export function VisitTable() {
           data.items.map(async (visit) => {
             try {
               const [patient, doctor] = await Promise.all([
-                superAdminApi.getPatientById(visit.patient.id).catch(() => null),
+                superAdminApi
+                  .getPatientById(visit.patient.id)
+                  .catch(() => null),
                 superAdminApi.getDoctorById(visit.doctor.id).catch(() => null),
               ]);
 
@@ -63,10 +65,6 @@ export function VisitTable() {
                   : 'Unknown Doctor',
               };
             } catch (error) {
-              console.error(
-                `Failed to fetch names for visit ${visit.id}:`,
-                error
-              );
               return {
                 ...visit,
                 patientName: 'Unknown Patient',
@@ -80,7 +78,6 @@ export function VisitTable() {
         setTotalPages(data.totalPages);
         setTotalItems(data.totalItems);
       } catch (error) {
-        console.error('Failed to load visits:', error);
         toast.error('Failed to load visits');
       } finally {
         setLoading(false);

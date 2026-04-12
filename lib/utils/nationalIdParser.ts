@@ -1,6 +1,6 @@
 /**
  * Egyptian National ID Parser Utility
- * 
+ *
  * Egyptian National ID Format: XYYMMDDSSNNNNC (14 digits)
  * - X (1 digit): Century indicator (2 = 1900s, 3 = 2000s)
  * - YY (2 digits): Year of birth
@@ -9,7 +9,7 @@
  * - SS (2 digits): Governorate code (01-35)
  * - NNNN (4 digits): Sequential number within same day/governorate
  * - C (1 digit): Check digit
- * 
+ *
  * Gender: Odd NNNN = Male, Even NNNN = Female
  */
 
@@ -20,15 +20,18 @@ import { InvalidNationalIdError } from '@/types/ocr';
  * @param nationalId - 14-digit National ID number
  * @returns Date object or null if invalid
  */
-export function extractBirthdateFromNationalId(nationalId: string): Date | null {
+export function extractBirthdateFromNationalId(
+  nationalId: string
+): Date | null {
   if (!nationalId || nationalId.length !== 14) {
     return null;
   }
 
   try {
     const centuryDigit = nationalId[0];
-    const century = centuryDigit === '2' ? 1900 : centuryDigit === '3' ? 2000 : null;
-    
+    const century =
+      centuryDigit === '2' ? 1900 : centuryDigit === '3' ? 2000 : null;
+
     if (century === null) {
       return null;
     }
@@ -59,7 +62,6 @@ export function extractBirthdateFromNationalId(nationalId: string): Date | null 
 
     return birthdate;
   } catch (error) {
-    console.error('Error extracting birthdate from National ID:', error);
     return null;
   }
 }
@@ -69,7 +71,9 @@ export function extractBirthdateFromNationalId(nationalId: string): Date | null 
  * @param nationalId - 14-digit National ID number
  * @returns 'male' | 'female' | null if invalid
  */
-export function extractGenderFromNationalId(nationalId: string): 'male' | 'female' | null {
+export function extractGenderFromNationalId(
+  nationalId: string
+): 'male' | 'female' | null {
   if (!nationalId || nationalId.length !== 14) {
     return null;
   }
@@ -85,7 +89,6 @@ export function extractGenderFromNationalId(nationalId: string): 'male' | 'femal
     // Odd = Male, Even = Female
     return sequentialNumber % 2 === 0 ? 'female' : 'male';
   } catch (error) {
-    console.error('Error extracting gender from National ID:', error);
     return null;
   }
 }
@@ -111,7 +114,6 @@ export function extractGovernorateCode(nationalId: string): string | null {
 
     return governorateCode;
   } catch (error) {
-    console.error('Error extracting governorate code:', error);
     return null;
   }
 }
@@ -169,7 +171,10 @@ export function calculateAgeFromNationalId(nationalId: string): number | null {
   const monthDiff = today.getMonth() - birthdate.getMonth();
 
   // Adjust age if birthday hasn't occurred this year yet
-  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthdate.getDate())) {
+  if (
+    monthDiff < 0 ||
+    (monthDiff === 0 && today.getDate() < birthdate.getDate())
+  ) {
     age--;
   }
 
@@ -235,7 +240,9 @@ export function parseNationalId(nationalId: string): {
 
   const age = calculateAgeFromNationalId(nationalId);
   if (age === null) {
-    throw new InvalidNationalIdError('Could not calculate age from National ID');
+    throw new InvalidNationalIdError(
+      'Could not calculate age from National ID'
+    );
   }
 
   return {

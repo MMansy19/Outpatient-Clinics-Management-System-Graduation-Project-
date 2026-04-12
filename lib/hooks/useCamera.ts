@@ -1,6 +1,6 @@
 /**
  * useCamera Hook
- * 
+ *
  * Wrapper for Capacitor Camera API with permission handling
  * Provides easy-to-use camera functionality for National ID scanning
  */
@@ -8,7 +8,12 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera';
+import {
+  Camera,
+  CameraResultType,
+  CameraSource,
+  Photo,
+} from '@capacitor/camera';
 import { CameraPermissionError, CameraCaptureResult } from '@/types/ocr';
 
 export interface UseCameraOptions {
@@ -39,21 +44,21 @@ export interface UseCameraReturn {
 
 /**
  * Hook for accessing device camera with Capacitor
- * 
+ *
  * @param options - Camera configuration options
  * @returns Camera interface with state management
- * 
+ *
  * @example
  * ```tsx
  * const { takePicture, checkPermissions, isCapturing } = useCamera();
- * 
+ *
  * const handleScan = async () => {
  *   const hasPermission = await checkPermissions();
  *   if (!hasPermission) {
  *     toast.error('Camera permission required');
  *     return;
  *   }
- *   
+ *
  *   const result = await takePicture();
  *   console.log('Captured:', result.base64String);
  * };
@@ -76,10 +81,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
   const checkPermissions = useCallback(async (): Promise<boolean> => {
     try {
       const permissions = await Camera.checkPermissions();
-      console.log('📸 Camera permissions:', permissions);
       return permissions.camera === 'granted';
     } catch (err) {
-      console.error('Error checking camera permissions:', err);
       setError(new CameraPermissionError('Failed to check camera permissions'));
       return false;
     }
@@ -90,25 +93,23 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
    */
   const requestPermissions = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('🔐 Requesting camera permissions...');
       const permissions = await Camera.requestPermissions();
       const granted = permissions.camera === 'granted';
-      
+
       if (!granted) {
         const permissionError = new CameraPermissionError(
           'Camera access denied. Please enable camera permissions in Settings.'
         );
         setError(permissionError);
-        console.error('❌ Camera permission denied');
         return false;
       }
 
-      console.log('✅ Camera permission granted');
       setError(null);
       return true;
     } catch (err) {
-      console.error('Error requesting camera permissions:', err);
-      setError(new CameraPermissionError('Failed to request camera permissions'));
+      setError(
+        new CameraPermissionError('Failed to request camera permissions')
+      );
       return false;
     }
   }, []);
@@ -128,11 +129,11 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
         // Try to request permissions
         const granted = await requestPermissions();
         if (!granted) {
-          throw new CameraPermissionError('Camera permission is required to scan National ID');
+          throw new CameraPermissionError(
+            'Camera permission is required to scan National ID'
+          );
         }
       }
-
-      console.log('📷 Opening camera...');
 
       // Capture photo using Capacitor Camera API
       const photo: Photo = await Camera.getPhoto({
@@ -150,11 +151,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
         throw new Error('Failed to capture image: No image data received');
       }
 
-      console.log('✅ Photo captured successfully', {
-        format: photo.format,
-        size: `${(photo.base64String.length / 1024).toFixed(2)} KB`,
-      });
-
       const result: CameraCaptureResult = {
         base64String: photo.base64String,
         format: photo.format,
@@ -163,8 +159,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
       return result;
     } catch (err) {
-      console.error('❌ Camera error:', err);
-
       // Handle specific error types
       if (err instanceof CameraPermissionError) {
         setError(err);
@@ -173,7 +167,10 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
       // Check if user cancelled
       if (err instanceof Error) {
-        if (err.message.includes('cancel') || err.message.includes('User cancelled')) {
+        if (
+          err.message.includes('cancel') ||
+          err.message.includes('User cancelled')
+        ) {
           const cancelError = new Error('Photo capture cancelled');
           setError(cancelError);
           throw cancelError;
@@ -187,13 +184,22 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
       }
 
       // Generic error
-      const genericError = new Error('Failed to capture photo. Please try again.');
+      const genericError = new Error(
+        'Failed to capture photo. Please try again.'
+      );
       setError(genericError);
       throw genericError;
     } finally {
       setIsCapturing(false);
     }
-  }, [checkPermissions, requestPermissions, quality, width, height, allowEditing]);
+  }, [
+    checkPermissions,
+    requestPermissions,
+    quality,
+    width,
+    height,
+    allowEditing,
+  ]);
 
   /**
    * Clear error state
@@ -227,9 +233,11 @@ interface CapacitorWindow extends Window {
  * Camera is only available in native apps (iOS/Android), not in browser
  */
 export function isCapacitorNative(): boolean {
-  return typeof window !== 'undefined' && 
-         'Capacitor' in window && 
-         !!(window as CapacitorWindow).Capacitor?.isNativePlatform?.();
+  return (
+    typeof window !== 'undefined' &&
+    'Capacitor' in window &&
+    !!(window as CapacitorWindow).Capacitor?.isNativePlatform?.()
+  );
 }
 
 /**

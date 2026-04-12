@@ -49,7 +49,6 @@ export function ClinicTable() {
       const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
-      console.error('Failed to load clinics:', error);
       toast.error('Failed to load clinics');
     } finally {
       setLoading(false);
@@ -70,7 +69,6 @@ export function ClinicTable() {
       setDeletingClinicId(null);
       loadClinics();
     } catch (error) {
-      console.error('Failed to delete clinic:', error);
       toast.error(t('clinicDeleteError') || 'Failed to delete clinic');
     } finally {
       setIsDeleting(false);

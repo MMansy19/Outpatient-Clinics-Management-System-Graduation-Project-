@@ -20,12 +20,10 @@ export function ImageUploadField({
   maxSizeMB = 5,
   className = '',
 }: ImageUploadFieldProps) {
-  const { selectedImage, imagePreview, handleImageChange, removeImage } = useImageUpload({
-    maxSizeMB,
-    onError: (error) => {
-      console.error('Image upload error:', error);
-    },
-  });
+  const { selectedImage, imagePreview, handleImageChange, removeImage } =
+    useImageUpload({
+      maxSizeMB,
+    });
   const t = useTranslations('doctor');
 
   React.useEffect(() => {

@@ -24,7 +24,6 @@ import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
 import { toast } from 'sonner';
 
-
 export function VisitTable() {
   const t = useTranslations('admin');
   const tCommon = useTranslations('common');
@@ -45,7 +44,6 @@ export function VisitTable() {
         setTotalPages(data.totalPages);
         setTotalItems(data.totalItems);
       } catch (error) {
-        console.error('Failed to load visits:', error);
         toast.error('Failed to load visits');
       } finally {
         setLoading(false);

@@ -24,7 +24,8 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  */
 const scansKeys = {
   all: ['scans'] as const,
-  patient: (patientId: string) => [...scansKeys.all, 'patient', patientId] as const,
+  patient: (patientId: string) =>
+    [...scansKeys.all, 'patient', patientId] as const,
   detail: (id: string) => [...scansKeys.all, id] as const,
 };
 
@@ -88,9 +89,7 @@ export const useGetPatientScans = (
  * const { data: scan, isLoading } = useGetScan(scanId);
  * ```
  */
-export const useGetScan = (
-  scanId: string
-): UseQueryResult<unknown, Error> => {
+export const useGetScan = (scanId: string): UseQueryResult<unknown, Error> => {
   return useQuery({
     queryKey: scansKeys.detail(scanId),
     queryFn: () => doctorApi.getScan(scanId),
@@ -140,7 +139,10 @@ export const useGetScan = (
 export const useCreateScan = (): UseMutationResult<
   unknown,
   Error,
-  { patientId: string; data: { name: string; comments: string; type: string } | FormData }
+  {
+    patientId: string;
+    data: { name: string; comments: string; type: string } | FormData;
+  }
 > => {
   const queryClient = useQueryClient();
   const { user } = useAuthStore();
@@ -177,9 +179,6 @@ export const useCreateScan = (): UseMutationResult<
           variables.data
         );
       }
-    },
-    onError: (error) => {
-      console.error('[useCreateScan] Error:', error);
     },
   });
 };
@@ -219,8 +218,7 @@ export const useUpdateScan = (): UseMutationResult<
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ scanId, data }) =>
-      doctorApi.updateScan(scanId, data),
+    mutationFn: ({ scanId, data }) => doctorApi.updateScan(scanId, data),
     onSuccess: (_updatedScan, variables) => {
       // Invalidate the specific scan cache
       queryClient.invalidateQueries({
@@ -236,9 +234,6 @@ export const useUpdateScan = (): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: scansKeys.all,
       });
-    },
-    onError: (error) => {
-      console.error('[useUpdateScan] Error:', error);
     },
   });
 };
@@ -297,9 +292,6 @@ export const useDeleteScan = (): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: ['patients'],
       });
-    },
-    onError: (error) => {
-      console.error('[useDeleteScan] Error:', error);
     },
   });
 };

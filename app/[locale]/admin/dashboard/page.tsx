@@ -141,7 +141,9 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
   const t = useTranslations('admin');
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState('clinics');
-  const [selectedPatientSSN, setSelectedPatientSSN] = useState<string | null>(null);
+  const [selectedPatientSSN, setSelectedPatientSSN] = useState<string | null>(
+    null
+  );
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const queryClient = useQueryClient();
@@ -308,7 +310,6 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
 
       window.location.replace(`/${locale}/login`);
     } catch (error) {
-      console.error('Logout error:', error);
       window.location.replace(`/${locale}/login`);
     }
   };
@@ -550,7 +551,9 @@ export default function AdminDashboard({ params }: AdminDashboardProps) {
                     />
                   </div>
                 ) : (
-                  <PatientTable onViewPatient={(ssn) => setSelectedPatientSSN(ssn)} />
+                  <PatientTable
+                    onViewPatient={(ssn) => setSelectedPatientSSN(ssn)}
+                  />
                 )}
               </TabsContent>
 

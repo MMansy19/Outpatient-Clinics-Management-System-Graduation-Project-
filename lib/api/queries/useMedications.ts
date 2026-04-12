@@ -17,12 +17,13 @@ import { Role } from '@/lib/api/types';
 
 /**
  * Query Key Factory for Medications
- * 
+ *
  * Centralized query key management for better cache control.
  */
 const medicationsKeys = {
   all: ['medications'] as const,
-  patient: (patientId: string) => [...medicationsKeys.all, 'patient', patientId] as const,
+  patient: (patientId: string) =>
+    [...medicationsKeys.all, 'patient', patientId] as const,
   detail: (id: string) => [...medicationsKeys.all, id] as const,
 };
 
@@ -80,12 +81,12 @@ export const useGetPatientMedications = (
 
 /**
  * Get Medication Details
- * 
+ *
  * Retrieves detailed information for a specific medication.
- * 
+ *
  * @param {string} medicationId - Medication UUID
  * @returns {UseQueryResult} Query result with medication details
- * 
+ *
  * @example
  * ```typescript
  * const { data: medication, isLoading } = useGetMedication(medicationId);
@@ -108,16 +109,16 @@ export const useGetMedication = (
 
 /**
  * Create Medication
- * 
+ *
  * Mutation hook for creating a new medication record.
  * Automatically invalidates related queries on success.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const createMedicationMutation = useCreateMedication();
- * 
+ *
  * const handleSubmit = (data: CreateMedicationDto) => {
  *   createMedicationMutation.mutate(data, {
  *     onSuccess: (response) => {
@@ -130,7 +131,7 @@ export const useGetMedication = (
  *     },
  *   });
  * };
- * 
+ *
  * return (
  *   <Form onSubmit={handleSubmit}>
  *     <Button disabled={createMedicationMutation.isPending}>
@@ -170,30 +171,23 @@ export const useCreateMedication = (): UseMutationResult<
       });
 
       // Optionally set the new medication in cache
-      queryClient.setQueryData(
-        medicationsKeys.detail(response.id),
-        variables
-      );
-    },
-    onError: (error) => {
-      console.error('[useCreateMedication] Error:', error);
-      // Could add global error handling here
+      queryClient.setQueryData(medicationsKeys.detail(response.id), variables);
     },
   });
 };
 
 /**
  * Update Medication
- * 
+ *
  * Mutation hook for updating an existing medication record.
  * Supports partial updates.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const updateMedicationMutation = useUpdateMedication();
- * 
+ *
  * const handleUpdate = () => {
  *   updateMedicationMutation.mutate(
  *     {
@@ -212,7 +206,11 @@ export const useCreateMedication = (): UseMutationResult<
 export const useUpdateMedication = (): UseMutationResult<
   unknown,
   Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
+  {
+    medicationId: string;
+    data: Partial<CreateMedicationDto>;
+    socialSecurityNumber: string;
+  }
 > => {
   const queryClient = useQueryClient();
 
@@ -230,23 +228,20 @@ export const useUpdateMedication = (): UseMutationResult<
         queryKey: medicationsKeys.all,
       });
     },
-    onError: (error) => {
-      console.error('[useUpdateMedication] Error:', error);
-    },
   });
 };
 
 /**
  * Delete Medication
- * 
+ *
  * Mutation hook for soft-deleting a medication record.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const deleteMedicationMutation = useDeleteMedication();
- * 
+ *
  * const handleDelete = (medicationId: string, patientId: string) => {
  *   if (confirm('Are you sure you want to delete this medication?')) {
  *     deleteMedicationMutation.mutate(
@@ -286,9 +281,6 @@ export const useDeleteMedication = (): UseMutationResult<
         queryKey: ['patients'],
       });
     },
-    onError: (error) => {
-      console.error('[useDeleteMedication] Error:', error);
-    },
   });
 };
 
@@ -298,14 +290,14 @@ export const useDeleteMedication = (): UseMutationResult<
 
 /**
  * Create Medication with Optimistic Update
- * 
+ *
  * This is an advanced pattern that updates the UI immediately
  * before the server responds, improving perceived performance.
- * 
+ *
  * @example
  * ```typescript
  * const { mutate } = useCreateMedicationOptimistic();
- * 
+ *
  * mutate(medicationData, {
  *   onSuccess: () => toast.success('Medication created'),
  *   onError: () => toast.error('Failed - changes reverted'),
@@ -334,12 +326,6 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
 
       // Return empty context for now
       return {};
-    },
-
-    // On error, rollback to snapshot
-    onError: (err) => {
-      // Rollback logic would go here if we had stored previous data
-      console.error('[useCreateMedicationOptimistic] Error:', err);
     },
 
     // On success, invalidate all queries

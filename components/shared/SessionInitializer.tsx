@@ -22,15 +22,11 @@ export function SessionInitializer() {
   useEffect(() => {
     // Initialize mock data for development mode
     if (process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true') {
-      console.log('[SessionInitializer] Initializing mock data...');
       initMockData();
     }
 
     // Session is automatically restored from localStorage by Zustand persist
     // No additional validation needed here
-    if (isAuthenticated && user) {
-      console.log('[SessionInitializer] Session restored from localStorage');
-    }
   }, [isAuthenticated, user]);
 
   return null; // This component doesn't render anything

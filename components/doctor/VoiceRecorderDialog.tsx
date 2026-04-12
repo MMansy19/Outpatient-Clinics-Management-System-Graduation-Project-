@@ -117,7 +117,6 @@ export function VoiceRecorderDialog({
       setIsRecording(true);
       setRecordingTime(0);
     } catch (err) {
-      console.error('Error accessing microphone:', err);
       setError(t('microphoneAccessDenied'));
       toast.error(t('microphoneError'));
     }
@@ -192,7 +191,8 @@ export function VoiceRecorderDialog({
       setIsConverting(true);
 
       // Convert to MP3 for backend compatibility (backend only accepts mp3)
-      const isMp3 = fileToUse.type === 'audio/mpeg' || fileToUse.type === 'audio/mp3';
+      const isMp3 =
+        fileToUse.type === 'audio/mpeg' || fileToUse.type === 'audio/mp3';
       let file: File;
 
       if (isMp3 && fileToUse instanceof File) {
@@ -205,7 +205,6 @@ export function VoiceRecorderDialog({
       onAudioCaptured?.(file);
       handleClose();
     } catch (err) {
-      console.error('Error converting audio:', err);
       toast.error(t('conversionError'));
     } finally {
       setIsConverting(false);

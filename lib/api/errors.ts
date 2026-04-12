@@ -3,16 +3,16 @@ import type { ApiError } from './types';
 
 /**
  * API Error Handling Utilities
- * 
+ *
  * Centralized error handling for consistent user experience.
  * Transforms backend errors into user-friendly messages.
- * 
+ *
  * @module apiErrorHandler
  */
 
 /**
  * Custom API Error Class
- * 
+ *
  * Extends the native Error class with additional context.
  */
 export class ApiException extends Error {
@@ -62,9 +62,9 @@ export const getErrorCategory = (statusCode?: number): ErrorCategory => {
 
 /**
  * Parse Axios Error
- * 
+ *
  * Extracts meaningful error information from Axios error objects.
- * 
+ *
  * @param {unknown} error - Error object (typically from catch block)
  * @returns {ApiException} Parsed and structured error
  */
@@ -136,9 +136,9 @@ export const parseApiError = (error: unknown): ApiException => {
 
 /**
  * Get User-Friendly Error Message
- * 
+ *
  * Converts technical errors into messages suitable for end users.
- * 
+ *
  * @param {unknown} error - Error object
  * @returns {string} User-friendly error message
  */
@@ -178,47 +178,30 @@ export const getUserFriendlyMessage = (error: unknown): string => {
 
 /**
  * Log Error for Debugging
- * 
+ *
  * Logs error details in development mode.
  * In production, this would send to error tracking service (Sentry, LogRocket, etc.)
- * 
+ *
  * @param {unknown} error - Error to log
  * @param {string} [context] - Additional context (e.g., "Create Visit")
  */
 export const logError = (error: unknown, context?: string): void => {
-  const apiError = parseApiError(error);
-
-  if (process.env.NODE_ENV === 'development') {
-    console.group(`🔴 API Error${context ? ` - ${context}` : ''}`);
-    console.error('Message:', apiError.message);
-    console.error('Status Code:', apiError.statusCode);
-    console.error('Error Code:', apiError.errorCode);
-    console.error('Category:', getErrorCategory(apiError.statusCode));
-    if (apiError.originalError) {
-      console.error('Original Error:', apiError.originalError);
-    }
-    console.groupEnd();
-  } else {
-    // In production, send to error tracking service
-    // Example: Sentry.captureException(apiError);
-    console.error(`API Error${context ? ` - ${context}` : ''}:`, apiError.message);
-  }
 };
 
 /**
  * Handle API Error with Toast Notification
- * 
+ *
  * Convenience function that parses error, logs it, and shows user notification.
- * 
+ *
  * @param {unknown} error - Error to handle
  * @param {string} [context] - Context for logging
  * @param {(message: string) => void} [toastError] - Toast notification function
  * @returns {ApiException} Parsed error
- * 
+ *
  * @example
  * ```typescript
  * import { toast } from 'sonner';
- * 
+ *
  * try {
  *   await createVisit(data);
  * } catch (error) {
@@ -244,9 +227,9 @@ export const handleApiError = (
 
 /**
  * Retry Strategy for Failed Requests
- * 
+ *
  * Determines if a request should be retried based on error type.
- * 
+ *
  * @param {number} failureCount - Number of previous failures
  * @param {unknown} error - Error that occurred
  * @returns {boolean} True if should retry
@@ -271,7 +254,7 @@ export const shouldRetry = (failureCount: number, error: unknown): boolean => {
 
 /**
  * Calculate Retry Delay (Exponential Backoff)
- * 
+ *
  * @param {number} attemptIndex - Current attempt number (0-based)
  * @returns {number} Delay in milliseconds
  */
@@ -279,7 +262,7 @@ export const getRetryDelay = (attemptIndex: number): number => {
   const baseDelay = 1000; // 1 second
   const maxDelay = 180000; // 30 seconds
   const delay = Math.min(baseDelay * Math.pow(2, attemptIndex), maxDelay);
-  
+
   // Add random jitter (±25%) to prevent thundering herd
   const jitter = delay * 0.25 * (Math.random() * 2 - 1);
   return Math.floor(delay + jitter);
@@ -287,16 +270,14 @@ export const getRetryDelay = (attemptIndex: number): number => {
 
 /**
  * Validation Error Helper
- * 
+ *
  * Extracts field-specific validation errors from backend response.
  * Useful for displaying errors next to form fields.
- * 
+ *
  * @param {unknown} error - Error object
  * @returns {Record<string, string>} Field errors map
  */
-export const getValidationErrors = (
-  error: unknown
-): Record<string, string> => {
+export const getValidationErrors = (error: unknown): Record<string, string> => {
   if (!isAxiosError(error)) return {};
 
   const responseData = error.response?.data as Record<string, unknown>;

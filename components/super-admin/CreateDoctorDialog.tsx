@@ -109,7 +109,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
-      console.error('Failed to load clinics:', error);
       toast.error('Failed to load clinics', 'Unable to fetch clinic list');
     } finally {
       setLoadingClinics(false);
@@ -117,11 +116,8 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   };
 
   const onSubmit = (data: CreateDoctorFormData) => {
-    console.log('🔍 Creating doctor with data:', data);
-
     createDoctor(data, {
       onSuccess: (response) => {
-        console.log('✅ Doctor created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         toast.success(
           toastMessages.doctor.createSuccess,
@@ -131,8 +127,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         setOpen(false);
       },
       onError: (error: unknown) => {
-        console.error('❌ Create doctor error:', error);
-
         // Handle different error cases
         if (
           error &&
@@ -145,8 +139,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             data?: unknown;
             status?: number;
           };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
 
           // Check if it's a "User already exists" error
           if (

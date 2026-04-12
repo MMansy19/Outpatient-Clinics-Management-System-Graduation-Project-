@@ -107,7 +107,6 @@ export function CreateAdminDialog({ trigger }: CreateAdminDialogProps) {
       const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
-      console.error('Failed to load clinics:', error);
       toast.error('Failed to load clinics', 'Unable to fetch clinic list');
     } finally {
       setLoadingClinics(false);

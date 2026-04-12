@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { Camera, Loader2, AlertCircle, Upload, Image as ImageIcon, X } from 'lucide-react';
+import {
+  Camera,
+  Loader2,
+  AlertCircle,
+  Upload,
+  Image as ImageIcon,
+  X,
+} from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -21,10 +28,10 @@ interface NationalIdScannerProps {
 
 /**
  * NationalIdScanner Component
- * 
+ *
  * Fullscreen camera interface for capturing National ID cards
  * Handles camera permissions, image capture, and OCR processing
- * 
+ *
  * Features:
  * - Native camera integration via Capacitor
  * - Automatic image compression
@@ -38,7 +45,7 @@ export function NationalIdScanner({
 }: NationalIdScannerProps) {
   const t = useTranslations('scan');
   const tCommon = useTranslations('common');
-  
+
   const [activeTab, setActiveTab] = useState<'camera' | 'upload'>('camera');
   const [isCapturing, setIsCapturing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,16 +62,14 @@ export function NationalIdScanner({
       videoRef.current.srcObject = videoStream;
     }
   }, [videoStream]);
-  
+
   const { takePicture, checkPermissions } = useCamera();
   const { mutate: scanId, isPending: isScanning } = useScanNationalId({
     onSuccess: (data) => {
-      console.log('✅ Scan successful:', data);
       onScanComplete(data);
       onClose();
     },
     onError: (err) => {
-      console.error('❌ Scan failed:', err);
       setError(err.message || t('scanFailed'));
       setIsCapturing(false);
     },
@@ -73,15 +78,21 @@ export function NationalIdScanner({
   const handleWebCameraCapture = async () => {
     try {
       // Use browser's getUserMedia API
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1280 }, aspectRatio: { ideal: 1.5 } } 
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1280 },
+          aspectRatio: { ideal: 1.5 },
+        },
       });
       setVideoStream(stream);
       setIsWebCameraActive(true);
       setError(null);
     } catch (err) {
-      console.error('❌ Web camera error:', err);
-      setError('Camera access denied. Please allow camera permissions in your browser.');
+      setError(
+        'Camera access denied. Please allow camera permissions in your browser.'
+      );
       setIsCapturing(false);
     }
   };
@@ -89,7 +100,9 @@ export function NationalIdScanner({
   const captureFromVideo = () => {
     if (!videoStream) return;
 
-    const video = document.getElementById('web-camera-video') as HTMLVideoElement;
+    const video = document.getElementById(
+      'web-camera-video'
+    ) as HTMLVideoElement;
     if (!video) return;
 
     // Create canvas to capture frame
@@ -101,17 +114,15 @@ export function NationalIdScanner({
 
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0);
-    
+
     // Convert to base64
     const base64String = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-    
+
     // Stop video stream
-    videoStream.getTracks().forEach(track => track.stop());
+    videoStream.getTracks().forEach((track) => track.stop());
     setVideoStream(null);
     setIsWebCameraActive(false);
 
-    console.log('📸 Image captured from web camera, processing...');
-    
     // Send to OCR service
     scanId({ imageBase64: base64String, compress: true });
   };
@@ -145,13 +156,9 @@ export function NationalIdScanner({
         return;
       }
 
-      console.log('📸 Image captured, processing...');
-      
       // Send to OCR service
       scanId({ imageBase64: result.base64String, compress: true });
-      
     } catch (err) {
-      console.error('❌ Capture error:', err);
       setError(err instanceof Error ? err.message : t('captureFailed'));
       setIsCapturing(false);
     }
@@ -191,21 +198,16 @@ export function NationalIdScanner({
 
       // Convert file to base64
       const base64String = await fileToBase64(selectedFile);
-      
-      console.log('📤 Image uploaded, processing...');
-      
+
       // Send to OCR service
       scanId({ imageBase64: base64String, compress: true });
-      
     } catch (err) {
-      console.error('❌ Upload error:', err);
       setError(err instanceof Error ? err.message : t('uploadFailed'));
       setIsCapturing(false);
     }
   };
 
   const handleRemoveFile = () => {
-    
     setSelectedFile(null);
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
@@ -234,7 +236,7 @@ export function NationalIdScanner({
     // Always clean up resources, regardless of processing state
     // Stop video stream if active
     if (videoStream) {
-      videoStream.getTracks().forEach(track => track.stop());
+      videoStream.getTracks().forEach((track) => track.stop());
       setVideoStream(null);
       setIsWebCameraActive(false);
     }
@@ -249,7 +251,7 @@ export function NationalIdScanner({
     setIsCapturing(false);
 
     // Only close if not processing or if forced
-    if (!isScanning && !isCapturing || forceClose) {
+    if ((!isScanning && !isCapturing) || forceClose) {
       onClose();
     }
   };
@@ -277,7 +279,11 @@ export function NationalIdScanner({
         {/* Content */}
         <div className="p-6 space-y-6">
           {/* Mode Selection Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'camera' | 'upload')} className="w-full">
+          <Tabs
+            value={activeTab}
+            onValueChange={(v) => setActiveTab(v as 'camera' | 'upload')}
+            className="w-full"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="camera" className="gap-2">
                 <Camera className="h-4 w-4" />
@@ -294,46 +300,45 @@ export function NationalIdScanner({
               {/* Instructions */}
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {isCapacitorNative() 
+                  {isCapacitorNative()
                     ? t('alignIdInstruction')
-                    : t('webCameraInstruction')
-                  }
+                    : t('webCameraInstruction')}
                 </p>
               </div>
 
               {/* Camera Placeholder / Instructions */}
               <div className="relative aspect-[3/2] rounded-lg border-2 border-dashed border-muted-foreground/25 bg-muted/10 flex flex-col items-center justify-center overflow-hidden">
-            {isWebCameraActive ? (
-              <video
-                id="web-camera-video"
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="absolute inset-0 relative aspect-[3/2] w-full object-cover rounded-lg"
-              />
-            ) : isProcessing ? (
-              <div className="text-center space-y-4">
-                <Loader2 className="h-16 w-16 animate-spin text-medical-primary mx-auto" />
-                <div className="space-y-1">
-                  <p className="font-medium">
-                    {isScanning ? t('processingId') : t('openingCamera')}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {isScanning ? t('pleaseWait') : t('preparingCamera')}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="text-center space-y-4">
-                <Camera className="h-16 w-16 text-muted-foreground/50 mx-auto" />
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">{t('readyToScan')}</p>
-                  <p className="text-xs text-muted-foreground max-w-[300px]">
-                    {t('captureHint')}
-                  </p>
-                </div>
-              </div>
-            )}
+                {isWebCameraActive ? (
+                  <video
+                    id="web-camera-video"
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    className="absolute inset-0 relative aspect-[3/2] w-full object-cover rounded-lg"
+                  />
+                ) : isProcessing ? (
+                  <div className="text-center space-y-4">
+                    <Loader2 className="h-16 w-16 animate-spin text-medical-primary mx-auto" />
+                    <div className="space-y-1">
+                      <p className="font-medium">
+                        {isScanning ? t('processingId') : t('openingCamera')}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {isScanning ? t('pleaseWait') : t('preparingCamera')}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center space-y-4">
+                    <Camera className="h-16 w-16 text-muted-foreground/50 mx-auto" />
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">{t('readyToScan')}</p>
+                      <p className="text-xs text-muted-foreground max-w-[300px]">
+                        {t('captureHint')}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Action Buttons */}
@@ -418,9 +423,15 @@ export function NationalIdScanner({
                     />
                     <Upload className="h-16 w-16 text-muted-foreground/50 mx-auto mb-4" />
                     <div className="text-center space-y-2">
-                      <p className="text-sm font-medium">{t('clickToUpload')}</p>
-                      <p className="text-xs text-muted-foreground">{t('uploadHint')}</p>
-                      <p className="text-xs text-muted-foreground/70">{t('supportedFormats')}</p>
+                      <p className="text-sm font-medium">
+                        {t('clickToUpload')}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t('uploadHint')}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70">
+                        {t('supportedFormats')}
+                      </p>
                     </div>
                   </div>
                 ) : (

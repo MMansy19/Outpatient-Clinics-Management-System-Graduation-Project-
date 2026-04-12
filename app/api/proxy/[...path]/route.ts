@@ -23,7 +23,9 @@ type ProxyRouteContext = {
 export const dynamic = 'force-dynamic';
 
 function getBackendBaseUrl(): string {
-  return (process.env.BACKEND_API_URL || DEFAULT_BACKEND_API_URL).trim().replace(/\/+$/, '');
+  return (process.env.BACKEND_API_URL || DEFAULT_BACKEND_API_URL)
+    .trim()
+    .replace(/\/+$/, '');
 }
 
 function getCandidateBackendBaseUrls(): string[] {
@@ -61,7 +63,9 @@ function getCandidateBackendBaseUrls(): string[] {
 }
 
 function getProxyTimeoutMs(): number {
-  const value = Number(process.env.PROXY_UPSTREAM_TIMEOUT_MS || DEFAULT_PROXY_TIMEOUT_MS);
+  const value = Number(
+    process.env.PROXY_UPSTREAM_TIMEOUT_MS || DEFAULT_PROXY_TIMEOUT_MS
+  );
   if (!Number.isFinite(value) || value <= 0) {
     return DEFAULT_PROXY_TIMEOUT_MS;
   }
@@ -82,7 +86,9 @@ const AUTH_COOKIE_NAME = process.env.AUTH_COOKIE_NAME || 'accessToken';
  *
  * If the cookie is NOT signed (no `s:` prefix) the whole value is returned.
  */
-function extractJwtFromCookieHeader(cookieHeader: string | null): string | null {
+function extractJwtFromCookieHeader(
+  cookieHeader: string | null
+): string | null {
   if (!cookieHeader) return null;
 
   // Parse the cookie header to find AUTH_COOKIE_NAME
@@ -95,7 +101,11 @@ function extractJwtFromCookieHeader(cookieHeader: string | null): string | null 
 
     let value = cookie.substring(idx + 1).trim();
     // URL-decode (e.g. s%3A → s:)
-    try { value = decodeURIComponent(value); } catch { /* keep as-is */ }
+    try {
+      value = decodeURIComponent(value);
+    } catch {
+      /* keep as-is */
+    }
 
     if (value.startsWith('s:')) {
       // Signed cookie: s:<JWT>.<HMAC>
@@ -151,14 +161,6 @@ function getForwardHeaders(request: NextRequest): Headers {
   if (!headers.get('authorization')) {
     const cookieHeader = request.headers.get('cookie');
     const jwt = extractJwtFromCookieHeader(cookieHeader);
-    // 🔍 DEBUG: Log auth chain for 401 diagnosis (remove after debugging)
-    console.log('[PROXY AUTH]', {
-      path: request.nextUrl.pathname,
-      hasCookie: !!cookieHeader,
-      cookieNames: cookieHeader?.split(';').map(c => c.trim().split('=')[0]).join(', ') || 'none',
-      jwtExtracted: !!jwt,
-      jwtPreview: jwt ? `${jwt.substring(0, 20)}...` : 'null',
-    });
     if (jwt) {
       headers.set('authorization', `Bearer ${jwt}`);
     }
@@ -194,7 +196,10 @@ function getResponseHeaders(upstreamHeaders: Headers): Headers {
   return headers;
 }
 
-async function proxyRequest(request: NextRequest, context: ProxyRouteContext): Promise<Response> {
+async function proxyRequest(
+  request: NextRequest,
+  context: ProxyRouteContext
+): Promise<Response> {
   const resolvedParams = await context.params;
   const path = resolvedParams.path?.join('/') || '';
   const candidateBaseUrls = getCandidateBackendBaseUrls();
@@ -231,7 +236,8 @@ async function proxyRequest(request: NextRequest, context: ProxyRouteContext): P
     } catch (error) {
       lastError = error;
       const errorName = error instanceof Error ? error.name : '';
-      const isTimeout = errorName === 'TimeoutError' || errorName === 'AbortError';
+      const isTimeout =
+        errorName === 'TimeoutError' || errorName === 'AbortError';
 
       // Timeout indicates an upstream processing issue, not a host mismatch.
       if (isTimeout) {
@@ -243,7 +249,8 @@ async function proxyRequest(request: NextRequest, context: ProxyRouteContext): P
   {
     const error = lastError;
     const errorName = error instanceof Error ? error.name : '';
-    const isTimeout = errorName === 'TimeoutError' || errorName === 'AbortError';
+    const isTimeout =
+      errorName === 'TimeoutError' || errorName === 'AbortError';
     const status = isTimeout ? 504 : 502;
     const statusText = isTimeout ? 'Gateway Timeout' : 'Bad Gateway';
     const rawCause = (error as { cause?: unknown } | undefined)?.cause;
@@ -256,14 +263,6 @@ async function proxyRequest(request: NextRequest, context: ProxyRouteContext): P
             port: (rawCause as { port?: number }).port,
           }
         : undefined;
-
-    console.error('[API Proxy Error]', {
-      candidateBaseUrls,
-      path,
-      method,
-      message: error instanceof Error ? error.message : 'Unknown proxy error',
-      cause,
-    });
 
     return new Response(statusText, {
       status,
@@ -295,7 +294,10 @@ export async function DELETE(request: NextRequest, context: ProxyRouteContext) {
   return proxyRequest(request, context);
 }
 
-export async function OPTIONS(request: NextRequest, context: ProxyRouteContext) {
+export async function OPTIONS(
+  request: NextRequest,
+  context: ProxyRouteContext
+) {
   return proxyRequest(request, context);
 }
 

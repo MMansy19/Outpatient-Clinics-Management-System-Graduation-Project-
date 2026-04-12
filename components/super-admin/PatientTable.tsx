@@ -48,7 +48,6 @@ export function PatientTable() {
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);
     } catch (error) {
-      console.error('Failed to load patients:', error);
       toast.error('Failed to load patients');
     } finally {
       setLoading(false);

@@ -18,7 +18,8 @@ const ROLE_NAME_MAP: Record<string, Role> = {
 function normalizeRole(role: unknown): Role | undefined {
   if (role === undefined || role === null) return undefined;
   if (typeof role === 'number' && role in Role) return role as Role;
-  if (typeof role === 'string' && role in ROLE_NAME_MAP) return ROLE_NAME_MAP[role];
+  if (typeof role === 'string' && role in ROLE_NAME_MAP)
+    return ROLE_NAME_MAP[role];
   return undefined;
 }
 
@@ -30,7 +31,8 @@ interface AuthGuardProps {
 
 export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
   const userRole = useUserRole();
-  const { isValidating, isAuthenticated: isSessionValid } = useSessionValidation();
+  const { isValidating, isAuthenticated: isSessionValid } =
+    useSessionValidation();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -42,7 +44,6 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
 
     // If session validation failed, redirect to login
     if (!isSessionValid) {
-      console.log('[AuthGuard] Session validation failed, redirecting to login');
       router.push(`/${locale}/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
@@ -50,13 +51,19 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
     // Check role authorization
     const normalized = normalizeRole(userRole);
     if (allowedRoles && allowedRoles.length > 0) {
-      console.log(`[AuthGuard] Role check — raw: ${userRole} (${typeof userRole}), normalized: ${normalized}, allowed: [${allowedRoles}]`);
       if (normalized !== undefined && !allowedRoles.includes(normalized)) {
-        console.log(`[AuthGuard] User role ${normalized} not authorized. Required: ${allowedRoles.join(', ')}`);
         router.push(`/${locale}/unauthorized`);
       }
     }
-  }, [isValidating, isSessionValid, userRole, allowedRoles, router, pathname, locale]);
+  }, [
+    isValidating,
+    isSessionValid,
+    userRole,
+    allowedRoles,
+    router,
+    pathname,
+    locale,
+  ]);
 
   // Show loading while validating session
   if (isValidating) {
@@ -76,7 +83,9 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
       <div className="flex min-h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-8 w-8 animate-spin text-medical-primary" />
-          <p className="text-sm text-muted-foreground">Redirecting to login...</p>
+          <p className="text-sm text-muted-foreground">
+            Redirecting to login...
+          </p>
         </div>
       </div>
     );
@@ -84,7 +93,12 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
 
   // Show loading if role doesn't match (will redirect)
   const normalizedForRender = normalizeRole(userRole);
-  if (allowedRoles && allowedRoles.length > 0 && normalizedForRender !== undefined && !allowedRoles.includes(normalizedForRender)) {
+  if (
+    allowedRoles &&
+    allowedRoles.length > 0 &&
+    normalizedForRender !== undefined &&
+    !allowedRoles.includes(normalizedForRender)
+  ) {
     return null;
   }
 

@@ -35,7 +35,11 @@ import {
 import { VoiceFormField } from '@/components/shared/VoiceFormField';
 
 import { useCreateMedication } from '@/lib/api/queries/useMedications';
-import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
+import {
+  medicationSchema,
+  getLocalizedPeriodOptions,
+  getLocalizedDosageOptions,
+} from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationFormProps {
@@ -44,10 +48,10 @@ interface MedicationFormProps {
   onCancel?: () => void;
 }
 
-export function MedicationForm({ 
-  patientId, 
-  onSuccess, 
-  onCancel 
+export function MedicationForm({
+  patientId,
+  onSuccess,
+  onCancel,
 }: MedicationFormProps) {
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
@@ -72,8 +76,6 @@ export function MedicationForm({
   });
 
   const onSubmit = (data: CreateMedicationDto) => {
-    console.log('🔵 Creating medication:', data);
-
     let submitData: CreateMedicationDto | FormData;
     if (audioFile) {
       const formData = new FormData();
@@ -87,10 +89,9 @@ export function MedicationForm({
     } else {
       submitData = data;
     }
-    
+
     createMedication(submitData, {
       onSuccess: (response) => {
-        console.log('✅ Medication created:', response);
         const dosageUnit = data.dosage === '1' ? 'tablet' : 'tablets';
         toast.success(t('medicationCreated'), {
           description: `${data.name} - ${data.dosage} ${dosageUnit} for ${data.period} days`,
@@ -100,7 +101,6 @@ export function MedicationForm({
         onSuccess?.(response.id);
       },
       onError: (error) => {
-        console.error('❌ Medication creation failed:', error);
         toast.error(t('medicationCreateError'), {
           description: error instanceof Error ? error.message : 'Unknown error',
         });
@@ -114,11 +114,9 @@ export function MedicationForm({
         <Card>
           <CardHeader>
             <CardTitle>{t('addMedication')}</CardTitle>
-            <CardDescription>
-              {t('medicationDescription')}
-            </CardDescription>
+            <CardDescription>{t('medicationDescription')}</CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
             {/* Medication Name */}
             <FormField
@@ -128,10 +126,7 @@ export function MedicationForm({
                 <FormItem>
                   <FormLabel required>{t('name')}</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder={t('namePlaceholder')}
-                      {...field} 
-                    />
+                    <Input placeholder={t('namePlaceholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -145,10 +140,7 @@ export function MedicationForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel required>{t('dosage')}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t('dosagePlaceholder')} />
@@ -165,9 +157,7 @@ export function MedicationForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    {t('dosageDescription')}
-                  </FormDescription>
+                  <FormDescription>{t('dosageDescription')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -180,8 +170,8 @@ export function MedicationForm({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel required>{t('duration')}</FormLabel>
-                  <Select 
-                    onValueChange={field.onChange} 
+                  <Select
+                    onValueChange={field.onChange}
                     value={field.value?.toString()}
                   >
                     <FormControl>
@@ -200,9 +190,7 @@ export function MedicationForm({
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormDescription>
-                    {t('durationDescription')}
-                  </FormDescription>
+                  <FormDescription>{t('durationDescription')}</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -214,7 +202,9 @@ export function MedicationForm({
               name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('notes')} ({tCommon('optional')})</FormLabel>
+                  <FormLabel>
+                    {t('notes')} ({tCommon('optional')})
+                  </FormLabel>
                   <FormControl>
                     <VoiceFormField
                       field={field}
@@ -232,9 +222,9 @@ export function MedicationForm({
 
           <CardFooter className="flex gap-2">
             {onCancel && (
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Button
+                type="button"
+                variant="outline"
                 onClick={onCancel}
                 disabled={isPending}
               >
@@ -250,4 +240,3 @@ export function MedicationForm({
     </Form>
   );
 }
-

@@ -78,7 +78,6 @@ export function useSessionValidation(): SessionValidationResult {
         }
       } catch (err: any) {
         // Session is invalid - clear cache and auth state
-        console.warn('[SessionValidation] Session invalid, clearing auth state', err);
         clearCache();
         useAuthStore.getState().logout();
 
@@ -96,7 +95,15 @@ export function useSessionValidation(): SessionValidationResult {
       isMounted = false;
       clearTimeout(timeoutId);
     };
-  }, [hasHydrated, user, storeIsAuthenticated, isValid, getCache, setCache, clearCache]);
+  }, [
+    hasHydrated,
+    user,
+    storeIsAuthenticated,
+    isValid,
+    getCache,
+    setCache,
+    clearCache,
+  ]);
 
   return {
     isValidating,

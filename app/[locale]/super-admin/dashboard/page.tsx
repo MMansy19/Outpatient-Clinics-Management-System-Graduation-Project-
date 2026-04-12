@@ -137,7 +137,9 @@ const EnhancedStatsCard = ({
   );
 };
 
-export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps) {
+export default function SuperAdminDashboard({
+  params,
+}: SuperAdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('superAdmin');
   // const router = useRouter();
@@ -207,7 +209,13 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchAdmins();
     refetchPatients();
     refetchVisits();
-  }, [refetchClinics, refetchDoctors, refetchAdmins, refetchPatients, refetchVisits]);
+  }, [
+    refetchClinics,
+    refetchDoctors,
+    refetchAdmins,
+    refetchPatients,
+    refetchVisits,
+  ]);
 
   useEffect(() => {
     refreshAllData();
@@ -321,7 +329,6 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
       window.location.replace(`/${locale}/login`);
     } catch (error) {
-      console.error('Logout error:', error);
       window.location.replace(`/${locale}/login`);
     }
   };

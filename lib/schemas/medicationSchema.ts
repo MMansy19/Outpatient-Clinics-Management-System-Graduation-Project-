@@ -2,17 +2,17 @@ import { z } from 'zod';
 
 /**
  * Medication Validation Schema
- * 
+ *
  * Zod schema for client-side validation of medication forms.
  * Matches the CreateMedicationDto from the backend API.
- * 
+ *
  * @see {@link docs/API/doctor.json} - Backend API specification
  */
 
 export const medicationSchema = z.object({
   /**
    * Medication Name
-   * 
+   *
    * Must be at least 2 characters.
    * Examples: "Panadol", "Aspirin", "Amoxicillin"
    */
@@ -24,28 +24,24 @@ export const medicationSchema = z.object({
 
   /**
    * Dosage Amount
-   * 
+   *
    * Number of pills/units per administration.
    * Must be a positive integer.
    * Examples: 1, 2, 3
    */
-  dosage: z
-    .string()
-    .min(1, 'Dosage is required'),
+  dosage: z.string().min(1, 'Dosage is required'),
 
   /**
    * Treatment Period
-   * 
+   *
    * Number of days the medication should be taken.
    * Examples: "3" (short term), "7" (one week), "30" (one month)
    */
-  period: z
-    .string()
-    .min(1, 'Period is required'),
+  period: z.string().min(1, 'Period is required'),
 
   /**
    * Additional Comments/Instructions
-   * 
+   *
    * Special instructions, warnings, or notes.
    * Examples:
    * - "Take with food"
@@ -60,7 +56,7 @@ export const medicationSchema = z.object({
 
   /**
    * Patient ID
-   * 
+   *
    * UUID of the patient receiving the medication.
    * Validated to ensure it's a valid UUID format.
    */
@@ -72,14 +68,14 @@ export const medicationSchema = z.object({
 
 /**
  * TypeScript Type from Zod Schema
- * 
+ *
  * Use this type for form data and component props.
  */
 export type MedicationFormData = z.infer<typeof medicationSchema>;
 
 /**
  * Medication Schema without Patient ID
- * 
+ *
  * Useful for forms where patient is already selected in context.
  */
 export const medicationSchemaWithoutPatient = medicationSchema.omit({
@@ -92,7 +88,7 @@ export type MedicationFormDataWithoutPatient = z.infer<
 
 /**
  * Default Form Values
- * 
+ *
  * Use these as initial values for react-hook-form.
  */
 export const medicationDefaultValues: Partial<MedicationFormData> = {
@@ -105,7 +101,7 @@ export const medicationDefaultValues: Partial<MedicationFormData> = {
 
 /**
  * Medication Update Schema
- * 
+ *
  * All fields are optional for partial updates.
  */
 export const medicationUpdateSchema = medicationSchema.partial();
@@ -224,7 +220,7 @@ export const COMMON_DOSAGES = [
 /**
  * Check if dosage is within safe range for common medications.
  * This is a basic safety check - NOT a substitute for medical knowledge!
- * 
+ *
  * @param {number} dosage - Dosage amount
  * @param {string} medicationName - Name of medication (optional)
  * @returns {boolean} True if dosage seems reasonable
@@ -235,9 +231,6 @@ export const isSafeDosage = (
 ): boolean => {
   // Basic safety check
   if (dosage > 10) {
-    console.warn(
-      `High dosage detected: ${dosage} for ${medicationName || 'medication'}`
-    );
     return false;
   }
   return true;
@@ -245,14 +238,13 @@ export const isSafeDosage = (
 
 /**
  * Check if period is reasonable for typical treatments.
- * 
+ *
  * @param {number} period - Treatment period in days
  * @returns {boolean} True if period seems reasonable
  */
 export const isReasonablePeriod = (period: number): boolean => {
   // Warn for very short or very long periods
   if (period < 1 || period > 90) {
-    console.warn(`Unusual period detected: ${period} days`);
     return false;
   }
   return true;
@@ -260,10 +252,10 @@ export const isReasonablePeriod = (period: number): boolean => {
 
 /**
  * Format medication for display
- * 
+ *
  * @param {MedicationFormData} medication - Medication data
  * @returns {string} Formatted string for display
- * 
+ *
  * @example
  * formatMedication({ name: "Panadol", dosage: 2, period: 7 })
  * // Returns: "Panadol - 2 tablets for 7 days"
@@ -276,7 +268,7 @@ export const formatMedication = (medication: MedicationFormData): string => {
 
 /**
  * Calculate end date based on start date and period
- * 
+ *
  * @param {Date} startDate - Treatment start date
  * @param {number} period - Treatment period in days
  * @returns {Date} Calculated end date

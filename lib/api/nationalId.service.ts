@@ -1,6 +1,6 @@
 /**
  * National ID Scanning API Service
- * 
+ *
  * Handles image upload to backend AI model for OCR processing
  * Uses mock data during development until AI endpoint is ready
  */
@@ -34,17 +34,8 @@ export async function scanNationalId(
   try {
     // Call backend OCR service via doctorApi
     const response = await doctorApi.processNationalId(imageBase64);
-
-    console.log('✅ National ID scanned successfully:', {
-      firstName: response.firstName,
-      lastName: response.lastName,
-      socialSecurityNumber: response.socialSecurityNumber?.length || 0,
-    });
-
     return response;
   } catch (error) {
-    console.error('❌ National ID scan failed:', error);
-
     if (error instanceof OCRProcessingError) {
       throw error;
     }
@@ -60,21 +51,27 @@ export async function scanNationalId(
         );
       }
       if (error.response?.status === 500) {
-        throw new OCRProcessingError('AI model processing failed. Please try again.');
+        throw new OCRProcessingError(
+          'AI model processing failed. Please try again.'
+        );
       }
-      throw new OCRProcessingError('Network error. Please check your connection and try again.');
+      throw new OCRProcessingError(
+        'Network error. Please check your connection and try again.'
+      );
     }
 
-    throw new OCRProcessingError('Failed to scan National ID. Please try again.');
+    throw new OCRProcessingError(
+      'Failed to scan National ID. Please try again.'
+    );
   }
 }
 
 /**
  * Scan National ID and enrich with derived data (gender, birthdate)
- * 
+ *
  * This is the primary function to use in components.
  * It calls the backend OCR service and adds frontend-derived data.
- * 
+ *
  * @param imageBase64 - Base64 encoded image of National ID card
  * @returns Complete scan data including derived gender and birthdate
  * @throws OCRProcessingError if scan fails or National ID is invalid
@@ -83,7 +80,9 @@ export async function scanAndEnrichNationalId(
   imageBase64: string
 ): Promise<EnrichedScanData> {
   if (!imageBase64) {
-    throw new OCRProcessingError('File is required. Please upload a valid image.');
+    throw new OCRProcessingError(
+      'File is required. Please upload a valid image.'
+    );
   }
 
   // Get OCR data from backend (or mock)
@@ -101,17 +100,20 @@ export async function scanAndEnrichNationalId(
       gender = extractGenderFromNationalId(nationalIdNumber);
       birthdate = extractBirthdateFromNationalId(nationalIdNumber);
     } catch (error) {
-      console.warn('⚠️ Failed to extract gender/birthdate from National ID:', error);
+  
     }
   }
 
   // Construct fullName for backward compatibility
-    let fullName: string | undefined = undefined;
-    if (scanResult.firstName && scanResult.lastName) {
-      fullName = `${scanResult.firstName} ${scanResult.lastName}`;
-    } else if ('fullName' in scanResult && typeof (scanResult as { fullName?: string }).fullName === 'string') {
-      fullName = (scanResult as { fullName?: string }).fullName;
-    }
+  let fullName: string | undefined = undefined;
+  if (scanResult.firstName && scanResult.lastName) {
+    fullName = `${scanResult.firstName} ${scanResult.lastName}`;
+  } else if (
+    'fullName' in scanResult &&
+    typeof (scanResult as { fullName?: string }).fullName === 'string'
+  ) {
+    fullName = (scanResult as { fullName?: string }).fullName;
+  }
 
   // Return enriched data
   const enrichedData: EnrichedScanData = {
@@ -128,21 +130,13 @@ export async function scanAndEnrichNationalId(
     isMockData: false,
   };
 
-  console.log('📋 Enriched scan data:', {
-    firstName: enrichedData.firstName,
-    lastName: enrichedData.lastName,
-    socialSecurityNumber: enrichedData.socialSecurityNumber,
-    gender: enrichedData.gender,
-    birthdate: enrichedData.birthdate?.toLocaleDateString() || 'N/A',
-  });
-
   return enrichedData;
 }
 
 /**
  * Compress image before sending to backend
  * Reduces payload size and upload time
- * 
+ *
  * @param base64Image - Original base64 image
  * @param maxWidth - Maximum width (default: 1920)
  * @param maxHeight - Maximum height (default: 1080)
@@ -183,15 +177,9 @@ export async function compressImage(
 
       // Convert to base64 with compression
       const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-      
+
       // Remove data URL prefix to get just the base64 data
       const base64Data = compressedBase64.split(',')[1];
-      
-      console.log('🗜️ Image compressed:', {
-        original: `${(base64Image.length / 1024).toFixed(2)} KB`,
-        compressed: `${(base64Data.length / 1024).toFixed(2)} KB`,
-        dimensions: `${width}x${height}`,
-      });
 
       resolve(base64Data);
     };
@@ -201,10 +189,10 @@ export async function compressImage(
     };
 
     // Add data URL prefix if not present
-    const imageData = base64Image.startsWith('data:') 
-      ? base64Image 
+    const imageData = base64Image.startsWith('data:')
+      ? base64Image
       : `data:image/jpeg;base64,${base64Image}`;
-    
+
     img.src = imageData;
   });
 }

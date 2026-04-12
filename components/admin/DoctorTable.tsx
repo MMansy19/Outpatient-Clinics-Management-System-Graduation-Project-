@@ -44,7 +44,6 @@ export function DoctorTable() {
         setTotalPages(data.totalPages);
         setTotalItems(data.totalItems);
       } catch (error) {
-        console.error('Failed to load doctors:', error);
         toast.error('Failed to load doctors');
       } finally {
         setLoading(false);

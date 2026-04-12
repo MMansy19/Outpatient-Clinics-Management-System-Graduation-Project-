@@ -77,7 +77,10 @@ interface CreateDoctorDialogProps {
   autoFetchClinic?: boolean;
 }
 
-export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDialogProps) {
+export function CreateDoctorDialog({
+  trigger,
+  autoFetchClinic,
+}: CreateDoctorDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
@@ -85,7 +88,8 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
   // For ADMIN (clinic manager): fetch own clinic info
-  const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!autoFetchClinic);
+  const { data: adminClinic, isLoading: loadingAdminClinic } =
+    useAdminGetClinic(!!autoFetchClinic);
 
   const form = useForm<CreateDoctorFormData>({
     resolver: zodResolver(createDoctorSchema),
@@ -123,7 +127,6 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
       const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
-      console.error('Failed to load clinics:', error);
       toast.error('Failed to load clinics', 'Unable to fetch clinic list');
     } finally {
       setLoadingClinics(false);
@@ -319,7 +322,11 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
                 <FormLabel required>{t('clinic')}</FormLabel>
                 <FormControl>
                   <Input
-                    value={loadingAdminClinic ? t('loading') : (adminClinic?.name || '')}
+                    value={
+                      loadingAdminClinic
+                        ? t('loading')
+                        : adminClinic?.name || ''
+                    }
                     disabled
                     readOnly
                     className="bg-muted"

@@ -52,7 +52,6 @@ export function AdminTable() {
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);
     } catch (error) {
-      console.error('Failed to load admins:', error);
       toast.error('Failed to load admins');
     } finally {
       setLoading(false);
@@ -69,7 +68,6 @@ export function AdminTable() {
       toast.success(t('adminDeleted'));
       loadAdmins();
     } catch (error) {
-      console.error('Failed to delete admin:', error);
       toast.error('Failed to delete admin');
     }
   };
@@ -158,7 +156,11 @@ export function AdminTable() {
               <div className="pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
                       <Trash2 className="h-4 w-4 mr-1" />
                       {t('delete')}
                     </Button>
@@ -167,12 +169,17 @@ export function AdminTable() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {t('deleteAdminConfirmation', { name: `${admin.user.firstName} ${admin.user.lastName}` })}
+                        {t('deleteAdminConfirmation', {
+                          name: `${admin.user.firstName} ${admin.user.lastName}`,
+                        })}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => handleDelete(admin.id)} className="bg-red-600 hover:bg-red-700">
+                      <AlertDialogAction
+                        onClick={() => handleDelete(admin.id)}
+                        className="bg-red-600 hover:bg-red-700"
+                      >
                         {t('delete')}
                       </AlertDialogAction>
                     </AlertDialogFooter>
@@ -193,8 +200,12 @@ export function AdminTable() {
                 <TableHead className="font-semibold">{t('name')}</TableHead>
                 <TableHead className="font-semibold">{t('email')}</TableHead>
                 <TableHead className="font-semibold">{t('phone')}</TableHead>
-                <TableHead className="font-semibold">{t('speciality')}</TableHead>
-                <TableHead className="font-semibold">{t('nationalId')}</TableHead>
+                <TableHead className="font-semibold">
+                  {t('speciality')}
+                </TableHead>
+                <TableHead className="font-semibold">
+                  {t('nationalId')}
+                </TableHead>
                 <TableHead className="font-semibold">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
@@ -222,20 +233,31 @@ export function AdminTable() {
                     <TableCell>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
+                            <AlertDialogTitle>
+                              {t('confirmDelete')}
+                            </AlertDialogTitle>
                             <AlertDialogDescription>
-                              {t('deleteAdminConfirmation', { name: `${admin.user.firstName} ${admin.user.lastName}` })}
+                              {t('deleteAdminConfirmation', {
+                                name: `${admin.user.firstName} ${admin.user.lastName}`,
+                              })}
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(admin.id)} className="bg-red-600 hover:bg-red-700">
+                            <AlertDialogAction
+                              onClick={() => handleDelete(admin.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
                               {t('delete')}
                             </AlertDialogAction>
                           </AlertDialogFooter>

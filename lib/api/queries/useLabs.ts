@@ -24,7 +24,8 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  */
 const labsKeys = {
   all: ['labs'] as const,
-  patient: (patientId: string) => [...labsKeys.all, 'patient', patientId] as const,
+  patient: (patientId: string) =>
+    [...labsKeys.all, 'patient', patientId] as const,
   detail: (id: string) => [...labsKeys.all, id] as const,
 };
 
@@ -88,9 +89,7 @@ export const useGetPatientLabs = (
  * const { data: lab, isLoading } = useGetLab(labId);
  * ```
  */
-export const useGetLab = (
-  labId: string
-): UseQueryResult<unknown, Error> => {
+export const useGetLab = (labId: string): UseQueryResult<unknown, Error> => {
   return useQuery({
     queryKey: labsKeys.detail(labId),
     queryFn: () => doctorApi.getLab(labId),
@@ -178,9 +177,6 @@ export const useCreateLab = (): UseMutationResult<
         );
       }
     },
-    onError: (error) => {
-      console.error('[useCreateLab] Error:', error);
-    },
   });
 };
 
@@ -219,8 +215,7 @@ export const useUpdateLab = (): UseMutationResult<
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ labId, data }) =>
-      doctorApi.updateLab(labId, data),
+    mutationFn: ({ labId, data }) => doctorApi.updateLab(labId, data),
     onSuccess: (_updatedLab, variables) => {
       // Invalidate the specific lab cache
       queryClient.invalidateQueries({
@@ -236,9 +231,6 @@ export const useUpdateLab = (): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: labsKeys.all,
       });
-    },
-    onError: (error) => {
-      console.error('[useUpdateLab] Error:', error);
     },
   });
 };
@@ -297,9 +289,6 @@ export const useDeleteLab = (): UseMutationResult<
       queryClient.invalidateQueries({
         queryKey: ['patients'],
       });
-    },
-    onError: (error) => {
-      console.error('[useDeleteLab] Error:', error);
     },
   });
 };

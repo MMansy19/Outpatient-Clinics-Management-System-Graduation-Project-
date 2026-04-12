@@ -1,20 +1,33 @@
-import { useMutation, useQuery, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  UseQueryResult,
+  UseMutationResult,
+} from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { adminApi } from '@/lib/api/admin.service';
 import { authApi } from '@/lib/api/auth.service';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import type { CreateDoctorDto, AdminClinicDoctorsResponse } from '@/lib/api/types';
+import type {
+  CreateDoctorDto,
+  AdminClinicDoctorsResponse,
+} from '@/lib/api/types';
 
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
 
 // Doctor Management Hooks
-export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClinic[], Error> => {
+export const useGetDoctors = (
+  clinicId?: number
+): UseQueryResult<DoctorWithClinic[], Error> => {
   return useQuery({
     queryKey: clinicId ? [...DOCTORS_KEY, { clinicId }] : DOCTORS_KEY,
     queryFn: async () => {
-      const url = clinicId ? `/super-admin/doctors?clinic_id=${clinicId}` : '/super-admin/doctors';
+      const url = clinicId
+        ? `/super-admin/doctors?clinic_id=${clinicId}`
+        : '/super-admin/doctors';
       const response = await apiClient.get<DoctorWithClinic[]>(url);
       return response.data;
     },
@@ -71,18 +84,22 @@ export const useCreateDoctor = (): UseMutationResult<
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: DOCTORS_KEY });
     },
-    onError: (error) => {
-      console.error('[useCreateDoctor] Error:', error);
-    },
   });
 };
 
-export const useUpdateDoctor = (): UseMutationResult<Doctor, Error, { id: number; data: Partial<Doctor> }> => {
+export const useUpdateDoctor = (): UseMutationResult<
+  Doctor,
+  Error,
+  { id: number; data: Partial<Doctor> }
+> => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ id, data }) => {
-      const response = await apiClient.patch<Doctor>(`/super-admin/doctor/${id}`, data);
+      const response = await apiClient.patch<Doctor>(
+        `/super-admin/doctor/${id}`,
+        data
+      );
       return response.data;
     },
     onSuccess: () => {
@@ -105,11 +122,15 @@ export const useDeleteDoctor = (): UseMutationResult<void, Error, number> => {
 };
 
 // Patient Management Hooks
-export const useGetPatients = (searchQuery?: string): UseQueryResult<Patient[], Error> => {
+export const useGetPatients = (
+  searchQuery?: string
+): UseQueryResult<Patient[], Error> => {
   return useQuery({
     queryKey: searchQuery ? [...PATIENTS_KEY, { searchQuery }] : PATIENTS_KEY,
     queryFn: async () => {
-      const url = searchQuery ? `/super-admin/patients?search=${searchQuery}` : '/super-admin/patients';
+      const url = searchQuery
+        ? `/super-admin/patients?search=${searchQuery}`
+        : '/super-admin/patients';
       const response = await apiClient.get<Patient[]>(url);
       return response.data;
     },

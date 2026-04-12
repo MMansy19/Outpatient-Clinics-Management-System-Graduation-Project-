@@ -111,14 +111,6 @@ export function AddPatientDialog({
     if (nationalId && nationalId.length === 14) {
       const gender = extractGenderFromNationalId(nationalId);
       const birthdate = extractBirthdateFromNationalId(nationalId);
-
-      // Just for validation and display - backend extracts from National ID
-      if (gender && birthdate) {
-        console.log('📋 Extracted from National ID:', {
-          gender,
-          birthdate: birthdate.toLocaleDateString(),
-        });
-      }
     }
   }, [nationalId]);
 
@@ -144,12 +136,14 @@ export function AddPatientDialog({
         submitData.gender = prefilledData.gender;
       }
       if (prefilledData.birthdate) {
-        submitData.birthdate = prefilledData.birthdate instanceof Date
-          ? prefilledData.birthdate.toISOString().split('T')[0]
-          : prefilledData.birthdate;
+        submitData.birthdate =
+          prefilledData.birthdate instanceof Date
+            ? prefilledData.birthdate.toISOString().split('T')[0]
+            : prefilledData.birthdate;
       }
       if (prefilledData.address || prefilledData.location) {
-        submitData.address = submitData.address || prefilledData.address || prefilledData.location;
+        submitData.address =
+          submitData.address || prefilledData.address || prefilledData.location;
       }
     }
 
@@ -161,8 +155,6 @@ export function AddPatientDialog({
           toastMessages.patient.createSuccess,
           toastMessages.patient.createSuccessDescription(fullName)
         );
-        console.log('🔍 Patient created - ID:', response.id, 'National ID:', socialSecurityNumber);
-        console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
         const numericId = parseInt(response.id) || 0;

@@ -49,7 +49,7 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
     try {
       // Generate registration URL with clinic ID
       const registrationUrl = `${window.location.origin}/register?clinic_id=${clinicId}&role=patient`;
-      
+
       // Generate QR code as data URL
       const qrDataUrl = await QRCodeLib.toDataURL(registrationUrl, {
         width: 300,
@@ -61,15 +61,15 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
       });
 
       setQrCodeUrl(qrDataUrl);
-    } catch (error) {
-      console.error('Failed to generate QR code:', error);
-    }
+    } catch (error) {}
   };
 
   const handleDownload = () => {
     if (!qrCodeUrl || !selectedClinicId) return;
 
-    const selectedClinic = clinics?.find((c) => c.id.toString() === selectedClinicId);
+    const selectedClinic = clinics?.find(
+      (c) => c.id.toString() === selectedClinicId
+    );
     const filename = `qr-code-${selectedClinic?.name.replace(/\s+/g, '-').toLowerCase()}.png`;
 
     // Create download link
@@ -95,7 +95,10 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
         <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="clinic-select">{t('selectClinic')}</Label>
-            <Select value={selectedClinicId} onValueChange={setSelectedClinicId}>
+            <Select
+              value={selectedClinicId}
+              onValueChange={setSelectedClinicId}
+            >
               <SelectTrigger id="clinic-select">
                 <SelectValue placeholder={t('selectClinicPlaceholder')} />
               </SelectTrigger>
@@ -112,14 +115,26 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
           {qrCodeUrl && (
             <div className="flex flex-col items-center space-y-4">
               <div className="rounded-lg border-2 border-medical-primary/20 p-4 bg-white">
-                <Image src={qrCodeUrl} alt="QR Code" width={300} height={300} className="h-[300px] w-[300px]" unoptimized />
+                <Image
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  width={300}
+                  height={300}
+                  className="h-[300px] w-[300px]"
+                  unoptimized
+                />
               </div>
 
               <div className="text-center space-y-1">
                 <p className="text-sm font-medium">
-                  {clinics?.find((c) => c.id.toString() === selectedClinicId)?.name}
+                  {
+                    clinics?.find((c) => c.id.toString() === selectedClinicId)
+                      ?.name
+                  }
                 </p>
-                <p className="text-xs text-muted-foreground">{t('scanToRegister')}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t('scanToRegister')}
+                </p>
               </div>
 
               <Button
@@ -136,7 +151,9 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
             <div className="flex items-center justify-center h-[300px] border-2 border-dashed rounded-lg">
               <div className="text-center space-y-2">
                 <QrCode className="h-12 w-12 mx-auto text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">{t('selectClinicToGenerate')}</p>
+                <p className="text-sm text-muted-foreground">
+                  {t('selectClinicToGenerate')}
+                </p>
               </div>
             </div>
           )}

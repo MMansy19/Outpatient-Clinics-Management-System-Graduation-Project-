@@ -1,13 +1,17 @@
 /**
  * useScanNationalId Hook
- * 
+ *
  * React Query mutation hook for scanning National ID cards
  * Handles API calls, image processing, and data enrichment
  */
 
 'use client';
 
-import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
+import {
+  useMutation,
+  UseMutationOptions,
+  UseMutationResult,
+} from '@tanstack/react-query';
 import {
   scanAndEnrichNationalId,
   compressImage,
@@ -21,11 +25,10 @@ export interface ScanNationalIdVariables {
   compress?: boolean;
 }
 
-export interface UseScanNationalIdOptions
-  extends Omit<
-    UseMutationOptions<EnrichedScanData, Error, ScanNationalIdVariables>,
-    'mutationFn'
-  > {
+export interface UseScanNationalIdOptions extends Omit<
+  UseMutationOptions<EnrichedScanData, Error, ScanNationalIdVariables>,
+  'mutationFn'
+> {
   /** Callback when scan succeeds */
   onScanSuccess?: (data: EnrichedScanData) => void;
   /** Callback when scan fails */
@@ -34,17 +37,17 @@ export interface UseScanNationalIdOptions
 
 /**
  * Hook for scanning National ID cards with React Query
- * 
+ *
  * Features:
  * - Automatic image compression
  * - Backend OCR processing (or mock data in dev)
  * - Frontend data enrichment (gender, birthdate)
  * - Error handling and retry logic
  * - Loading states
- * 
+ *
  * @param options - Configuration and callbacks
  * @returns React Query mutation result
- * 
+ *
  * @example
  * ```tsx
  * const { mutate: scanId, isPending, error } = useScanNationalId({
@@ -56,7 +59,7 @@ export interface UseScanNationalIdOptions
  *     toast.error(error.message);
  *   },
  * });
- * 
+ *
  * // Usage
  * const handleCapture = async (image: string) => {
  *   scanId({ imageBase64: image });
@@ -68,20 +71,23 @@ export function useScanNationalId(
 ): UseMutationResult<EnrichedScanData, Error, ScanNationalIdVariables> {
   const { onScanSuccess, onScanError, ...mutationOptions } = options || {};
 
-  const mutation = useMutation<EnrichedScanData, Error, ScanNationalIdVariables>({
+  const mutation = useMutation<
+    EnrichedScanData,
+    Error,
+    ScanNationalIdVariables
+  >({
     mutationKey: ['scanNationalId'],
-    
-    mutationFn: async ({ imageBase64, compress = true }): Promise<EnrichedScanData> => {
-      console.log('🔍 Starting National ID scan...');
 
+    mutationFn: async ({
+      imageBase64,
+      compress = true,
+    }): Promise<EnrichedScanData> => {
       // Compress image if requested (default: true)
       let processedImage = imageBase64;
       if (compress) {
         try {
           processedImage = await compressImage(imageBase64, 1920, 1080, 0.9);
-          console.log('✅ Image compressed successfully');
         } catch (compressionError) {
-          console.warn('⚠️ Image compression failed, using original:', compressionError);
           // Continue with original image if compression fails
         }
       }
@@ -89,24 +95,13 @@ export function useScanNationalId(
       // Send to backend OCR service
       try {
         const enrichedData = await scanAndEnrichNationalId(processedImage);
-        console.log('✅ National ID scan completed successfully');
         return enrichedData;
       } catch (error) {
-        console.error('❌ National ID scan failed:', error);
         throw error;
       }
     },
 
     onSuccess: (data) => {
-      console.log('📋 Scan result:', {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        socialSecurityNumber: data.socialSecurityNumber,
-        location: data.location,
-        gender: data.gender,
-        birthdate: data.birthdate.toISOString(),
-      });
-
       // Call custom success handler
       if (onScanSuccess) {
         onScanSuccess(data);
@@ -114,22 +109,21 @@ export function useScanNationalId(
     },
 
     onError: (error) => {
-      console.error('❌ Scan error:', error);
-
       // Provide user-friendly error messages
       let userMessage = 'Failed to scan National ID. Please try again.';
 
       if (error instanceof OCRProcessingError) {
         userMessage = error.message;
       } else if (error.message.includes('Network')) {
-        userMessage = 'Network error. Please check your connection and try again.';
+        userMessage =
+          'Network error. Please check your connection and try again.';
       } else if (error.message.includes('timeout')) {
         userMessage = 'Request timed out. Please try again.';
       }
 
       // Create new error with user-friendly message
       const userError = new Error(userMessage);
-      
+
       // Call custom error handler
       if (onScanError) {
         onScanError(userError);
