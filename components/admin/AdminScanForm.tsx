@@ -27,12 +27,12 @@ import { useAdminCreateScan } from '@/lib/api/queries/useAdmin';
 import { useFormState } from '@/src/hooks/useFormState';
 
 const scanTypes = [
-  { label: 'MRI', value: '0' },
-  { label: 'CT', value: '1' },
-  { label: 'X-RAY', value: '2' },
-  { label: 'ULTRA SOUND', value: '3' },
-  { label: 'PET CT', value: '4' },
-  { label: 'MAMMOGRAPHY', value: '5' },
+  { labelKey: 'scanTypes.mri', value: '0' },
+  { labelKey: 'scanTypes.ct', value: '1' },
+  { labelKey: 'scanTypes.xray', value: '2' },
+  { labelKey: 'scanTypes.ultrasound', value: '3' },
+  { labelKey: 'scanTypes.petct', value: '4' },
+  { labelKey: 'scanTypes.mammography', value: '5' },
 ];
 
 const scanSchema = z.object({
@@ -60,6 +60,7 @@ export function AdminScanForm({
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
+    mode: 'onChange',
     resolver: zodResolver(scanSchema),
     defaultValues: {
       name: '',
@@ -113,6 +114,7 @@ export function AdminScanForm({
       title={t('createNewScan')}
       description={t('createScanDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('createScan')}
       cancelLabel={tCommon('cancel')}
@@ -149,7 +151,7 @@ export function AdminScanForm({
                 <SelectContent>
                   {scanTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
