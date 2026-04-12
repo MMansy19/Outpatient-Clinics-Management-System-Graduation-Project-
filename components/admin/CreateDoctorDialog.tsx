@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { toast, toastMessages } from '@/lib/utils/toast';
-import { Loader2, UserPlus, Info } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 
 import {
   Dialog,
