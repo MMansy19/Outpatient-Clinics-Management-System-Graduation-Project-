@@ -435,6 +435,7 @@ export function PatientProfile({
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('speciality')}</TableHead>
                         <TableHead>{tTable('diagnoses')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -444,6 +445,11 @@ export function PatientProfile({
                           <TableCell>Dr. {visit.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>{visit.doctor?.speciality || 'N/A'}</TableCell>
                           <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
+                          <TableCell>
+                            {visit.diagnosesAudioUrl && (
+                              <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+                            )}
+                          </TableCell>
                         </TableRow>
                       ))}
                     </TableBody>
@@ -740,6 +746,11 @@ export function PatientProfile({
                                     <span className="font-medium">{tTable('speciality')}:</span> {visit.doctor?.speciality || tCommon('unknown')}
                                   </p>
                                   <p className="text-xs text-muted-foreground">{formatDate(visit.createdAt)}</p>
+                                  {visit.diagnosesAudioUrl && (
+                                    <div className="mt-1">
+                                      <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
