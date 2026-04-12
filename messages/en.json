@@ -248,7 +248,9 @@
     "createLabDescription": "Add a new lab test result",
     "createNewLab": "New Lab",
     "labName": "Lab Name",
+    "labNamePlaceholder": "e.g., Blood Test, X-Ray, MRI",
     "scanName": "Scan Name",
+    "scanNamePlaceholder": "e.g., Chest X-Ray, Brain MRI",
     "scanType": "Scan Type",
     "selectScanType": "Select scan type",
     "scanTypes": {

@@ -117,7 +117,7 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
             <FormItem>
               <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
+                <Input placeholder={t('labNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

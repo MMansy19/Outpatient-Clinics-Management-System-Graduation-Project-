@@ -110,7 +110,7 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
             <FormItem>
               <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
+                <Input placeholder={t('labNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

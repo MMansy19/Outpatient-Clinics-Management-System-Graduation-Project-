@@ -142,7 +142,7 @@ export function ScanEditDialog({
             <FormItem>
               <FormLabel required>{t('scanName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Chest X-Ray, Brain MRI" {...field} />
+                <Input placeholder={t('scanNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
