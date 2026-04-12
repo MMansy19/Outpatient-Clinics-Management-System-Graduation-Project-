@@ -26,14 +26,13 @@ import { z } from 'zod';
 import { useCreateScan } from '@/lib/api/queries/useScans';
 import { useFormState } from '@/src/hooks/useFormState';
 
-
 const scanTypes = [
-  { label: 'MRI', value: "1" },
-  { label: 'CT', value: "2" },
-  { label: 'X-RAY', value: "3" },
-  { label: 'ULTRA SOUND', value: "4" },
-  { label: 'PET CT', value: "5" },
-  { label: 'MAMMOGRAPHY', value: "6" },
+  { labelKey: 'scanTypes.mri', value: '0' },
+  { labelKey: 'scanTypes.ct', value: '1' },
+  { labelKey: 'scanTypes.xray', value: '2' },
+  { labelKey: 'scanTypes.ultrasound', value: '3' },
+  { labelKey: 'scanTypes.petct', value: '4' },
+  { labelKey: 'scanTypes.mammography', value: '5' },
 ];
 
 const scanSchema = z.object({
@@ -52,10 +51,16 @@ interface ScanFormProps {
   onSuccess?: () => void;
 }
 
-export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormProps) {
+export function ScanForm({
+  open,
+  onOpenChange,
+  patientId,
+  onSuccess,
+}: ScanFormProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
+    mode: 'onChange',
     resolver: zodResolver(scanSchema),
     defaultValues: {
       name: '',
@@ -114,6 +119,7 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
       title={t('createNewScan')}
       description={t('createScanDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('createScan')}
       cancelLabel={tCommon('cancel')}
@@ -147,12 +153,12 @@ export function ScanForm({ open, onOpenChange, patientId, onSuccess }: ScanFormP
                     <SelectValue placeholder={t('selectScanType')} />
                   </SelectTrigger>
                 </FormControl>
-                 <SelectContent>
-              {scanTypes.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label}
-                </SelectItem>
-              ))}
+                <SelectContent>
+                  {scanTypes.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {t(type.labelKey)}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />
