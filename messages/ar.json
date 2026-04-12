@@ -18,7 +18,15 @@
     "viewImage": "عرض الصورة",
     "unknown": "غير معروف",
     "other": "آخر",
-    "totalPatients": "إجمالي المرضى"
+    "totalPatients": "إجمالي المرضى",
+    "scanTypes": {
+      "mri": "الرنين المغناطيسي",
+      "ct": "الأشعة المقطعية",
+      "xray": "الأشعة السينية",
+      "ultrasound": "الموجات الصوتية",
+      "petct": "الطب النووي (المسح الذري)",
+      "mammography": "تصوير الثدي"
+    }
   },
   "nav": {
     "home": "الرئيسية",
@@ -152,7 +160,7 @@
     "login": "تسجيل الدخول",
     "register": "إنشاء حساب",
     "logOut": "تسجيل الخروج",
-    "loggingOut":"...جاري تسجيل الخروج",
+    "loggingOut": "...جاري تسجيل الخروج",
     "email": "البريد الإلكتروني",
     "password": "كلمة المرور",
     "confirmPassword": "تأكيد كلمة المرور",
@@ -183,12 +191,13 @@
     "clinicPediatrics": "طب الأطفال",
     "specializationPlaceholder": "مثال: القلب، الأعصاب",
     "passwordRequirements": "يجب أن تحتوي على حروف كبيرة وصغيرة ورقم ورمز خاص",
-    "addClinic":"إضافة عيادة"
+    "addClinic": "إضافة عيادة"
   },
   "doctor": {
     "dashboard": "لوحة التحكم",
     "createVisit": "إنشاء زيارة",
-"title": "تحويل الصوت إلى نص",    "viewImage": "عرض الصورة",
+    "title": "تحويل الصوت إلى نص",
+    "viewImage": "عرض الصورة",
     "visits": "الزيارات",
     "dashboardSubtitle": "إدارة مرضاك وسير العمل السريري",
     "clinicDashboardTitle": "لوحة تحكم عيادة {clinicName}",
@@ -198,7 +207,7 @@
     "scanID": "سكان البطاقة",
     "search": "ابحث بالاسم أو الرقم القومي",
     "searchPlaceholder": "بحث عن المرضى...",
-    "noVisitsFound":"لا توجد زيارات",
+    "noVisitsFound": "لا توجد زيارات",
     "today": "اليوم",
     "thisWeek": "زيارات هذا الأسبوع",
     "thisMonth": "هذا الشهر",
@@ -242,6 +251,14 @@
     "scanName": "اسم الأشعة",
     "scanType": "نوع الأشعة",
     "selectScanType": "اختر نوع الأشعة",
+    "scanTypes": {
+      "mri": "الرنين المغناطيسي",
+      "ct": "الأشعة المقطعية",
+      "xray": "الأشعة السينية",
+      "ultrasound": "الموجات الصوتية",
+      "petct": "الطب النووي (المسح الذري)",
+      "mammography": "تصوير الثدي"
+    },
     "createScan": "إنشاء أشعة",
     "createScanDescription": "إضافة دراسة تصويرية جديدة",
     "createNewScan": "أشعة جديدة",
@@ -260,12 +277,12 @@
     "noVisitsDescription": "لم يتم العثور على زيارات لهذا الدكتور",
     "allPatients": "جميع المرضى",
     "noPatientsFound": "لم يتم العثور على مرضى",
-    "comments":"التعليقات",
-    "optionalComments":"تعليقات اختيارية",
+    "comments": "التعليقات",
+    "optionalComments": "تعليقات اختيارية",
     "existingAudioRecording": "التسجيل الصوتي الحالي",
     "allPatientsDescription": "جميع المرضى المسجلين تحت هذا الطبيب",
     "tryAgain": "حاول مرة أخرى",
-        "addDoctor": "إضافة طبيب",
+    "addDoctor": "إضافة طبيب",
     "doctorsInClinic": "الأطباء في {clinicName}",
     "doctorsInClinicDescription": "الأطباء المسجلين في {clinicName}",
     "patientsInClinic": "المرضى في {clinicName}",
@@ -276,7 +293,7 @@
     "doctors": "الأطباء",
     "clinics": "العيادات",
     "noDoctorsFound": "لم يتم العثور على أطباء في هذه العيادة",
-  "uploadScanImage": "تحميل صورة الأشعة",
+    "uploadScanImage": "تحميل صورة الأشعة",
     "addPatient": {
       "title": "إضافة مريض جديد",
       "selectMethod": "اختر طريقة التسجيل",
@@ -421,14 +438,13 @@
     "networkError": "خطأ في الشبكة",
     "networkErrorDescription": "يرجى التحقق من الاتصال بالإنترنت والمحاولة مرة أخرى",
     "diagnosesTreatmentPlan": "التشخيص وخطة العلاج",
-    "enterDiagnosesTreatmentPlan":" أدخل التشخيص وخطة العلاج",
+    "enterDiagnosesTreatmentPlan": " أدخل التشخيص وخطة العلاج",
     "diagnosesOrAudioRequired": "يرجى إدخال نص التشخيص أو تسجيل صوتي",
     "existingAudioRecording": "التسجيل الصوتي الحالي",
     "editVisit": "تعديل الزيارة",
     "editVisitDescription": "تحديث تفاصيل الزيارة",
     "updateVisit": "تحديث الزيارة",
     "visitUpdated": "تم تحديث الزيارة بنجاح"
-
   },
   "medication": {
     "addMedication": "إضافة دواء",
@@ -523,7 +539,7 @@
     "gender": "الجنس",
     "dateOfBirth": "تاريخ الميلاد",
     "socialSecurityNumber": "الرقم القومي",
-    "job":"الوظيفة",
+    "job": "الوظيفة",
     "audio": "صوت",
     "email": "البريد الإلكتروني",
     "phone": "الهاتف",
@@ -549,10 +565,11 @@
     "to": "إلى"
   },
   "scanTypes": {
-    "ct": "أشعة مقطعية",
-    "xray": "أشعة إكس",
-    "ultrasound": "موجات فوق صوتية",
-    "petct": "أشعة مقطعية بالإصدار البوزيتروني",
+    "mri": "الرنين المغناطيسي",
+    "ct": "الأشعة المقطعية",
+    "xray": "الأشعة السينية",
+    "ultrasound": "الموجات الصوتية",
+    "petct": "الطب النووي (المسح الذري)",
     "mammography": "تصوير الثدي"
   },
   "admin": {
@@ -571,7 +588,7 @@
     "previous": "السابق",
     "next": "التالي",
     "logOut": "تسجيل الخروج",
-    "loggingOut":"...جاري تسجيل الخروج",
+    "loggingOut": "...جاري تسجيل الخروج",
     "dashboard": "لوحة تحكم المسؤول",
     "dashboardSubtitle": "إدارة العيادات والمستخدمين ومراقبة النظام",
     "clinicManagement": "إدارة العيادات",
@@ -763,7 +780,7 @@
     "previous": "السابق",
     "next": "التالي",
     "logOut": "تسجيل الخروج",
-    "loggingOut":"...جاري تسجيل الخروج",
+    "loggingOut": "...جاري تسجيل الخروج",
     "dashboard": "لوحة تحكم المسؤول الأعلى",
     "dashboardSubtitle": "إدارة العيادات والمستخدمين ومراقبة النظام",
     "clinicManagement": "إدارة العيادات",
@@ -991,7 +1008,7 @@
     "opening": "فتح الكاميرا...",
     "pleaseWait": "يرجى الانتظار..."
   },
-    "voiceRecorder": {
+  "voiceRecorder": {
     "title": "تحويل الصوت إلى نص",
     "description": "سجل صوتك أو قم برفع ملف صوتي لتحويله إلى نص",
     "recordTab": "تسجيل",

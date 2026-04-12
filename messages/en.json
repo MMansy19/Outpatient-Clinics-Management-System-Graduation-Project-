@@ -18,7 +18,15 @@
     "viewImage": "View Image",
     "unknown": "Unknown",
     "other": "Other",
-    "totalPatients": "Total Patients"
+    "totalPatients": "Total Patients",
+    "scanTypes": {
+      "mri": "MRI",
+      "ct": "CT",
+      "xray": "X-RAY",
+      "ultrasound": "ULTRA SOUND",
+      "petct": "PET CT",
+      "mammography": "MAMMOGRAPHY"
+    }
   },
   "nav": {
     "home": "Home",
@@ -243,6 +251,14 @@
     "scanName": "Scan Name",
     "scanType": "Scan Type",
     "selectScanType": "Select scan type",
+    "scanTypes": {
+      "mri": "MRI",
+      "ct": "CT",
+      "xray": "X-RAY",
+      "ultrasound": "ULTRA SOUND",
+      "petct": "PET CT",
+      "mammography": "MAMMOGRAPHY"
+    },
     "createScan": "Create Scan",
     "createScanDescription": "Add a new imaging study",
     "createNewScan": "New Scan",
@@ -266,9 +282,9 @@
     "noPatientsFound": "No patients found",
     "allPatientsDescription": "All patients registered under this doctor",
     "uploadScanImage": "Upload Scan Image",
-        "addDoctor": "Add Doctor",
-        "addDoctorMobile": "Doctor",
-"doctorsInClinic": "Doctors in {clinicName}",
+    "addDoctor": "Add Doctor",
+    "addDoctorMobile": "Doctor",
+    "doctorsInClinic": "Doctors in {clinicName}",
     "doctorsInClinicDescription": "Registered doctors in {clinicName}",
     "patientsInClinic": "Patients in {clinicName}",
     "patientsInClinicDescription": "All patients registered in {clinicName}",
@@ -422,7 +438,7 @@
     "networkError": "Network Error",
     "networkErrorDescription": "Please check your internet connection and try again",
     "diagnosesTreatmentPlan": "Diagnosis & Treatment Plan",
-    "enterDiagnosesTreatmentPlan":"Enter diagnosis and treatment plan",
+    "enterDiagnosesTreatmentPlan": "Enter diagnosis and treatment plan",
     "diagnosesOrAudioRequired": "Please enter diagnoses text or record an audio",
     "existingAudioRecording": "Existing Audio Recording",
     "editVisit": "Edit Visit",
@@ -523,7 +539,7 @@
     "gender": "Gender",
     "dateOfBirth": "Date of Birth",
     "socialSecurityNumber": "Social Security Number",
-    "job":"Job",
+    "job": "Job",
     "audio": "Audio",
     "email": "Email",
     "phone": "Phone",
@@ -912,6 +928,7 @@
     "to": "To"
   },
   "scanTypes": {
+    "mri": "MRI",
     "ct": "CT",
     "xray": "X-RAY",
     "ultrasound": "ULTRA SOUND",
