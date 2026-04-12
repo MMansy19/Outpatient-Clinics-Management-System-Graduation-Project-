@@ -201,12 +201,6 @@ export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDia
           <DialogTitle>{t('createDoctor')}</DialogTitle>
           <DialogDescription>{t('createDoctorDescription')}</DialogDescription>
         </DialogHeader>
-
-        {/* Pending approval notice */}
-        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
-          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        </div>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Name Fields */}

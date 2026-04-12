@@ -176,11 +176,13 @@ export const useAdminCreateVisit = (): UseMutationResult<
 
       const diagnoses =
         variables instanceof FormData
-          ? (variables.get('diagnoses') as string)
-          : variables.diagnoses;
+          ? ((variables.get('diagnoses') as string) ?? '')
+          : (variables.diagnoses ?? '');
 
       const adminName = useAuthStore.getState().user?.name ?? '';
       const clinicInfo = queryClient.getQueryData<AdminClinicInfoResponse>(adminKeys.clinic);
+      const clinicId = clinicInfo?.id ?? 'unknown';
+      const clinicName = clinicInfo?.name ?? '';
 
       const newVisit = {
         doctor: { name: adminName, speciality: '' },
@@ -189,12 +191,17 @@ export const useAdminCreateVisit = (): UseMutationResult<
         createdAt: new Date().toISOString(),
       };
 
+      const emptyPatient = { id: patientId, name: '', gender: 0, dateOfBirth: '', socialSecurityNumber: '', address: null, job: null };
+
       queryClient.setQueryData<AdminPatientVisitsResponse>(
         adminKeys.patientVisits(patientId),
         (old) => {
-          if (!old) return old;
-          const clinicId = clinicInfo?.id ?? 'unknown';
-          const clinicName = clinicInfo?.name ?? '';
+          if (!old) {
+            return {
+              patient: emptyPatient,
+              clinics: [{ id: clinicId, name: clinicName, visits: [newVisit] }],
+            };
+          }
           const clinics = old.clinics.map((c) => ({ ...c, visits: [...c.visits] }));
           const existing = clinics.find((c) => c.id === clinicId);
           if (existing) {
@@ -245,7 +252,12 @@ export const useAdminCreateMedication = (): UseMutationResult<
       queryClient.setQueryData<AdminPatientMedicationsResponse>(
         adminKeys.patientMedications(patientId),
         (old) => {
-          if (!old) return old;
+          if (!old) {
+            return {
+              patient: { id: patientId, name: '', gender: 0, dateOfBirth: '', socialSecurityNumber: '', address: null, job: null },
+              medications: [newMedication],
+            };
+          }
           return { ...old, medications: [newMedication, ...old.medications] };
         },
       );
@@ -279,7 +291,12 @@ export const useAdminCreateLab = (): UseMutationResult<unknown, Error, FormData>
       queryClient.setQueryData<AdminPatientLabsResponse>(
         adminKeys.patientLabs(patientId),
         (old) => {
-          if (!old) return old;
+          if (!old) {
+            return {
+              patient: { id: patientId, name: '', gender: 0, dateOfBirth: '', socialSecurityNumber: '', address: null, job: null },
+              labs: [newLab],
+            };
+          }
           return { ...old, labs: [newLab, ...old.labs] };
         },
       );
@@ -315,7 +332,12 @@ export const useAdminCreateScan = (): UseMutationResult<unknown, Error, FormData
       queryClient.setQueryData<AdminPatientScansResponse>(
         adminKeys.patientScans(patientId),
         (old) => {
-          if (!old) return old;
+          if (!old) {
+            return {
+              patient: { id: patientId, name: '', gender: 0, dateOfBirth: '', socialSecurityNumber: '', address: null, job: null },
+              scans: [newScan],
+            };
+          }
           return { ...old, scans: [newScan, ...old.scans] };
         },
       );
