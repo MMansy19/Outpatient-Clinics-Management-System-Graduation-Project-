@@ -19,11 +19,12 @@ import {
   Stethoscope,
   FileText,
   Calendar,
+  Volume2,
 } from 'lucide-react';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
 import { toast } from 'sonner';
-
 
 export function VisitTable() {
   const t = useTranslations('admin');
@@ -181,6 +182,16 @@ export function VisitTable() {
                         {visit.diagnoses || t('noDiagnoses')}{' '}
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Audio */}
+              {visit.diagnosesAudioUrl && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-medical-primary flex-shrink-0" />
+                    <AudioPlayer src={visit.diagnosesAudioUrl} compact />
                   </div>
                 </div>
               )}
