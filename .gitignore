@@ -37,3 +37,7 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 .worktrees/
+
+# Serwist (generated service worker)
+public/sw*
+public/swe-worker*
