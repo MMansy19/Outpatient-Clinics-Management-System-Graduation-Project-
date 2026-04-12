@@ -1,6 +1,6 @@
 /**
  * API Type Definitions
- * 
+ *
  * These types are derived from the OpenAPI schema (auth.json) and backend DTOs.
  * They ensure type safety when communicating with the CodeBlue backend.
  */
@@ -121,7 +121,7 @@ export interface Doctor extends User {
   speciality: string;
   isApproved: boolean;
 }
- 
+
 export interface Patient extends User {
   address?: string;
   job?: string;
@@ -135,7 +135,7 @@ export interface ApiError {
   message: string;
   statusCode: number;
   error?: string;
-} 
+}
 
 // ============================================================================
 // Doctor API DTOs
@@ -312,6 +312,7 @@ export interface PaginatedVisitsResponse {
 export interface SuperAdminVisitItem {
   id: string;
   diagnoses: string;
+  diagnosesAudioUrl: string | null;
   patient: {
     name: string;
     id: string;

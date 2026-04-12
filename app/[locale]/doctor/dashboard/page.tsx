@@ -2,7 +2,16 @@
 
 import React, { use, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Users, Activity, Calendar, Plus, LogOut, Stethoscope, ClipboardList } from 'lucide-react';
+import {
+  Users,
+  Activity,
+  Calendar,
+  Plus,
+  LogOut,
+  Stethoscope,
+  ClipboardList,
+} from 'lucide-react';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { useAuthStore } from '@/stores/authStore';
@@ -52,7 +61,14 @@ interface DoctorDashboardProps {
   params: Promise<{ locale: string }>;
 }
 
-type View = 'search' | 'profile' | 'newVisit' | 'visits' | 'patients' | 'doctors' | 'clinics';
+type View =
+  | 'search'
+  | 'profile'
+  | 'newVisit'
+  | 'visits'
+  | 'patients'
+  | 'doctors'
+  | 'clinics';
 
 export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   const { locale } = use(params);
@@ -95,10 +111,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
   } = useGetAllPatients();
 
   // Admin-specific: Get doctors in admin's clinic (backend reads clinic from JWT)
-  const {
-    data: clinicDoctors,
-    isLoading: loadingClinicDoctors,
-  } = useGetClinicDoctors(1, 50);
+  const { data: clinicDoctors, isLoading: loadingClinicDoctors } =
+    useGetClinicDoctors(1, 50);
 
   // Calculate statistics
   const calculateStats = () => {
@@ -164,11 +178,15 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   const handleSelectPatient = (patient: any) => {
     // Normalize patient data: handle both flat (doctor) and nested (admin) patient structures
-    const ssn = patient.socialSecurityNumber
-      || patient.user?.socialSecurityNumber
-      || (patient.national_id ? String(patient.national_id) : undefined);
-    const name = patient.name
-      || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '');
+    const ssn =
+      patient.socialSecurityNumber ||
+      patient.user?.socialSecurityNumber ||
+      (patient.national_id ? String(patient.national_id) : undefined);
+    const name =
+      patient.name ||
+      (patient.user
+        ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim()
+        : '');
     setSelectedPatient({
       ...patient,
       socialSecurityNumber: ssn,
@@ -177,7 +195,10 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     setCurrentView('profile');
   };
 
-  const handleNewPatientCreated = (data: { id: number; socialSecurityNumber: string }) => {
+  const handleNewPatientCreated = (data: {
+    id: number;
+    socialSecurityNumber: string;
+  }) => {
     console.log('🔍 handleNewPatientCreated - data:', data);
     setSelectedPatient({
       id: data.id,
@@ -240,10 +261,13 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     console.log('🔄 Dashboard mounted, refetching data...');
     refetchPatients();
     refetchVisits();
-  }, [ refetchPatients, refetchVisits]);
+  }, [refetchPatients, refetchVisits]);
 
   return (
-    <AuthGuard allowedRoles={[Role.DOCTOR, Role.ADMIN, Role.SUPER_ADMIN]} locale={locale}>
+    <AuthGuard
+      allowedRoles={[Role.DOCTOR, Role.ADMIN, Role.SUPER_ADMIN]}
+      locale={locale}
+    >
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
         {/* Header */}
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -268,7 +292,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Button variant="outline" className="sm:flex-none">
                     <Plus className="mr-2 h-5 w-5" />
                     <span className="md:inline hidden">{t('addDoctor')}</span>
-                    <span className="inline md:hidden">{t('addDoctorMobile')}</span>
+                    <span className="inline md:hidden">
+                      {t('addDoctorMobile')}
+                    </span>
                   </Button>
                 }
               />
@@ -282,7 +308,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             >
               <Plus className="mr-2 h-5 w-5" />
               <span className="md:inline hidden">{t('addNewPatient')}</span>
-              <span className="inline md:hidden">{t('addNewPatientMobile')}</span>
+              <span className="inline md:hidden">
+                {t('addNewPatientMobile')}
+              </span>
             </Button>
             <LanguageToggle locale={locale} variant="outline" size="icon" />
 
@@ -330,7 +358,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('doctorsInClinicDescription', { clinicName: stats.clinicName })}
+                    {t('doctorsInClinicDescription', {
+                      clinicName: stats.clinicName,
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -347,7 +377,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingAllPatients ? '...' : stats.clinicPatients}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('patientsInClinicDescription', { clinicName: stats.clinicName })}
+                    {t('patientsInClinicDescription', {
+                      clinicName: stats.clinicName,
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -364,7 +396,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                     {loadingAllVisits ? '...' : stats.clinicVisits}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {t('visitsInClinicDescription', { clinicName: stats.clinicName })}
+                    {t('visitsInClinicDescription', {
+                      clinicName: stats.clinicName,
+                    })}
                   </p>
                 </CardContent>
               </Card>
@@ -377,7 +411,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Calendar className="h-4 w-4 text-medical-success" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.thisWeeksVisits}
+                  </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {t('thisWeekDescription')}
                   </p>
@@ -395,7 +431,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Users className="h-4 w-4 text-medical-primary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.todaysPatients}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.todaysPatients}
+                  </div>
                   {patientsError && (
                     <p className="text-xs text-red-500 mt-1">
                       Error: {String(patientsError.message)}
@@ -412,7 +450,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Activity className="h-4 w-4 text-medical-secondary" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.pendingVisits}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.pendingVisits}
+                  </div>
                   {visitsError && (
                     <p className="text-xs text-red-500 mt-1">
                       Error: {String(visitsError.message)}
@@ -429,7 +469,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <Calendar className="h-4 w-4 text-medical-info" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stats.thisWeeksVisits}</div>
+                  <div className="text-2xl font-bold">
+                    {stats.thisWeeksVisits}
+                  </div>
                 </CardContent>
               </Card>
             </>
@@ -518,6 +560,14 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                 visit?.diagnosis ||
                                 tTable('noDiagnosis')}
                             </div>
+                            {visit?.diagnosesAudioUrl && (
+                              <div className="mt-2">
+                                <AudioPlayer
+                                  src={visit.diagnosesAudioUrl}
+                                  compact
+                                />
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             {visit?.doctor?.name ||
@@ -572,7 +622,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                             <TableHead>{tTable('name')}</TableHead>
                             <TableHead>{tTable('gender')}</TableHead>
                             <TableHead>{tTable('dateOfBirth')}</TableHead>
-                            <TableHead>{tTable('socialSecurityNumber')}</TableHead>
+                            <TableHead>
+                              {tTable('socialSecurityNumber')}
+                            </TableHead>
                             <TableHead>{tPatient('address')}</TableHead>
                             <TableHead>{tTable('job')}</TableHead>
                           </TableRow>
@@ -580,52 +632,63 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                         <TableBody>
                           {patientsList.map((patient: any) => {
                             // Handle both admin (nested user) and doctor (flat) patient structures
-                            const patientName = patient.name || (patient.user ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim() : '') || tCommon('unknown');
-                            const patientGender = patient.gender ?? patient.user?.gender;
-                            const patientDOB = patient.dateOfBirth || patient.user?.dateOfBirth;
-                            const patientSSN = patient.socialSecurityNumber || patient.user?.socialSecurityNumber;
-                            const patientAddress = patient.address || patient.user?.address;
+                            const patientName =
+                              patient.name ||
+                              (patient.user
+                                ? `${patient.user.firstName || ''} ${patient.user.lastName || ''}`.trim()
+                                : '') ||
+                              tCommon('unknown');
+                            const patientGender =
+                              patient.gender ?? patient.user?.gender;
+                            const patientDOB =
+                              patient.dateOfBirth || patient.user?.dateOfBirth;
+                            const patientSSN =
+                              patient.socialSecurityNumber ||
+                              patient.user?.socialSecurityNumber;
+                            const patientAddress =
+                              patient.address || patient.user?.address;
                             const patientJob = patient.job || patient.user?.job;
 
                             return (
-                            <TableRow
-                              key={patient.id}
-                              className="cursor-pointer hover:bg-muted/50"
-                              onClick={() => handleSelectPatient(patient)}
-                            >
-                              <TableCell className="font-medium">
-                                {patientName}
-                              </TableCell>
-                              <TableCell>
-                                {patientGender === 0
-                                  ? tPatient('male')
-                                  : patientGender === 1
-                                    ? tPatient('female')
-                                    : tCommon('other')}
-                              </TableCell>
-                              <TableCell>
-                                {patientDOB
-                                  ? new Date(
-                                      patientDOB
-                                    ).toLocaleDateString()
-                                  : tCommon('unknown')}
-                              </TableCell>
-                              <TableCell>
-                                <div className="font-mono text-sm">
-                                  {patientSSN || tCommon('unknown')}
-                                </div>
-                              </TableCell>
-                              <TableCell className="max-w-[250px]">
-                                <div
-                                  className="truncate"
-                                  title={patientAddress}
-                                >
-                                  {patientAddress || tCommon('unknown')}
-                                </div>
-                              </TableCell>
-                              <TableCell>{patientJob || tCommon('unknown')}</TableCell>
-                            </TableRow>
-                          )})}
+                              <TableRow
+                                key={patient.id}
+                                className="cursor-pointer hover:bg-muted/50"
+                                onClick={() => handleSelectPatient(patient)}
+                              >
+                                <TableCell className="font-medium">
+                                  {patientName}
+                                </TableCell>
+                                <TableCell>
+                                  {patientGender === 0
+                                    ? tPatient('male')
+                                    : patientGender === 1
+                                      ? tPatient('female')
+                                      : tCommon('other')}
+                                </TableCell>
+                                <TableCell>
+                                  {patientDOB
+                                    ? new Date(patientDOB).toLocaleDateString()
+                                    : tCommon('unknown')}
+                                </TableCell>
+                                <TableCell>
+                                  <div className="font-mono text-sm">
+                                    {patientSSN || tCommon('unknown')}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="max-w-[250px]">
+                                  <div
+                                    className="truncate"
+                                    title={patientAddress}
+                                  >
+                                    {patientAddress || tCommon('unknown')}
+                                  </div>
+                                </TableCell>
+                                <TableCell>
+                                  {patientJob || tCommon('unknown')}
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
                         </TableBody>
                       </Table>
                     </div>
@@ -702,7 +765,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             <CardHeader>
               <CardTitle>{t('doctors') || 'Doctors'}</CardTitle>
               <CardDescription>
-                {t('doctorsInClinicDescription', { clinicName: stats.clinicName }) || 'Doctors in your clinic'}
+                {t('doctorsInClinicDescription', {
+                  clinicName: stats.clinicName,
+                }) || 'Doctors in your clinic'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -712,7 +777,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                   <div className="skeleton h-16 w-full" />
                   <div className="skeleton h-16 w-full" />
                 </div>
-              ) : clinicDoctors && clinicDoctors.items && clinicDoctors.items.length > 0 ? (
+              ) : clinicDoctors &&
+                clinicDoctors.items &&
+                clinicDoctors.items.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -741,7 +808,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                                   : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                               }`}
                             >
-                              {doctor.isApproved ? tTable('approved') : tTable('pending')}
+                              {doctor.isApproved
+                                ? tTable('approved')
+                                : tTable('pending')}
                             </span>
                           </TableCell>
                         </TableRow>
