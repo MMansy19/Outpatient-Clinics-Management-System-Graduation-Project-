@@ -6,6 +6,7 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { adminApi } from '@/lib/api/admin.service';
+import { useAuthStore } from '@/stores/authStore';
 import type {
   AdminClinicInfoResponse,
   CreateVisitDto,
@@ -173,9 +174,37 @@ export const useAdminCreateVisit = (): UseMutationResult<
           ? (variables.get('patientId') as string)
           : variables.patientId;
 
-      queryClient.invalidateQueries({ queryKey: adminKeys.visits });
-      queryClient.invalidateQueries({ queryKey: adminKeys.patientVisits(patientId) });
-      queryClient.invalidateQueries({ queryKey: adminKeys.patients });
+      const diagnoses =
+        variables instanceof FormData
+          ? (variables.get('diagnoses') as string)
+          : variables.diagnoses;
+
+      const adminName = useAuthStore.getState().user?.name ?? '';
+      const clinicInfo = queryClient.getQueryData<AdminClinicInfoResponse>(adminKeys.clinic);
+
+      const newVisit = {
+        doctor: { name: adminName, speciality: '' },
+        diagnosesAudioUrl: null,
+        diagnoses,
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<AdminPatientVisitsResponse>(
+        adminKeys.patientVisits(patientId),
+        (old) => {
+          if (!old) return old;
+          const clinicId = clinicInfo?.id ?? 'unknown';
+          const clinicName = clinicInfo?.name ?? '';
+          const clinics = old.clinics.map((c) => ({ ...c, visits: [...c.visits] }));
+          const existing = clinics.find((c) => c.id === clinicId);
+          if (existing) {
+            existing.visits.unshift(newVisit);
+          } else {
+            clinics.unshift({ id: clinicId, name: clinicName, visits: [newVisit] });
+          }
+          return { ...old, clinics };
+        },
+      );
     },
   });
 };
@@ -189,8 +218,37 @@ export const useAdminCreateMedication = (): UseMutationResult<
 
   return useMutation({
     mutationFn: (data) => adminApi.createMedication(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    onSuccess: (_response, variables) => {
+      const isFormData = variables instanceof FormData;
+      const patientId = isFormData
+        ? (variables.get('patientId') as string)
+        : variables.patientId;
+      const name = isFormData ? (variables.get('name') as string) : variables.name;
+      const dosage = isFormData ? (variables.get('dosage') as string) : variables.dosage;
+      const period = isFormData ? (variables.get('period') as string) : variables.period;
+      const comments = isFormData
+        ? (variables.get('comments') as string | null)
+        : variables.comments ?? null;
+
+      const adminName = useAuthStore.getState().user?.name ?? '';
+
+      const newMedication = {
+        name,
+        dosage,
+        period,
+        comments,
+        commentsAudioUrl: null,
+        doctor: { id: '', name: adminName, speciality: '' },
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<AdminPatientMedicationsResponse>(
+        adminKeys.patientMedications(patientId),
+        (old) => {
+          if (!old) return old;
+          return { ...old, medications: [newMedication, ...old.medications] };
+        },
+      );
     },
   });
 };
@@ -203,8 +261,28 @@ export const useAdminCreateLab = (): UseMutationResult<unknown, Error, FormData>
       const patientId = data.get('patientId') as string;
       return adminApi.createLab(patientId, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    onSuccess: (_response, variables) => {
+      const patientId = variables.get('patientId') as string;
+      const name = variables.get('name') as string;
+      const comments = variables.get('comments') as string | null;
+      const adminName = useAuthStore.getState().user?.name ?? '';
+
+      const newLab = {
+        name,
+        photoUrl: '',
+        comments,
+        commentsAudioUrl: null,
+        doctor: { id: '', name: adminName, speciality: '' },
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<AdminPatientLabsResponse>(
+        adminKeys.patientLabs(patientId),
+        (old) => {
+          if (!old) return old;
+          return { ...old, labs: [newLab, ...old.labs] };
+        },
+      );
     },
   });
 };
@@ -217,8 +295,30 @@ export const useAdminCreateScan = (): UseMutationResult<unknown, Error, FormData
       const patientId = data.get('patientId') as string;
       return adminApi.createScan(patientId, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: adminKeys.all });
+    onSuccess: (_response, variables) => {
+      const patientId = variables.get('patientId') as string;
+      const name = variables.get('name') as string;
+      const type = variables.get('type') as string;
+      const comments = variables.get('comments') as string | null;
+      const adminName = useAuthStore.getState().user?.name ?? '';
+
+      const newScan = {
+        name,
+        type,
+        photoUrl: '',
+        comments,
+        commentsAudioUrl: null,
+        doctor: { id: '', name: adminName, speciality: '' },
+        createdAt: new Date().toISOString(),
+      };
+
+      queryClient.setQueryData<AdminPatientScansResponse>(
+        adminKeys.patientScans(patientId),
+        (old) => {
+          if (!old) return old;
+          return { ...old, scans: [newScan, ...old.scans] };
+        },
+      );
     },
   });
 };
