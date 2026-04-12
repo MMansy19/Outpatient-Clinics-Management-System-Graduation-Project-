@@ -888,9 +888,6 @@ export function PatientProfile({
                                 <Activity className="h-5 w-5 text-medical-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">
-                                  {visit.diagnoses || tVisit('diagnosis')}
-                                </p>
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
                                     <span className="font-medium">
@@ -917,7 +914,13 @@ export function PatientProfile({
                                       />
                                     </div>
                                   )}
+                                  <p className="font-medium truncate md:hidden mt-2">
+                                    {visit.diagnoses || tVisit('diagnosis')}
+                                  </p>
                                 </div>
+                                <p className="font-medium truncate hidden md:block">
+                                  {visit.diagnoses || tVisit('diagnosis')}
+                                </p>
                               </div>
                             </div>
                           </div>
