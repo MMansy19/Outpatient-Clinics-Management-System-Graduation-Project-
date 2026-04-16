@@ -19,12 +19,14 @@ import {
   Stethoscope,
   FileText,
   Calendar,
+  Volume2,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api/admin.service';
-import type { VisitResponse } from '@/lib/api/types';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
+import type { SuperAdminVisitItem } from '@/lib/api/types';
 import { toast } from 'sonner';
 
-interface EnhancedVisit extends VisitResponse {
+interface EnhancedVisit extends SuperAdminVisitItem {
   patientName?: string;
   doctorName?: string;
 }
@@ -43,14 +45,16 @@ export function VisitTable() {
     const loadVisits = async () => {
       try {
         setLoading(true);
-        const data = await adminApi.getVisits({ page, limit });
+        const data = await superAdminApi.getVisits({ page, limit });
 
         const enhancedVisits = await Promise.all(
           data.items.map(async (visit) => {
             try {
               const [patient, doctor] = await Promise.all([
-                adminApi.getPatientById(visit.patientId).catch(() => null),
-                adminApi.getDoctorById(visit.doctorId).catch(() => null),
+                superAdminApi
+                  .getPatientById(visit.patient.id)
+                  .catch(() => null),
+                superAdminApi.getDoctorById(visit.doctor.id).catch(() => null),
               ]);
 
               return {
@@ -216,6 +220,16 @@ export function VisitTable() {
                         {visit.diagnoses || t('noDiagnoses')}{' '}
                       </p>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Audio */}
+              {visit.diagnosesAudioUrl && (
+                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-medical-primary flex-shrink-0" />
+                    <AudioPlayer src={visit.diagnosesAudioUrl} compact />
                   </div>
                 </div>
               )}

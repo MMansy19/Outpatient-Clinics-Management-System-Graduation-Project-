@@ -1,11 +1,13 @@
 import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
 // import type { User } from '@/types/entities/User';
 import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -20,20 +22,19 @@ const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
 export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWithRelations[], Error> => {
-  console.log('🔍 useGetPatientVisits called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useQuery({
     queryKey: [...VISITS_KEY, 'patient', patientId],
     queryFn: async () => {
-      console.log('🔍 useGetPatientVisits - queryFn executing for patientId:', patientId);
-
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientVisits - using mock data (by SSN not supported with new contract)');
-        const result = await mockVisitsAPI.getPatientVisits(patientId);
-        console.log('🔍 useGetPatientVisits - mock result:', result);
-        return result;
+        return await mockVisitsAPI.getPatientVisits(patientId);
       }
-      console.log('🔍 useGetPatientVisits - using real API');
+      if (isAdmin) {
+        const response = await adminApi.getPatientVisits(patientId);
+        return response as unknown as VisitWithRelations[];
+      }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
       return response.data;
     },
@@ -42,23 +43,6 @@ export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWith
   });
 };
 
-/**
- * Get Single Visit Hook
- * 
- * Retrieves detailed information for a specific visit, including audio URL.
- * 
- * @param {number} id - Visit ID
- * @returns {UseQueryResult} Query result with visit details
- * 
- * @example
- * ```typescript
- * const { data: visit } = useGetVisit(visitId);
- * 
- * if (visit?.diagnosesAudioUrl) {
- *   return <AudioPlayer url={visit.diagnosesAudioUrl} />;
- * }
- * ```
- */
 export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Error> => {
   return useQuery({
     queryKey: [...VISITS_KEY, id],
@@ -74,7 +58,6 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
  * Create Visit Hook
  * 
  * Professional implementation with backend integration support.
- * Creates a new visit record and optionally generates audio diagnosis.
  * 
  * **Backend API:** POST /api/v1/doctor/visit/create
  * **Required Role:** DOCTOR
@@ -92,7 +75,6 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
  *   onSuccess: (response) => {
  *     toast.success('Visit created successfully');
  *     console.log('Visit ID:', response.id);
- *     // Backend may generate audio automatically
  *   },
  *   onError: (error) => {
  *     toast.error('Failed to create visit');
@@ -103,46 +85,66 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
 export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto | FormData> => {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
     mutationFn: async (data: CreateVisitDto | FormData) => {
+      if (data instanceof FormData) {
+        // FormData path - for audio uploads
+        if (isAdmin) {
+          return await adminApi.createVisit(data);
+        }
+        return await doctorApi.createVisit(data as unknown as CreateVisitDto);
+      }
+
       if (USE_MOCK_DATA) {
-        const dto = data instanceof FormData
-          ? { diagnoses: data.get('diagnoses') as string || '', patientId: data.get('patientId') as string }
-          : data;
         // Mock implementation - transform to match mock API signature
         const visitData = {
-          ...dto,
-          patient_id: 1,
+          ...data,
+          // Mock data expects different field names
+          patient_id: 1, // In mock, we use numeric ID
           doctor_id: 1,
           clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
-          chief_complaint: '',
-          diagnosis: dto.diagnoses,
-          vitals: { weight: 0 },
+          chief_complaint: '', // Mock requires this
+          diagnosis: data.diagnoses, // Map to mock field name
+          vitals: { weight: 0 }, // Mock requires this
         };
         const mockResult = await mockVisitsAPI.createVisit(visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } });
-        
+
+        // Transform mock response to match backend API response
         return {
           message: 'Visit Created Successfully',
           id: mockResult.global_id,
         };
       }
-      
-      // Real backend implementation
-      // Backend will automatically generate diagnosesAudioUrl if configured
-      return await doctorApi.createVisit(data);
+
+      // Real backend implementation - ADMIN uses adminApi, DOCTOR uses doctorApi
+      // Only include clinicId if available — sending undefined fails backend validation
+      const clinicId = data.clinicId || user?.clinicId;
+      const payload: CreateVisitDto = { diagnoses: data.diagnoses, patientId: data.patientId };
+      if (clinicId) payload.clinicId = clinicId;
+      if (isAdmin) {
+        return await adminApi.createVisit(payload);
+      }
+      return await doctorApi.createVisit(payload);
     },
     onSuccess: (_response, variables) => {
-      const patientId = variables instanceof FormData
-        ? variables.get('patientId') as string
-        : variables.patientId;
-
+      // Invalidate all visits queries
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-      queryClient.invalidateQueries({ 
-        queryKey: [...VISITS_KEY, 'patient', patientId] 
+
+      const patientId =
+        variables instanceof FormData
+          ? (variables.get('patientId') as string)
+          : variables.patientId;
+
+      // Invalidate patient-specific visits
+      queryClient.invalidateQueries({
+        queryKey: [...VISITS_KEY, 'patient', patientId]
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ['patients', patientId] 
+
+      // Invalidate patient details (may include visit count)
+      queryClient.invalidateQueries({
+        queryKey: ['patients', patientId]
       });
     },
     onError: (error) => {
@@ -152,29 +154,6 @@ export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, 
   });
 };
 
-/**
- * Update Visit Hook
- * 
- * Updates an existing visit. If diagnosis text is updated,
- * the backend may regenerate the audio URL.
- * 
- * @returns {UseMutationResult} Mutation object
- * 
- * @example
- * ```typescript
- * const { mutate: updateVisit } = useUpdateVisit();
- * 
- * updateVisit({
- *   id: visitId,
- *   data: { diagnosis: "Updated diagnosis text" }
- * }, {
- *   onSuccess: (updatedVisit) => {
- *     // updatedVisit.diagnosesAudioUrl may be newly generated
- *     toast.success('Visit updated');
- *   }
- * });
- * ```
- */
 export const useUpdateVisit = (): UseMutationResult<Visit, Error, { id: number; data: Partial<VisitFormData> }> => {
   const queryClient = useQueryClient();
 
@@ -184,7 +163,6 @@ export const useUpdateVisit = (): UseMutationResult<Visit, Error, { id: number; 
       return response.data;
     },
     onSuccess: (data) => {
-      // Invalidate queries to fetch updated data with new audio URL if applicable
       queryClient.invalidateQueries({ queryKey: VISITS_KEY });
       queryClient.invalidateQueries({ queryKey: [...VISITS_KEY, data.id] });
       queryClient.invalidateQueries({ queryKey: ['patients', data.patient_id] });
@@ -192,28 +170,6 @@ export const useUpdateVisit = (): UseMutationResult<Visit, Error, { id: number; 
   });
 };
 
-/**
- * Get Recent Visits Hook
- * 
- * Retrieves the most recent visits, including audio URLs.
- * Useful for dashboard displays.
- * 
- * @param {number} limit - Maximum number of visits to retrieve
- * @returns {UseQueryResult} Query result with recent visits
- * 
- * @example
- * ```typescript
- * const { data: recentVisits } = useGetRecentVisits(5);
- * 
- * return (
- *   <div>
- *     {recentVisits?.map(visit => (
- *       <VisitCard key={visit.id} visit={visit} />
- *     ))}
- *   </div>
- * );
- * ```
- */
 export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWithRelations[], Error> => {
   return useQuery({
     queryKey: [...VISITS_KEY, 'recent', limit],
@@ -229,10 +185,9 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
 };
 
 /**
- * Get All Visits Hook
+ * Get All Visits
  *
  * Retrieves all visits for the authenticated doctor with pagination.
- * Each visit includes diagnosesAudioUrl if available.
  *
  * @param {Object} params - Query parameters
  * @param {number} [params.page] - Page number (default: 1)
@@ -257,6 +212,9 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
  * ```
  */
 export const useGetAllVisits = (params?: { page?: number; limit?: number }): UseQueryResult<PaginatedVisitsResponse, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery<PaginatedVisitsResponse>({
     queryKey: [...VISITS_KEY, 'all', params?.page || 1, params?.limit || 10],
     queryFn: async (): Promise<PaginatedVisitsResponse> => {
@@ -278,6 +236,11 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
       //     totalItems: 10,
       //   };
       // }
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getClinicVisits({ page: params?.page || 1, limit: params?.limit || 10 });
+        return response as unknown as PaginatedVisitsResponse;
+      }
       const response = await doctorApi.getAllVisits(params);
       return response as PaginatedVisitsResponse;
     },
@@ -285,14 +248,10 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
   });
 };
 
-/**
- * Get All Patients Hook
- * 
- * Retrieves all patients accessible to the current doctor.
- * 
- * @returns {UseQueryResult} Query result with patients list
- */
 export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery<unknown[]>({
     queryKey: [...PATIENTS_KEY, 'all'],
     queryFn: async (): Promise<unknown[]> => {
@@ -301,97 +260,14 @@ export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
         const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
         return users.filter((user: any) => user.role === 'patient');
       }
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await adminApi.getClinicPatients({ page: 1, limit: 10000 });
+        return response.items;
+      }
       const response = await doctorApi.getAllPatients();
       return response;
     },
     staleTime: 2 * 60 * 1000,
   });
-};
-
-/**
- * Prefetch Visit Hook
- * 
- * Prefetches a visit to improve perceived performance.
- * Useful when hovering over visit cards before clicking.
- * 
- * @returns {Function} Prefetch function
- * 
- * @example
- * ```typescript
- * const prefetchVisit = usePrefetchVisit();
- * 
- * <VisitCard
- *   onMouseEnter={() => prefetchVisit(visit.id)}
- *   visit={visit}
- * />
- * ```
- */
-export const usePrefetchVisit = () => {
-  const queryClient = useQueryClient();
-
-  return (visitId: number) => {
-    queryClient.prefetchQuery({
-      queryKey: [...VISITS_KEY, visitId],
-      queryFn: async () => {
-        const response = await apiClient.get<VisitWithRelations>(`/doctor/visits/${visitId}`);
-        return response.data;
-      },
-      staleTime: 5 * 60 * 1000,
-    });
-  };
-};
-
-/**
- * Check Audio Availability Hook
- * 
- * Utility hook to check if a visit has an audio diagnosis.
- * 
- * @param {VisitWithRelations | VisitResponse} visit - Visit object
- * @returns {boolean} True if audio URL exists and is valid
- * 
- * @example
- * ```typescript
- * const hasAudio = useCheckAudioAvailability(visit);
- * 
- * {hasAudio && <AudioPlayer url={visit.diagnosesAudioUrl} />}
- * ```
- */
-export const useCheckAudioAvailability = (
-  visit: VisitWithRelations | VisitResponse | null | undefined
-): boolean => {
-  if (!visit) return false;
-  
-  const audioUrl = 'diagnosesAudioUrl' in visit 
-    ? visit.diagnosesAudioUrl 
-    : undefined;
-    
-  return !!(audioUrl && audioUrl.trim().length > 0);
-};
-
-/**
- * Get Visit Audio URL Hook
- * 
- * Safely retrieves the audio URL from a visit object.
- * Handles both VisitWithRelations and VisitResponse types.
- * 
- * @param {VisitWithRelations | VisitResponse} visit - Visit object
- * @returns {string | undefined} Audio URL if available
- * 
- * @example
- * ```typescript
- * const audioUrl = useGetVisitAudioUrl(visit);
- * 
- * if (audioUrl) {
- *   return <AudioPlayer url={audioUrl} />;
- * }
- * ```
- */
-export const useGetVisitAudioUrl = (
-  visit: VisitWithRelations | VisitResponse | null | undefined
-): string | undefined => {
-  if (!visit) return undefined;
-  
-  return 'diagnosesAudioUrl' in visit 
-    ? visit.diagnosesAudioUrl 
-    : undefined;
 };

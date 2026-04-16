@@ -26,7 +26,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
 import { AddClinicDialog } from './AddClinicDialog';
 
@@ -46,7 +46,7 @@ export function ClinicTable() {
   const loadClinics = async () => {
     try {
       setLoading(true);
-      const data = await adminApi.getClinics();
+      const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
       console.error('Failed to load clinics:', error);
@@ -65,7 +65,7 @@ export function ClinicTable() {
   const handleDelete = async (id: string) => {
     try {
       setIsDeleting(true);
-      await adminApi.deleteClinic(id);
+      await superAdminApi.deleteClinic(id);
       toast.success(t('clinicDeleted') || 'Clinic deleted successfully');
       setDeletingClinicId(null);
       loadClinics();

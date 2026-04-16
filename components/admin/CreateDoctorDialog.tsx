@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { toast, toastMessages } from '@/lib/utils/toast';
-import { Loader2, UserPlus, Info } from 'lucide-react';
+import { Loader2, UserPlus } from 'lucide-react';
 
 import {
   Dialog,
@@ -41,6 +41,7 @@ import {
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useAdminGetClinic } from '@/lib/api/queries/useAdmin';
 import type { ClinicResponse } from '@/lib/api/types';
 
 const MEDICAL_SPECIALITIES = [
@@ -69,16 +70,25 @@ const MEDICAL_SPECIALITIES = [
 
 interface CreateDoctorDialogProps {
   trigger?: React.ReactNode;
+  /**
+   * When true, auto-fetches the admin's own clinic via GET /admin/clinic
+   * and hides the clinic selector. Use for ADMIN (clinic manager) role.
+   */
+  autoFetchClinic?: boolean;
 }
 
-export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
+export function CreateDoctorDialog({ trigger, autoFetchClinic }: CreateDoctorDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
   const [loadingClinics, setLoadingClinics] = useState(false);
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
+  // For ADMIN (clinic manager): fetch own clinic info
+  const { data: adminClinic, isLoading: loadingAdminClinic } = useAdminGetClinic(!!autoFetchClinic);
+
   const form = useForm<CreateDoctorFormData>({
+    mode: 'onChange',
     resolver: zodResolver(createDoctorSchema),
     defaultValues: {
       firstName: '',
@@ -93,13 +103,20 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
     },
   });
 
+  // When admin clinic info loads, set the clinicId in the form
+  useEffect(() => {
+    if (adminClinic?.id && autoFetchClinic) {
+      form.setValue('clinicId', adminClinic.id);
+    }
+  }, [adminClinic, autoFetchClinic, form]);
+
   const nationalId = form.watch('socialSecurityNumber');
 
   useEffect(() => {
-    if (open) {
+    if (open && !autoFetchClinic) {
       loadClinics();
     }
-  }, [open]);
+  }, [open, autoFetchClinic]);
 
   const loadClinics = async () => {
     try {
@@ -185,12 +202,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
           <DialogTitle>{t('createDoctor')}</DialogTitle>
           <DialogDescription>{t('createDoctorDescription')}</DialogDescription>
         </DialogHeader>
-
-        {/* Pending approval notice */}
-        <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
-          <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
-        </div>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Name Fields */}
@@ -200,7 +211,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormLabel required>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -218,7 +229,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormLabel required>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -238,7 +249,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
+                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="30202041234567"
@@ -261,7 +272,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('email')}</FormLabel>
+                  <FormLabel required>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -281,7 +292,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
+                  <FormLabel required>{t('phoneNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('phonePlaceholder')}
@@ -297,47 +308,61 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               )}
             />
 
-            {/* Clinic Selection */}
-            <FormField
-              control={form.control}
-              name="clinicId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>{t('clinic')}</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    disabled={isPending || loadingClinics}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          placeholder={
-                            loadingClinics
-                              ? t('loadingClinics')
-                              : t('selectClinicRequired')
-                          }
-                        />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {clinics.length === 0 && !loadingClinics ? (
-                        <SelectItem value="no-clinics" disabled>
-                          {t('noClinicsAvailable')}
-                        </SelectItem>
-                      ) : (
-                        clinics.map((clinic) => (
-                          <SelectItem key={clinic.id} value={clinic.id}>
-                            {clinic.name} - {clinic.speciality}
+            {/* Clinic - Read-only display for ADMIN, selector for SUPER_ADMIN */}
+            {autoFetchClinic ? (
+              <FormItem>
+                <FormLabel required>{t('clinic')}</FormLabel>
+                <FormControl>
+                  <Input
+                    value={loadingAdminClinic ? t('loading') : (adminClinic?.name || '')}
+                    disabled
+                    readOnly
+                    className="bg-muted"
+                  />
+                </FormControl>
+              </FormItem>
+            ) : (
+              <FormField
+                control={form.control}
+                name="clinicId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required>{t('clinic')}</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      disabled={isPending || loadingClinics}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue
+                            placeholder={
+                              loadingClinics
+                                ? t('loadingClinics')
+                                : t('selectClinicRequired')
+                            }
+                          />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {clinics.length === 0 && !loadingClinics ? (
+                          <SelectItem value="no-clinics" disabled>
+                            {t('noClinicsAvailable')}
                           </SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                        ) : (
+                          clinics.map((clinic) => (
+                            <SelectItem key={clinic.id} value={clinic.id}>
+                              {clinic.name} - {clinic.speciality}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             {/* Speciality */}
             <FormField
@@ -345,7 +370,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('medicalSpeciality')}</FormLabel>
+                  <FormLabel required>{t('medicalSpeciality')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -375,7 +400,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('password')}</FormLabel>
+                  <FormLabel required>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
@@ -402,7 +427,15 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending || loadingClinics}>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  loadingClinics ||
+                  (autoFetchClinic && loadingAdminClinic) ||
+                  !form.formState.isValid
+                }
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

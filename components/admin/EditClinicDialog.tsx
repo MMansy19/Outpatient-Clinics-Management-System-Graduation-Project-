@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
 import { z } from 'zod';
 
@@ -75,7 +75,7 @@ export function EditClinicDialog({
 
     try {
       setIsPending(true);
-      await adminApi.updateClinic(clinic.id, {
+      await superAdminApi.updateClinic(clinic.id, {
         name: data.name,
         speciality: data.speciality,
       });
@@ -113,7 +113,7 @@ export function EditClinicDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinicName')}</FormLabel>
+                  <FormLabel required>{t('clinicName')}</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} />
                   </FormControl>
@@ -127,7 +127,7 @@ export function EditClinicDialog({
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('speciality')}</FormLabel>
+                  <FormLabel required>{t('speciality')}</FormLabel>
                   <FormControl>
                     <Input disabled={isPending} {...field} />
                   </FormControl>

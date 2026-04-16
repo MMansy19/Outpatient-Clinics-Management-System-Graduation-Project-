@@ -33,7 +33,6 @@ import { VisitDialog } from '@/components/doctor/VisitDialog';
 import { MedicationDialog } from '@/components/doctor/MedicationDialog';
 import { LabForm } from '@/components/doctor/LabForm';
 import { ScanForm } from '@/components/doctor/ScanForm';
-import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
 import {
   Table,
@@ -46,6 +45,7 @@ import {
 import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
 import { QuickActionCard } from '@/components/shared/QuickActionCard';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 
@@ -69,6 +69,21 @@ export function PatientProfile({
   const tTable = useTranslations('table');
   const tVitals = useTranslations('vitals');
 
+  const getScanTypeLabel = (
+    typeValue: string | number | undefined | null
+  ): string => {
+    if (!typeValue && typeValue !== 0) return '-';
+    const typeMap: Record<string, string> = {
+      '0': t('scanTypes.mri'),
+      '1': t('scanTypes.ct'),
+      '2': t('scanTypes.xray'),
+      '3': t('scanTypes.ultrasound'),
+      '4': t('scanTypes.petct'),
+      '5': t('scanTypes.mammography'),
+    };
+    return typeMap[String(typeValue)] || String(typeValue);
+  };
+
   // Fetch patient data by national ID
   const {
     data: patient,
@@ -78,11 +93,20 @@ export function PatientProfile({
     isFetching: isRefetchingPatient,
   } = useGetPatientByNationalId(socialSecurityNumber);
 
+  // Get patient ID (UUID/global_id) for subsequent queries
+  // Handle both admin (nested user.id) and doctor (flat id/global_id) patient structures
+  // IMPORTANT: For admin API (PatientResponse), `id` is the patient entity ID, NOT the user UUID.
+  // The visits/meds/labs/scans endpoints expect the user UUID, so prefer user.id over id.
+  const patientAny = patient as any;
+  const patientId =
+    patientAny?.global_id || patientAny?.user?.id || patientAny?.id || null;
+
   // Debug logging
   console.log(
     '🔍 PatientProfile - socialSecurityNumber:',
     socialSecurityNumber
   );
+  console.log('🔍 PatientProfile - patientId (UUID):', patientId);
   console.log('🔍 PatientProfile - Fetched patient:', patient);
   console.log('🔍 PatientProfile - Loading:', loadingPatient);
   console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
@@ -90,17 +114,25 @@ export function PatientProfile({
   console.log('🔍 PatientProfile - Scanned Data:', scannedData);
 
   // Combine API patient data with scanned data (scanned data serves as fallback)
+  // Handle both admin (nested user) and doctor (flat) patient structures
+  const patientUser = patientAny?.user || patientAny;
   const patientName =
-    patient?.name ||
+    patientAny?.name ||
+    (patientUser?.firstName && patientUser?.lastName
+      ? `${patientUser.firstName} ${patientUser.lastName}`
+      : '') ||
     scannedData?.name ||
     (scannedData?.firstName && scannedData?.lastName
       ? `${scannedData.firstName} ${scannedData.lastName}`
       : '');
 
-  const patientGender = patient?.gender || scannedData?.gender;
+  const patientGender =
+    patientAny?.gender ?? patientUser?.gender ?? scannedData?.gender;
   const patientDateOfBirth =
-    patient?.dateOfBirth ||
-    patient?.birthdate ||
+    patientAny?.dateOfBirth ||
+    patientAny?.birthdate ||
+    patientUser?.dateOfBirth ||
+    patientUser?.birthdate ||
     scannedData?.birthdate ||
     scannedData?.dateOfBirth;
 
@@ -111,14 +143,12 @@ export function PatientProfile({
   // If patient is null and we're loading or fetching, show skeleton
   const showLoading = loadingPatient || (isRefetchingPatient && !patient);
 
-  const patientId = patient?.id ? String(patient.id) : '';
-
   const { data: visitsResponse, isLoading: loadingVisits } =
-    useGetPatientVisits(patientId);
+    useGetPatientVisits(patientId || '');
 
   // Debug logging
   console.log('🔍 PatientProfile - Visits Query:', {
-    patientId,
+    socialSecurityNumber,
     visitsResponse,
     isLoading: loadingVisits,
   });
@@ -138,10 +168,13 @@ export function PatientProfile({
 
   // Fetch additional data
   const { data: medications, isLoading: loadingMedications } =
-    useGetPatientMedications(patientId);
-  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(patientId);
-  const { data: scans, isLoading: loadingScans } =
-    useGetPatientScans(patientId);
+    useGetPatientMedications(patientId || '');
+  const { data: labs, isLoading: loadingLabs } = useGetPatientLabs(
+    patientId || ''
+  );
+  const { data: scans, isLoading: loadingScans } = useGetPatientScans(
+    patientId || ''
+  );
 
   // Debug logging
   console.log('🔍 PatientProfile - Other Queries:', {
@@ -169,6 +202,22 @@ export function PatientProfile({
   }
 
   // If patient not found (API returned null) and not a new scanned patient
+  if (patientError && !isScannedNewPatient) {
+    const errorMessage =
+      (patientError as any)?.response?.data?.message || patientError.message;
+    return (
+      <Card>
+        <CardContent className="py-12 text-center">
+          <p className="text-destructive mb-2 font-medium">{errorMessage}</p>
+          <p className="text-muted-foreground mb-4">{t('patientNotFound')}</p>
+          <Button variant="outline" onClick={() => refetchPatient()}>
+            {t('tryAgain')}
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   if (!patient && !isScannedNewPatient) {
     return (
       <Card>
@@ -508,6 +557,7 @@ export function PatientProfile({
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('speciality')}</TableHead>
                         <TableHead>{tTable('diagnoses')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -520,21 +570,14 @@ export function PatientProfile({
                           <TableCell>
                             {visit.doctor?.speciality || 'N/A'}
                           </TableCell>
+                          <TableCell>{visit.diagnoses || 'N/A'}</TableCell>
                           <TableCell>
-                            <div className="space-y-1">
-                              {visit.diagnoses && (
-                                <span>{visit.diagnoses}</span>
-                              )}
-                              {!visit.diagnoses && !visit.diagnosesAudioUrl && (
-                                <span>N/A</span>
-                              )}
-                              {visit.diagnosesAudioUrl && (
-                                <AudioPlayer
-                                  src={visit.diagnosesAudioUrl}
-                                  compact
-                                />
-                              )}
-                            </div>
+                            {visit.diagnosesAudioUrl && (
+                              <AudioPlayer
+                                src={visit.diagnosesAudioUrl}
+                                compact
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -593,6 +636,7 @@ export function PatientProfile({
                         <TableHead>{tTable('duration')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -606,20 +650,14 @@ export function PatientProfile({
                           <TableCell>
                             Dr. {medication.doctor?.name || 'N/A'}
                           </TableCell>
+                          <TableCell>{medication.comments || '-'}</TableCell>
                           <TableCell>
-                            <div className="space-y-1">
-                              {medication.comments && (
-                                <span>{medication.comments}</span>
-                              )}
-                              {!medication.comments &&
-                                !medication.commentsAudioUrl && <span>-</span>}
-                              {medication.commentsAudioUrl && (
-                                <AudioPlayer
-                                  src={medication.commentsAudioUrl}
-                                  compact
-                                />
-                              )}
-                            </div>
+                            {medication.commentsAudioUrl && (
+                              <AudioPlayer
+                                src={medication.commentsAudioUrl}
+                                compact
+                              />
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -676,6 +714,7 @@ export function PatientProfile({
                         <TableHead>{tTable('name')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                         <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -687,19 +726,11 @@ export function PatientProfile({
                             {lab.name}
                           </TableCell>
                           <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{lab.comments || '-'}</TableCell>
                           <TableCell>
-                            <div className="space-y-1">
-                              {lab.comments && <span>{lab.comments}</span>}
-                              {!lab.comments && !lab.commentsAudioUrl && (
-                                <span>-</span>
-                              )}
-                              {lab.commentsAudioUrl && (
-                                <AudioPlayer
-                                  src={lab.commentsAudioUrl}
-                                  compact
-                                />
-                              )}
-                            </div>
+                            {lab.commentsAudioUrl && (
+                              <AudioPlayer src={lab.commentsAudioUrl} compact />
+                            )}
                           </TableCell>
                           <TableCell>
                             {lab.photoUrl && (
@@ -769,6 +800,7 @@ export function PatientProfile({
                         <TableHead>{tTable('type')}</TableHead>
                         <TableHead>{tTable('doctor')}</TableHead>
                         <TableHead>{tTable('comments')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                         <TableHead>{tTable('actions')}</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -779,23 +811,18 @@ export function PatientProfile({
                           <TableCell className="font-medium">
                             {scan.name || '-'}
                           </TableCell>
-                          <TableCell>{scan.type || '-'}</TableCell>
+                          <TableCell>{getScanTypeLabel(scan.type)}</TableCell>
                           <TableCell>
                             Dr. {scan.doctor?.name || 'N/A'}
                           </TableCell>
+                          <TableCell>{scan.comments || '-'}</TableCell>
                           <TableCell>
-                            <div className="space-y-1">
-                              {scan.comments && <span>{scan.comments}</span>}
-                              {!scan.comments && !scan.commentsAudioUrl && (
-                                <span>-</span>
-                              )}
-                              {scan.commentsAudioUrl && (
-                                <AudioPlayer
-                                  src={scan.commentsAudioUrl}
-                                  compact
-                                />
-                              )}
-                            </div>
+                            {scan.commentsAudioUrl && (
+                              <AudioPlayer
+                                src={scan.commentsAudioUrl}
+                                compact
+                              />
+                            )}
                           </TableCell>
                           <TableCell>
                             {scan.photoUrl && (
@@ -861,17 +888,6 @@ export function PatientProfile({
                                 <Activity className="h-5 w-5 text-medical-primary" />
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-medium truncate">
-                                  {visit.diagnoses || tVisit('diagnosis')}
-                                </p>
-                                {visit.diagnosesAudioUrl && (
-                                  <div className="mt-1">
-                                    <AudioPlayer
-                                      src={visit.diagnosesAudioUrl}
-                                      compact
-                                    />
-                                  </div>
-                                )}
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
                                     <span className="font-medium">
@@ -890,7 +906,21 @@ export function PatientProfile({
                                   <p className="text-xs text-muted-foreground">
                                     {formatDate(visit.createdAt)}
                                   </p>
+                                  {visit.diagnosesAudioUrl && (
+                                    <div className="mt-1">
+                                      <AudioPlayer
+                                        src={visit.diagnosesAudioUrl}
+                                        compact
+                                      />
+                                    </div>
+                                  )}
+                                  <p className="font-medium truncate md:hidden mt-2">
+                                    {visit.diagnoses || tVisit('diagnosis')}
+                                  </p>
                                 </div>
+                                <p className="font-medium truncate hidden md:block">
+                                  {visit.diagnoses || tVisit('diagnosis')}
+                                </p>
                               </div>
                             </div>
                           </div>
@@ -970,7 +1000,7 @@ export function PatientProfile({
                                       </p>
                                     )}
                                     {medication.commentsAudioUrl && (
-                                      <div className="mt-1">
+                                      <div className="mt-2">
                                         <AudioPlayer
                                           src={medication.commentsAudioUrl}
                                           compact
@@ -1048,14 +1078,6 @@ export function PatientProfile({
                                       {lab.comments}
                                     </p>
                                   )}
-                                  {lab.commentsAudioUrl && (
-                                    <div className="mt-1">
-                                      <AudioPlayer
-                                        src={lab.commentsAudioUrl}
-                                        compact
-                                      />
-                                    </div>
-                                  )}
                                   {lab.photoUrl && (
                                     <a
                                       href={lab.photoUrl}
@@ -1065,6 +1087,14 @@ export function PatientProfile({
                                     >
                                       {tCommon('viewImage')}
                                     </a>
+                                  )}
+                                  {lab.commentsAudioUrl && (
+                                    <div className="mt-2">
+                                      <AudioPlayer
+                                        src={lab.commentsAudioUrl}
+                                        compact
+                                      />
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -1113,7 +1143,9 @@ export function PatientProfile({
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="font-medium truncate">
-                                  {scan.name || scan.type || tPatient('scans')}
+                                  {scan.name ||
+                                    getScanTypeLabel(scan.type) ||
+                                    tPatient('scans')}
                                 </p>
                                 <div className="mt-1 space-y-1">
                                   <p className="text-sm text-muted-foreground">
@@ -1126,7 +1158,7 @@ export function PatientProfile({
                                     <span className="font-medium">
                                       {tTable('type')}:
                                     </span>{' '}
-                                    {scan.type || '-'}
+                                    {getScanTypeLabel(scan.type)}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
                                     <span className="font-medium">
@@ -1143,14 +1175,6 @@ export function PatientProfile({
                                       {scan.comments}
                                     </p>
                                   )}
-                                  {scan.commentsAudioUrl && (
-                                    <div className="mt-1">
-                                      <AudioPlayer
-                                        src={scan.commentsAudioUrl}
-                                        compact
-                                      />
-                                    </div>
-                                  )}
                                   {scan.photoUrl && (
                                     <a
                                       href={scan.photoUrl}
@@ -1160,6 +1184,14 @@ export function PatientProfile({
                                     >
                                       {tCommon('viewImage')}
                                     </a>
+                                  )}
+                                  {scan.commentsAudioUrl && (
+                                    <div className="mt-2">
+                                      <AudioPlayer
+                                        src={scan.commentsAudioUrl}
+                                        compact
+                                      />
+                                    </div>
                                   )}
                                 </div>
                               </div>
@@ -1189,7 +1221,7 @@ export function PatientProfile({
       <VisitDialog
         open={isVisitDialogOpen}
         onOpenChange={setIsVisitDialogOpen}
-        patientId={String(patient?.id ?? '')}
+        patientId={patientId || ''}
         onSuccess={() => {
           setIsVisitDialogOpen(false);
         }}
@@ -1198,7 +1230,7 @@ export function PatientProfile({
       <MedicationDialog
         open={isMedicationDialogOpen}
         onOpenChange={setIsMedicationDialogOpen}
-        patientId={String(patient?.id ?? '')}
+        patientId={patientId || ''}
         onSuccess={() => {
           setIsMedicationDialogOpen(false);
         }}
@@ -1207,13 +1239,13 @@ export function PatientProfile({
       <LabForm
         open={isLabFormOpen}
         onOpenChange={setIsLabFormOpen}
-        patientId={patientId}
+        patientId={patientId || ''}
       />
 
       <ScanForm
         open={isScanFormOpen}
         onOpenChange={setIsScanFormOpen}
-        patientId={patientId}
+        patientId={patientId || ''}
       />
     </div>
   );

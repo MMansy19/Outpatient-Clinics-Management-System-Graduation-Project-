@@ -28,12 +28,12 @@ import { useUpdateScan } from '@/lib/api/queries/useScans';
 import { useFormState } from '@/src/hooks/useFormState';
 
 const scanTypes = [
-  { label: 'MRI', value: "1" },
-  { label: 'CT', value: "2" },
-  { label: 'X-RAY', value: "3" },
-  { label: 'ULTRA SOUND', value: "4" },
-  { label: 'PET CT', value: "5" },
-  { label: 'MAMMOGRAPHY', value: "6" },
+  { labelKey: 'scanTypes.mri', value: '0' },
+  { labelKey: 'scanTypes.ct', value: '1' },
+  { labelKey: 'scanTypes.xray', value: '2' },
+  { labelKey: 'scanTypes.ultrasound', value: '3' },
+  { labelKey: 'scanTypes.petct', value: '4' },
+  { labelKey: 'scanTypes.mammography', value: '5' },
 ];
 
 const scanSchema = z.object({
@@ -58,10 +58,16 @@ interface ScanEditDialogProps {
   onSuccess?: () => void;
 }
 
-export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEditDialogProps) {
+export function ScanEditDialog({
+  open,
+  onOpenChange,
+  scan,
+  onSuccess,
+}: ScanEditDialogProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<ScanFormData>({
+    mode: 'onChange',
     resolver: zodResolver(scanSchema),
     defaultValues: {
       name: scan.name || '',
@@ -121,10 +127,12 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
       title={t('editScan')}
       description={t('editScanDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('updateScan')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField
@@ -132,9 +140,9 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('scanName')}</FormLabel>
+              <FormLabel required>{t('scanName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Chest X-Ray, Brain MRI" {...field} />
+                <Input placeholder={t('scanNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -146,7 +154,7 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
           name="type"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('scanType')}</FormLabel>
+              <FormLabel required>{t('scanType')}</FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -156,7 +164,7 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
                 <SelectContent>
                   {scanTypes.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      {t(type.labelKey)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -188,7 +196,9 @@ export function ScanEditDialog({ open, onOpenChange, scan, onSuccess }: ScanEdit
 
         {scan.commentsAudioUrl && (
           <div>
-            <p className="text-sm font-medium mb-2">{t('existingAudioRecording')}</p>
+            <p className="text-sm font-medium mb-2">
+              {t('existingAudioRecording')}
+            </p>
             <AudioPlayer src={scan.commentsAudioUrl} compact />
           </div>
         )}

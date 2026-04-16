@@ -109,7 +109,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
             name="username"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('username')}</FormLabel>
+                <FormLabel required>{t('username')}</FormLabel>
                 <FormControl>
                   <Input
                     placeholder="dr_ahmed"
@@ -128,7 +128,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('email')}</FormLabel>
+                <FormLabel required>{t('email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -148,7 +148,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
             name="role"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('role')}</FormLabel>
+                <FormLabel required>{t('role')}</FormLabel>
                 <Select
                   onValueChange={field.onChange}
                   defaultValue={field.value}
@@ -180,7 +180,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
                 name="specialization"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('specialization')}</FormLabel>
+                    <FormLabel required>{t('specialization')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder={t('specializationPlaceholder')}
@@ -198,7 +198,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
                 name="license_number"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('licenseNumber')}</FormLabel>
+                    <FormLabel required>{t('licenseNumber')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="MD-12345"
@@ -216,7 +216,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
                 name="clinic_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('clinic')}</FormLabel>
+                    <FormLabel required>{t('clinic')}</FormLabel>
                     <Select
                       onValueChange={(value) => field.onChange(parseInt(value))}
                       disabled={isPending}
@@ -264,7 +264,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('password')}</FormLabel>
+                <FormLabel required>{t('password')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"
@@ -285,7 +285,7 @@ export function RegisterForm({ locale }: RegisterFormProps) {
             name="confirmPassword"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('confirmPassword')}</FormLabel>
+                <FormLabel required>{t('confirmPassword')}</FormLabel>
                 <FormControl>
                   <Input
                     type="password"

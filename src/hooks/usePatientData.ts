@@ -57,9 +57,9 @@ export function usePatientData(socialSecurityNumber: string, options: UsePatient
   // Computed data
   const stats = useMemo(() => {
     const totalVisits = visits?.length || 0;
-    const totalMedications = medications?.length || 0;
-    const totalLabs = labs?.length || 0;
-    const totalScans = scans?.length || 0;
+    const totalMedications = Array.isArray(medications) ? medications.length : 0;
+    const totalLabs = Array.isArray(labs) ? labs.length : 0;
+    const totalScans = Array.isArray(scans) ? scans.length : 0;
 
     const latestVisit = visits?.[0] || null;
     const latestVitals = latestVisit?.vitals || null;

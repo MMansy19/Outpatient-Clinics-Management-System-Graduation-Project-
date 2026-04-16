@@ -26,7 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { z } from 'zod';
 
 const clinicSchema = z.object({
@@ -51,6 +51,7 @@ export function AddClinicDialog({
   const [isPending, setIsPending] = useState(false);
 
   const form = useForm<ClinicFormData>({
+    mode: 'onChange',
     resolver: zodResolver(clinicSchema),
     defaultValues: {
       name: '',
@@ -61,7 +62,7 @@ export function AddClinicDialog({
   const onSubmit = async (data: ClinicFormData) => {
     try {
       setIsPending(true);
-      await adminApi.createClinic({
+      await superAdminApi.createClinic({
         name: data.name,
         speciality: data.speciality,
       });
@@ -100,7 +101,7 @@ export function AddClinicDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinicName')}</FormLabel>
+                  <FormLabel required>{t('clinicName')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
@@ -120,7 +121,7 @@ export function AddClinicDialog({
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('speciality')}</FormLabel>
+                  <FormLabel required>{t('speciality')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={
@@ -147,7 +148,7 @@ export function AddClinicDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !form.formState.isValid}
                 className="bg-medical-primary hover:bg-medical-primary/90"
               >
                 {isPending ? (

@@ -61,6 +61,7 @@ export function MedicationForm({
   const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
   const form = useForm<CreateMedicationDto>({
+    mode: 'onChange',
     resolver: zodResolver(medicationSchema),
     defaultValues: {
       patientId,
@@ -126,7 +127,7 @@ export function MedicationForm({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('name')}</FormLabel>
+                  <FormLabel required>{t('name')}</FormLabel>
                   <FormControl>
                     <Input 
                       placeholder={t('namePlaceholder')}
@@ -144,7 +145,7 @@ export function MedicationForm({
               name="dosage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('dosage')}</FormLabel>
+                  <FormLabel required>{t('dosage')}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value}
@@ -179,7 +180,7 @@ export function MedicationForm({
               name="period"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('duration')}</FormLabel>
+                  <FormLabel required>{t('duration')}</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
                     value={field.value?.toString()}
@@ -241,7 +242,10 @@ export function MedicationForm({
                 {tCommon('cancel')}
               </Button>
             )}
-            <Button type="submit" disabled={isPending}>
+            <Button
+              type="submit"
+              disabled={isPending || !form.formState.isValid}
+            >
               {isPending ? tCommon('saving') : t('addMedication')}
             </Button>
           </CardFooter>

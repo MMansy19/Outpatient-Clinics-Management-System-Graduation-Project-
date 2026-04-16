@@ -27,10 +27,11 @@ import {
 import { useUpdateMedication } from '@/lib/api/queries/useMedications';
 import { useFormState } from '@/src/hooks/useFormState';
 import {
-  medicationSchema,
+  medicationSchemaWithoutPatient,
   getLocalizedPeriodOptions,
   getLocalizedDosageOptions,
 } from '@/lib/schemas/medicationSchema';
+import type { MedicationFormDataWithoutPatient } from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
 
 interface MedicationEditDialogProps {
@@ -63,8 +64,9 @@ export function MedicationEditDialog({
   const periodOptions = getLocalizedPeriodOptions(getMedicationT);
   const dosageOptions = getLocalizedDosageOptions(getMedicationT);
 
-  const form = useForm<Partial<CreateMedicationDto>>({
-    resolver: zodResolver(medicationSchema),
+  const form = useForm<MedicationFormDataWithoutPatient>({
+    mode: 'onChange',
+    resolver: zodResolver(medicationSchemaWithoutPatient),
     defaultValues: {
       name: medication.name,
       dosage: String(medication.dosage),
@@ -84,7 +86,7 @@ export function MedicationEditDialog({
 
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
-  const onSubmit = (data: Partial<CreateMedicationDto>) => {
+  const onSubmit = (data: MedicationFormDataWithoutPatient) => {
     execute(() => {
       let payload: Partial<CreateMedicationDto> | FormData = data;
       if (audioFile) {
@@ -101,7 +103,7 @@ export function MedicationEditDialog({
           {
             medicationId: medication.id,
             data: payload as Partial<CreateMedicationDto>,
-            patientId: '', // patientId not required for invalidation in this context
+            socialSecurityNumber: '', // not required for invalidation in this context
           },
           {
             onSuccess: resolve,
@@ -119,10 +121,12 @@ export function MedicationEditDialog({
       title={t('editMedication')}
       description={t('editMedicationDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={t('updateMedication')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         {/* Medication Name */}
@@ -131,7 +135,7 @@ export function MedicationEditDialog({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('name')}</FormLabel>
+              <FormLabel required>{t('name')}</FormLabel>
               <FormControl>
                 <Input placeholder={t('namePlaceholder')} {...field} />
               </FormControl>
@@ -146,9 +150,9 @@ export function MedicationEditDialog({
           name="dosage"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('dosage')}</FormLabel>
+              <FormLabel required>{t('dosage')}</FormLabel>
               <Select
-                onValueChange={(value) => field.onChange(parseInt(value))}
+                onValueChange={field.onChange}
                 value={field.value?.toString()}
               >
                 <FormControl>
@@ -179,9 +183,9 @@ export function MedicationEditDialog({
           name="period"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('duration')}</FormLabel>
+              <FormLabel required>{t('duration')}</FormLabel>
               <Select
-                onValueChange={(value) => field.onChange(parseInt(value))}
+                onValueChange={field.onChange}
                 value={field.value?.toString()}
               >
                 <FormControl>

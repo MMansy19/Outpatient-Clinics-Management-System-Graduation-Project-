@@ -1,6 +1,6 @@
 /**
  * API Type Definitions
- * 
+ *
  * These types are derived from the OpenAPI schema (auth.json) and backend DTOs.
  * They ensure type safety when communicating with the CodeBlue backend.
  */
@@ -39,6 +39,10 @@ export interface LoginResponse {
   name: string;
   language: Language;
   role: Role;
+  /**
+   * Clinic ID for ADMIN role. This is used to scope admin actions to their clinic.
+   */
+  clinicId?: string;
 }
 
 // ============================================================================
@@ -144,6 +148,7 @@ export interface ApiError {
 export interface CreateVisitDto {
   diagnoses: string;
   patientId: string; // UUID format
+  clinicId?: string; // Optional - backend reads from JWT for admin/doctor
 }
 
 export interface CreateVisitResponse {
@@ -247,10 +252,18 @@ export interface VisitResponse {
   doctorId: string;
   patientName?: string;
   doctorName?: string;
-  diagnosesAudioUrl?: string;
   createdAt: string; // ISO date string
   patientID: string;
   doctorID: string;
+}
+
+/**
+ * Admin Clinic Info Response (GET /admin/clinic)
+ * Returns the clinic name and id for the logged-in clinic manager.
+ */
+export interface AdminClinicInfoResponse {
+  name: string;
+  id: string;
 }
 
 /**
@@ -299,6 +312,7 @@ export interface PaginatedVisitsResponse {
 export interface SuperAdminVisitItem {
   id: string;
   diagnoses: string;
+  diagnosesAudioUrl: string | null;
   patient: {
     name: string;
     id: string;

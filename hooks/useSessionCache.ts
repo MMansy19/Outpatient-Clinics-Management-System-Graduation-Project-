@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 
 /**
  * Session Cache Hook
@@ -19,7 +19,7 @@ const DEFAULT_CACHE_DURATION = 30 * 1000; // 30 seconds
 export function useSessionCache(duration = DEFAULT_CACHE_DURATION) {
   const cacheRef = useRef<SessionCache | null>(null);
 
-  const isValid = (): boolean => {
+  const isValid = useCallback((): boolean => {
     if (!cacheRef.current) {
       return false;
     }
@@ -29,22 +29,22 @@ export function useSessionCache(duration = DEFAULT_CACHE_DURATION) {
 
     // Cache is valid if it's not expired
     return age < duration;
-  };
+  }, [duration]);
 
-  const getCache = (): SessionCache | null => {
+  const getCache = useCallback((): SessionCache | null => {
     return cacheRef.current;
-  };
+  }, []);
 
-  const setCache = (isValid: boolean): void => {
+  const setCache = useCallback((valid: boolean): void => {
     cacheRef.current = {
-      isValid,
+      isValid: valid,
       timestamp: Date.now(),
     };
-  };
+  }, []);
 
-  const clearCache = (): void => {
+  const clearCache = useCallback((): void => {
     cacheRef.current = null;
-  };
+  }, []);
 
   return {
     isValid,

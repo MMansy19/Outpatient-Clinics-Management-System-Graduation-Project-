@@ -55,6 +55,7 @@ export function VisitEditDialog({
   const setAudioFile = audioFileState[1];
 
   const form = useForm<VisitEditFormData>({
+    mode: 'onChange',
     resolver: zodResolver(visitSchema),
     defaultValues: {
       diagnosis: visit.diagnosis || '',
@@ -102,10 +103,12 @@ export function VisitEditDialog({
       title={t('editVisit')}
       description={t('editVisitDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(onSubmit)}
       submitLabel={t('updateVisit')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField
@@ -113,7 +116,7 @@ export function VisitEditDialog({
           name="diagnosis"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Diagnosis</FormLabel>
+              <FormLabel required>Diagnosis</FormLabel>
               <FormControl>
                 <VoiceFormField
                   field={field}

@@ -79,6 +79,10 @@ export function AudioPlayer({ src, className, compact = false }: AudioPlayerProp
   const togglePlay = async () => {
     if (!audioRef.current) return;
     setupAudioContext();
+    // Resume AudioContext if suspended (browsers require user gesture)
+    if (audioContextRef.current?.state === 'suspended') {
+      await audioContextRef.current.resume();
+    }
     if (isPlaying) {
       audioRef.current.pause();
     } else {
@@ -141,6 +145,7 @@ export function AudioPlayer({ src, className, compact = false }: AudioPlayerProp
       <audio
         ref={audioRef}
         src={src}
+        crossOrigin="anonymous"
         onTimeUpdate={handleTimeUpdate}
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}

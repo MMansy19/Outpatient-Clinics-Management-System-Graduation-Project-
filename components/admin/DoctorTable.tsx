@@ -22,7 +22,7 @@ import {
   CheckCircle,
   Clock,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { DoctorResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 
@@ -39,7 +39,7 @@ export function DoctorTable() {
     const loadDoctors = async () => {
       try {
         setLoading(true);
-        const data = await adminApi.getDoctors({ page, limit });
+        const data = await superAdminApi.getDoctors({ page, limit });
         setDoctors(data.items);
         setTotalPages(data.totalPages);
         setTotalItems(data.totalItems);

@@ -51,6 +51,7 @@ export function AddClinicDialog({
   const [isPending, setIsPending] = useState(false);
 
   const form = useForm<ClinicFormData>({
+    mode: 'onChange',
     resolver: zodResolver(clinicSchema),
     defaultValues: {
       name: '',
@@ -147,7 +148,7 @@ export function AddClinicDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isPending}
+                disabled={isPending || !form.formState.isValid}
                 className="bg-medical-primary hover:bg-medical-primary/90"
               >
                 {isPending ? (

@@ -1,11 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import Image from 'next/image';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { toast, toastMessages } from '@/lib/utils/toast';
 
 import { Button } from '@/components/ui/button';
@@ -28,8 +29,8 @@ interface LoginFormProps {
 
 export function LoginForm({ locale }: LoginFormProps) {
   const t = useTranslations('auth');
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const [showPassword, setShowPassword] = useState(false);
 
   const { mutate: login, isPending } = useLogin();
 
@@ -55,35 +56,48 @@ export function LoginForm({ locale }: LoginFormProps) {
           toastMessages.auth.loginSuccess,
           `${toastMessages.auth.loginSuccessDescription} Welcome, ${response.name}!`
         );
+
+        // Mark login timestamp so the 401 interceptor doesn't redirect
+        // during the grace period while the Set-Cookie is being processed.
+        sessionStorage.setItem('login-timestamp', String(Date.now()));
         
         // Redirect based on user role
         const redirectParam = searchParams.get('redirect');
-        let redirectPath = redirectParam;
-        
-        if (!redirectPath) {
-          // Default redirects based on role
-          switch (response.role) {
-            case Role.SUPER_ADMIN:
-              redirectPath = `/${locale}/super-admin/dashboard`;
-              console.log('🔄 Redirecting to Super Admin Dashboard:', redirectPath);
-              break;
-            case Role.ADMIN:
-              redirectPath = `/${locale}/admin/dashboard`;
-              console.log('🔄 Redirecting to Admin Dashboard:', redirectPath);
-              break;
-            case Role.DOCTOR:
-              redirectPath = `/${locale}/doctor/dashboard`;
-              console.log('🔄 Redirecting to Doctor Dashboard:', redirectPath);
-              break;
-            default:
-              redirectPath = `/${locale}/`;
-              console.log('🔄 Redirecting to Home:', redirectPath);
-          }
+
+        // Determine the default redirect for this role
+        const roleRedirects: Record<number, string> = {
+          [Role.SUPER_ADMIN]: `/${locale}/super-admin/dashboard`,
+          [Role.ADMIN]: `/${locale}/doctor/dashboard`,
+          [Role.DOCTOR]: `/${locale}/doctor/dashboard`,
+        };
+        const defaultRedirect = roleRedirects[response.role] ?? `/${locale}/`;
+
+        // Only honour the redirect param if the target page belongs to
+        // the user's role scope. This prevents e.g. a super-admin from
+        // being sent to /doctor/dashboard via a stale ?redirect= param.
+        const rolePathPrefixes: Record<number, string[]> = {
+          [Role.SUPER_ADMIN]: ['/super-admin/', '/admin/'],
+          [Role.ADMIN]: ['/admin/', '/doctor/'],
+          [Role.DOCTOR]: ['/doctor/'],
+        };
+        const allowedPrefixes = rolePathPrefixes[response.role] ?? [];
+
+        let redirectPath: string;
+        if (
+          redirectParam &&
+          allowedPrefixes.some((prefix) => redirectParam.includes(prefix))
+        ) {
+          redirectPath = redirectParam;
+          console.log('🔄 Redirecting to (from param):', redirectPath);
         } else {
-          console.log('🔄 Redirecting to:', redirectPath);
+          redirectPath = defaultRedirect;
+          console.log('🔄 Redirecting to (role default):', redirectPath);
         }
         
-        router.push(redirectPath);
+        // Use hard navigation to ensure the browser fully processes the
+        // Set-Cookie header from the login response before the new page
+        // fires any API requests that depend on the JWT cookie.
+        window.location.href = redirectPath;
       },
       onError: (error: unknown) => {
         console.error('❌ Login Error:', error);
@@ -123,7 +137,7 @@ export function LoginForm({ locale }: LoginFormProps) {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('email')}</FormLabel>
+                <FormLabel required>{t('email')}</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -143,15 +157,31 @@ export function LoginForm({ locale }: LoginFormProps) {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t('password')}</FormLabel>
+                <FormLabel required>{t('password')}</FormLabel>
                 <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    disabled={isPending}
-                    {...field}
-                  />
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      disabled={isPending}
+                      className="pr-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      tabIndex={-1}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
