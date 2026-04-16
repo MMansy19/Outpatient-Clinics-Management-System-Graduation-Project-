@@ -6,8 +6,11 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type { Scan } from '@/types/entities/Scan';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -34,12 +37,12 @@ const scansKeys = {
  *
  * Retrieves all scan records for a specific patient.
  *
- * @param {number} patientId - Patient's numeric ID
+ * @param {string} patientId - Patient's UUID (globalId)
  * @returns {UseQueryResult} Query result with scans array
  *
  * @example
  * ```typescript
- * const { data: scans, isLoading, error } = useGetPatientScans(1);
+ * const { data: scans, isLoading, error } = useGetPatientScans("0281ba4f-7592-477e-9d02-f2641aa89221");
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -51,21 +54,19 @@ const scansKeys = {
  */
 export const useGetPatientScans = (
   patientId: string
-): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientScans called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+): UseQueryResult<unknown, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useQuery({
     queryKey: scansKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientScans - queryFn executing for patientId:', patientId);
-
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientScans - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientScans(patientId);
-        console.log('🔍 useGetPatientScans - mock result:', result);
-        return result;
+        return await mockMedicalHistoryAPI.getPatientScans(patientId);
       }
-      console.log('🔍 useGetPatientScans - using real API');
+      if (isAdmin) {
+        return await adminApi.getPatientScans(patientId);
+      }
       return await doctorApi.getPatientScans(patientId);
     },
     enabled: !!patientId,
@@ -115,7 +116,7 @@ export const useGetScan = (
  * const createScanMutation = useCreateScan();
  *
  * const handleSubmit = (data: { name: string; comments: string; type: string }) => {
- *   createScanMutation.mutate({ socialSecurityNumber, data }, {
+ *   createScanMutation.mutate({ patientId, data }, {
  *     onSuccess: (response) => {
  *       toast.success(`Scan created: ${response.id}`);
  *       onClose();
@@ -142,9 +143,17 @@ export const useCreateScan = (): UseMutationResult<
   { patientId: string; data: { name: string; comments: string; type: string } | FormData }
 > => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: ({ patientId, data }) => doctorApi.createScan(patientId, data),
+    mutationFn: ({ patientId, data }) => {
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return adminApi.createScan(patientId, data);
+      }
+      return doctorApi.createScan(patientId, data);
+    },
     onSuccess: (response, variables) => {
       // Invalidate patient scans list
       queryClient.invalidateQueries({
@@ -301,13 +310,13 @@ export const useDeleteScan = (): UseMutationResult<
  * Utility function to prefetch scans before user navigates.
  * Improves perceived performance.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {string} patientId - Patient's UUID (globalId)
  *
  * @example
  * ```typescript
  * // In a patient list, prefetch on hover
  * <PatientCard
- *   onMouseEnter={() => prefetchPatientScans(patient.socialSecurityNumber)}
+ *   onMouseEnter={() => prefetchPatientScans(patient.id)}
  * />
  * ```
  */

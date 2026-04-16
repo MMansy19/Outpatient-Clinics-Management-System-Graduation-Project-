@@ -16,18 +16,23 @@ import {
   ChevronLeft,
   ChevronRight,
   Pencil,
+  Eye,
   User,
   CreditCard,
   Calendar,
   Briefcase,
   MapPin,
 } from 'lucide-react';
-import { adminApi } from '@/lib/api/admin.service';
+import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 import { EditPatientDialog } from './EditPatientDialog';
 
-export function PatientTable() {
+interface PatientTableProps {
+  onViewPatient?: (ssn: string) => void;
+}
+
+export function PatientTable({ onViewPatient }: PatientTableProps = {}) {
   const t = useTranslations('admin');
   const [patients, setPatients] = useState<PatientResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +48,7 @@ export function PatientTable() {
   const loadPatients = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await adminApi.getPatients({ page, limit });
+      const data = await superAdminApi.getPatients({ page, limit });
       setPatients(data.items);
       setTotalPages(data.totalPages);
       setTotalItems(data.totalItems);
@@ -117,9 +122,12 @@ export function PatientTable() {
                 animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`,
               }}
             >
-              {/* Header with name and edit button */}
+              {/* Header with name and action buttons */}
               <div className="flex items-start justify-between mb-3">
-                <div className="flex items-start gap-3 flex-1 min-w-0">
+                <div
+                  className={`flex items-start gap-3 flex-1 min-w-0 ${onViewPatient ? 'cursor-pointer' : ''}`}
+                  onClick={() => onViewPatient?.(patient.user.socialSecurityNumber)}
+                >
                   <div className="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                     <User className="h-6 w-6 text-white" />
                   </div>
@@ -128,20 +136,29 @@ export function PatientTable() {
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {patient.user.firstName} {patient.user.lastName}
                     </h3>
-                    {/* <Badge variant="outline" className="mt-1 text-xs">
-                      {patient.user.gender}
-                    </Badge> */}
                   </div>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEditPatient(patient)}
-                  className="flex-shrink-0 h-8 w-8 p-0"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="flex gap-1">
+                  {onViewPatient && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onViewPatient(patient.user.socialSecurityNumber)}
+                      className="flex-shrink-0 h-8 w-8 p-0"
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditPatient(patient)}
+                    className="flex-shrink-0 h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               {/* Patient Details */}
@@ -224,7 +241,8 @@ export function PatientTable() {
                 patients.map((patient) => (
                   <TableRow
                     key={patient.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-900/30 ${onViewPatient ? 'cursor-pointer' : ''}`}
+                    onClick={() => onViewPatient?.(patient.user.socialSecurityNumber)}
                   >
                     <TableCell className="font-medium">
                       {patient.user.firstName} {patient.user.lastName}
@@ -241,14 +259,32 @@ export function PatientTable() {
                       {patient.address}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditPatient(patient)}
-                      >
-                        <Pencil className="h-4 w-4 mr-2" />
-                        {t('edit')}
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        {onViewPatient && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onViewPatient(patient.user.socialSecurityNumber);
+                            }}
+                          >
+                            <Eye className="h-4 w-4 mr-2" />
+                            {t('view') || 'View'}
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditPatient(patient);
+                          }}
+                        >
+                          <Pencil className="h-4 w-4 mr-2" />
+                          {t('edit')}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

@@ -43,6 +43,7 @@ export function AdminLabForm({
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<LabFormData>({
+    mode: 'onChange',
     resolver: zodResolver(labSchema),
     defaultValues: {
       name: '',
@@ -94,6 +95,7 @@ export function AdminLabForm({
       title={t('createNewLab')}
       description={t('createLabDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('createLab')}
       cancelLabel={tCommon('cancel')}
@@ -106,9 +108,9 @@ export function AdminLabForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('labName')}</FormLabel>
+              <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
+                <Input placeholder={t('labNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

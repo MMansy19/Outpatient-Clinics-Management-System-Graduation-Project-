@@ -9,8 +9,10 @@ import {
   FileAudio,
   X,
   Check,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { convertBlobToMp3 } from '@/lib/utils/audioConverter';
 import {
   Dialog,
   DialogContent,
@@ -46,6 +48,7 @@ export function VoiceRecorderDialog({
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isConverting, setIsConverting] = useState(false);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -181,17 +184,32 @@ export function VoiceRecorderDialog({
     setSelectedFile(file);
   };
 
-  const handleUseAudio = () => {
+  const handleUseAudio = async () => {
     const fileToUse = activeTab === 'record' ? audioBlob : selectedFile;
     if (!fileToUse) return;
 
-    const file =
-      fileToUse instanceof Blob && !(fileToUse instanceof File)
-        ? new File([fileToUse], 'recording.webm', { type: fileToUse.type })
-        : (fileToUse as File);
+    try {
+      setIsConverting(true);
 
-    onAudioCaptured?.(file);
-    handleClose();
+      // Convert to MP3 for backend compatibility (backend only accepts mp3)
+      const isMp3 = fileToUse.type === 'audio/mpeg' || fileToUse.type === 'audio/mp3';
+      let file: File;
+
+      if (isMp3 && fileToUse instanceof File) {
+        file = fileToUse;
+      } else {
+        const mp3Blob = await convertBlobToMp3(fileToUse);
+        file = new File([mp3Blob], 'recording.mp3', { type: 'audio/mpeg' });
+      }
+
+      onAudioCaptured?.(file);
+      handleClose();
+    } catch (err) {
+      console.error('Error converting audio:', err);
+      toast.error(t('conversionError'));
+    } finally {
+      setIsConverting(false);
+    }
   };
 
   const handleClose = () => {
@@ -331,9 +349,14 @@ export function VoiceRecorderDialog({
                     </Button>
                     <Button
                       onClick={handleUseAudio}
+                      disabled={isConverting}
                       className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
                     >
-                      <Check className="mr-2 h-4 w-4" />
+                      {isConverting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="mr-2 h-4 w-4" />
+                      )}
                       {t('useAudio')}
                     </Button>
                   </div>
@@ -392,9 +415,14 @@ export function VoiceRecorderDialog({
                   <div className="flex gap-3">
                     <Button
                       onClick={handleUseAudio}
+                      disabled={isConverting}
                       className="flex-1 bg-medical-primary hover:bg-medical-primary/90"
                     >
-                      <Check className="mr-2 h-4 w-4" />
+                      {isConverting ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Check className="mr-2 h-4 w-4" />
+                      )}
                       {t('useAudio')}
                     </Button>
                   </div>

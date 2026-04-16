@@ -5,6 +5,8 @@ import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 import type { CreatePatientRequest } from '@/types/api';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 const PATIENTS_KEY = ['patients'];
 
@@ -14,6 +16,9 @@ interface PatientsResponse {
 }
 
 export const useSearchPatients = (filters: SearchFilters): UseQueryResult<PatientsResponse, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'search', filters],
     queryFn: async () => {
@@ -41,8 +46,11 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
       if (filters.maxAge !== undefined) params.append('max_age', filters.maxAge.toString());
       if (filters.nationalId) params.append('national_id', filters.nationalId);
 
-      // TODO: Verify endpoint path with backend team
-      // Possible endpoints: /doctor/patients, /clinic/patients, /patients
+      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await apiClient.get<PatientsResponse>(`/admin/patients?${params.toString()}`);
+        return response.data;
+      }
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);
       return response.data;
     },
@@ -53,9 +61,17 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
 };
 
 export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
+      // ADMIN uses admin endpoint, DOCTOR uses doctorApi
+      if (isAdmin) {
+        const response = await apiClient.get<Patient>(`/admin/patient/${id}`);
+        return response.data;
+      }
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
       return response.data;
     },
@@ -65,55 +81,58 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
 };
 
 export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient | null, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
+
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
-      console.log(`🔍 Fetching patient by National ID: ${socialSecurityNumber}`);
       try {
-        const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
-        console.log(`✅ API Raw Response:`, response);
-        console.log(`✅ Patient fetched successfully:`, response.data);
+        let patientData: Patient | null;
+        if (isAdmin) {
+          // Try the SSN-specific endpoint first (searches globally),
+          // fall back to clinic-scoped search if it errors
+          try {
+            const ssnResponse = await apiClient.get<Patient>(
+              `/admin/patient/${encodeURIComponent(socialSecurityNumber)}`
+            );
+            patientData = ssnResponse.data || null;
+          } catch {
+            // SSN endpoint failed — fall back to paginated search
+            const response = await apiClient.get<{ items?: any[]; patients?: any[] }>(
+              `/admin/patients?search=${encodeURIComponent(socialSecurityNumber)}`
+            );
+            const items = response.data?.items || response.data?.patients || [];
+            const match = items.find((p: any) =>
+              p.socialSecurityNumber === socialSecurityNumber ||
+              p.user?.socialSecurityNumber === socialSecurityNumber
+            );
+            patientData = match || null;
+          }
+        } else {
+          const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+          patientData = response.data;
+        }
 
-        // Handle both direct Patient object and wrapped response formats
-        const data = response.data;
-
-        // If data is null or undefined, return null
-        if (!data) {
-          console.log(`Patient with National ID ${socialSecurityNumber} returned null data`);
+        if (!patientData) {
           return null;
         }
 
-        // If data has a 'data' property (wrapped response), use that
-        if (data && typeof data === 'object') {
-          console.log(`✅ Using wrapped response data:`, data);
-          return data as Patient;
-        }
-
-        // Return direct patient data
-        return data as Patient;
+        return patientData;
       } catch (error) {
-        console.error(`❌ Error fetching patient with National ID ${socialSecurityNumber}:`, error);
-        // Check if it's a 404 (patient not found) or 500 (server error for not found)
-        // In both cases, treat as "patient not found" and return null
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;
-          const statusText = error.response?.statusText;
-          const responseData = error.response?.data;
-          console.log(`📊 API Response - Status: ${status}, StatusText: ${statusText}, Data:`, responseData);
-          // 404 = Not Found, 500 = Internal Server Error (often used when patient doesn't exist)
-          if (status === 404 || status === 500) {
-            console.log(`Patient with National ID ${socialSecurityNumber} not found (API returned ${status})`);
+          if (status === 404) {
             return null;
           }
         }
-        // For other errors, rethrow
         throw error;
       }
     },
     enabled: !!socialSecurityNumber && socialSecurityNumber.length > 0,
-    staleTime: 0, // Always fetch fresh data
+    staleTime: 0,
     refetchOnWindowFocus: true,
-    gcTime: 0, // Immediately remove from cache after unmount
+    gcTime: 0,
   });
 };
 

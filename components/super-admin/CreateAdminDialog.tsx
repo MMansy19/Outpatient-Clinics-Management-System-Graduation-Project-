@@ -79,6 +79,7 @@ export function CreateAdminDialog({ trigger }: CreateAdminDialogProps) {
   const { mutate: createAdmin, isPending } = useCreateAdmin();
 
   const form = useForm<CreateAdminFormData>({
+    mode: 'onChange',
     resolver: zodResolver(createAdminSchema),
     defaultValues: {
       firstName: '',
@@ -397,7 +398,14 @@ export function CreateAdminDialog({ trigger }: CreateAdminDialogProps) {
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending || loadingClinics}>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  loadingClinics ||
+                  !form.formState.isValid
+                }
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

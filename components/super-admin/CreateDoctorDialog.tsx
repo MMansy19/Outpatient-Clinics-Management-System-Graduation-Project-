@@ -79,6 +79,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   const { mutate: createDoctor, isPending } = useCreateDoctor();
 
   const form = useForm<CreateDoctorFormData>({
+    mode: 'onChange',
     resolver: zodResolver(createDoctorSchema),
     defaultValues: {
       firstName: '',
@@ -408,7 +409,14 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               >
                 {t('cancel')}
               </Button>
-              <Button type="submit" disabled={isPending || loadingClinics}>
+              <Button
+                type="submit"
+                disabled={
+                  isPending ||
+                  loadingClinics ||
+                  !form.formState.isValid
+                }
+              >
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -6,11 +6,14 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
+import { adminApi } from '@/lib/api/admin.service';
 import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useAuthStore } from '@/stores/authStore';
+import { Role } from '@/lib/api/types';
 
 /**
  * Query Key Factory for Medications
@@ -37,12 +40,12 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  *
  * Retrieves all medications for a specific patient.
  *
- * @param {number} patientId - Patient's numeric ID
+ * @param {string} patientId - Patient's UUID (globalId)
  * @returns {UseQueryResult} Query result with medications array
  *
  * @example
  * ```typescript
- * const { data: medications, isLoading, error } = useGetPatientMedications(1);
+ * const { data: medications, isLoading, error } = useGetPatientMedications("0281ba4f-7592-477e-9d02-f2641aa89221");
  *
  * if (isLoading) return <Skeleton />;
  * if (error) return <ErrorAlert error={error} />;
@@ -54,21 +57,19 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
  */
 export const useGetPatientMedications = (
   patientId: string
-): UseQueryResult<unknown[], Error> => {
-  console.log('🔍 useGetPatientMedications called with patientId:', patientId, 'USE_MOCK_DATA:', USE_MOCK_DATA);
+): UseQueryResult<unknown, Error> => {
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useQuery({
     queryKey: medicationsKeys.patient(patientId),
     queryFn: async () => {
-      console.log('🔍 useGetPatientMedications - queryFn executing for patientId:', patientId);
-
       if (USE_MOCK_DATA) {
-        console.log('🔍 useGetPatientMedications - using mock data');
-        const result = await mockMedicalHistoryAPI.getPatientMedications(patientId);
-        console.log('🔍 useGetPatientMedications - mock result:', result);
-        return result;
+        return await mockMedicalHistoryAPI.getPatientMedications(patientId);
       }
-      console.log('🔍 useGetPatientMedications - using real API');
+      if (isAdmin) {
+        return await adminApi.getPatientMedications(patientId);
+      }
       return await doctorApi.getPatientMedications(patientId);
     },
     enabled: !!patientId, // Only run when patientId is provided
@@ -145,24 +146,34 @@ export const useCreateMedication = (): UseMutationResult<
   CreateMedicationDto | FormData
 > => {
   const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
-    mutationFn: (data: CreateMedicationDto | FormData) => doctorApi.createMedication(data),
+    mutationFn: (data: CreateMedicationDto | FormData) => {
+      // ADMIN uses adminApi, DOCTOR uses doctorApi
+      if (isAdmin) {
+        return adminApi.createMedication(data);
+      }
+      return doctorApi.createMedication(data);
+    },
     onSuccess: (response, variables) => {
+      // Invalidate patient medications list
+      // Note: medications are keyed by socialSecurityNumber, not patientId
       queryClient.invalidateQueries({
         queryKey: medicationsKeys.all,
       });
 
+      // Invalidate patient details (may include medication count)
       queryClient.invalidateQueries({
         queryKey: ['patients'],
       });
 
-      if (!(variables instanceof FormData)) {
-        queryClient.setQueryData(
-          medicationsKeys.detail(response.id),
-          variables
-        );
-      }
+      // Optionally set the new medication in cache
+      queryClient.setQueryData(
+        medicationsKeys.detail(response.id),
+        variables
+      );
     },
     onError: (error) => {
       console.error('[useCreateMedication] Error:', error);
@@ -201,7 +212,7 @@ export const useCreateMedication = (): UseMutationResult<
 export const useUpdateMedication = (): UseMutationResult<
   unknown,
   Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; patientId: string }
+  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -253,7 +264,7 @@ export const useUpdateMedication = (): UseMutationResult<
 export const useDeleteMedication = (): UseMutationResult<
   void,
   Error,
-  { medicationId: string; patientId: string }
+  { medicationId: string; socialSecurityNumber: string }
 > => {
   const queryClient = useQueryClient();
 
@@ -346,13 +357,13 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
  * Utility function to prefetch medications before user navigates.
  * Improves perceived performance.
  *
- * @param {string} socialSecurityNumber - Patient's 14-digit social security number
+ * @param {string} patientId - Patient's UUID (globalId)
  *
  * @example
  * ```typescript
  * // In a patient list, prefetch on hover
  * <PatientCard
- *   onMouseEnter={() => prefetchPatientMedications(patient.socialSecurityNumber)}
+ *   onMouseEnter={() => prefetchPatientMedications(patient.id)}
  * />
  * ```
  */

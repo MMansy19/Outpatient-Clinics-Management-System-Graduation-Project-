@@ -1,6 +1,9 @@
 import axios, { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { useAuthStore } from '@/stores/authStore';
 
+// Module-level flag to prevent multiple concurrent 401 redirects
+let isRedirecting401 = false;
+
 // Extend Axios request config to include metadata
 interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
   metadata?: {
@@ -46,6 +49,12 @@ class ApiClient {
         // Add timestamp for caching
         config.metadata = { startTime: Date.now() };
 
+        // When sending FormData, delete the default JSON Content-Type so the
+        // browser/axios can auto-set multipart/form-data with the correct boundary.
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+        }
+
         // Log requests in development
         if (process.env.NODE_ENV === 'development') {
           console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
@@ -76,12 +85,22 @@ class ApiClient {
         if (error.response?.status === 401) {
           console.error('[API Error] 401 Unauthorized - Token expired or invalid');
 
-          // Only redirect if we're not already on the login page
+          // Only redirect if we're not already on the login page and not
+          // within a grace period after login (prevents redirect loops when
+          // the Set-Cookie hasn't been fully processed by the browser yet).
           if (typeof window !== 'undefined') {
             const currentPath = window.location.pathname;
             const isLoginPage = currentPath.includes('/login');
+            const loginTimestamp = sessionStorage.getItem('login-timestamp');
+            const isRecentLogin = loginTimestamp && (Date.now() - Number(loginTimestamp)) < 5000;
 
-            if (!isLoginPage) {
+            if (isRecentLogin) {
+              console.warn('[API Client] Skipping 401 redirect — recent login (cookie may still be processing)');
+            } else if (isRedirecting401) {
+              console.warn('[API Client] 401 redirect already in progress, skipping duplicate');
+            } else if (!isLoginPage) {
+              isRedirecting401 = true;
+
               // Clear auth state
               useAuthStore.getState().logout();
 
@@ -97,20 +116,16 @@ class ApiClient {
         }
 
         // Handle 403 Forbidden (insufficient permissions)
+        // Log the error but let it propagate to the caller (React Query / component).
+        // The AuthGuard already handles page-level role checks; a 403 from a single
+        // API call should not forcibly navigate the user away from the page.
         if (error.response?.status === 403) {
-          console.error('[API Error] 403 Forbidden - Insufficient permissions');
-
-          // Redirect to unauthorized page
-          if (typeof window !== 'undefined') {
-            const pathParts = window.location.pathname.split('/');
-            const locale = pathParts[1] || 'en';
-            window.location.href = `/${locale}/unauthorized`;
-          }
+          console.warn('[API Error] 403 Forbidden - Insufficient permissions', error.config?.url);
         }
 
         // Handle network errors
         if (!error.response) {
-          console.error('[API Error] Network error or server unreachable');
+          console.warn('[API Error] Network error or server unreachable');
         }
 
         // Log error details in development
@@ -118,7 +133,7 @@ class ApiClient {
           const config = error.config as ExtendedAxiosRequestConfig | undefined;
           const startTime = config?.metadata?.startTime;
           const duration = startTime ? Date.now() - startTime : 0;
-          console.error('[API Error Details]', {
+          console.warn('[API Error Details]', {
             url: error.config?.url,
             method: error.config?.method,
             status: error.response?.status,

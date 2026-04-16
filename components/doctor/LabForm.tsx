@@ -30,19 +30,15 @@ type LabFormData = z.infer<typeof labSchema>;
 interface LabFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  patientId: string;
+  patientId?: string;
   onSuccess?: () => void;
 }
 
-export function LabForm({
-  open,
-  onOpenChange,
-  patientId,
-  onSuccess,
-}: LabFormProps) {
+export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormProps) {
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<LabFormData>({
+    mode: 'onChange',
     resolver: zodResolver(labSchema),
     defaultValues: {
       name: '',
@@ -80,7 +76,7 @@ export function LabForm({
       return new Promise((resolve, reject) => {
         createLabMutation.mutate(
           {
-            patientId,
+            patientId: patientId || '',
             data: formData,
           },
           {
@@ -99,6 +95,7 @@ export function LabForm({
       title={t('createNewLab')}
       description={t('createLabDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('createLab')}
       cancelLabel={tCommon('cancel')}
@@ -111,9 +108,9 @@ export function LabForm({
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('labName')}</FormLabel>
+              <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
+                <Input placeholder={t('labNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

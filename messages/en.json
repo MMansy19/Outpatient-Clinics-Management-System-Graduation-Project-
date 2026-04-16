@@ -18,7 +18,15 @@
     "viewImage": "View Image",
     "unknown": "Unknown",
     "other": "Other",
-    "totalPatients": "Total Patients"
+    "totalPatients": "Total Patients",
+    "scanTypes": {
+      "mri": "MRI",
+      "ct": "CT",
+      "xray": "X-RAY",
+      "ultrasound": "ULTRA SOUND",
+      "petct": "PET CT",
+      "mammography": "MAMMOGRAPHY"
+    }
   },
   "nav": {
     "home": "Home",
@@ -189,8 +197,11 @@
     "title": "Voice to Text",
     "visits": "Visits",
     "dashboardSubtitle": "Manage your patients and clinical workflow",
+    "clinicDashboardTitle": "Dashboard of {clinicName}",
+    "clinicManagerSubtitle": "Manage doctors, patients, and visits of {clinicName}",
     "patients": "Patients",
     "addNewPatient": "Add New Patient",
+    "addNewPatientMobile": "Patient",
     "scanID": "Scan ID",
     "createVisit": "Create Visit",
     "search": "Search by Name or National ID",
@@ -237,9 +248,19 @@
     "createLabDescription": "Add a new lab test result",
     "createNewLab": "New Lab",
     "labName": "Lab Name",
+    "labNamePlaceholder": "e.g., Blood Test, X-Ray, MRI",
     "scanName": "Scan Name",
+    "scanNamePlaceholder": "e.g., Chest X-Ray, Brain MRI",
     "scanType": "Scan Type",
     "selectScanType": "Select scan type",
+    "scanTypes": {
+      "mri": "MRI",
+      "ct": "CT",
+      "xray": "X-RAY",
+      "ultrasound": "ULTRA SOUND",
+      "petct": "PET CT",
+      "mammography": "MAMMOGRAPHY"
+    },
     "createScan": "Create Scan",
     "createScanDescription": "Add a new imaging study",
     "createNewScan": "New Scan",
@@ -263,6 +284,21 @@
     "noPatientsFound": "No patients found",
     "allPatientsDescription": "All patients registered under this doctor",
     "uploadScanImage": "Upload Scan Image",
+    "uploadScanImageRequired": "Scan image is required",
+    "uploadLabImage": "Upload Lab Image",
+    "uploadLabImageRequired": "Lab image is required",
+    "addDoctor": "Add Doctor",
+    "addDoctorMobile": "Doctor",
+    "doctorsInClinic": "Doctors in {clinicName}",
+    "doctorsInClinicDescription": "Registered doctors in {clinicName}",
+    "patientsInClinic": "Patients in {clinicName}",
+    "patientsInClinicDescription": "All patients registered in {clinicName}",
+    "visitsInClinic": "Visits in {clinicName}",
+    "visitsInClinicDescription": "All visits recorded in {clinicName}",
+    "thisWeekDescription": "Visits in the last 7 days",
+    "doctors": "Doctors",
+    "clinics": "Clinics",
+    "noDoctorsFound": "No doctors found in this clinic",
     "addPatient": {
       "title": "Add New Patient",
       "selectMethod": "Choose Registration Method",
@@ -407,7 +443,7 @@
     "networkError": "Network Error",
     "networkErrorDescription": "Please check your internet connection and try again",
     "diagnosesTreatmentPlan": "Diagnosis & Treatment Plan",
-    "enterDiagnosesTreatmentPlan":"Enter diagnosis and treatment plan",
+    "enterDiagnosesTreatmentPlan": "Enter diagnosis and treatment plan",
     "diagnosesOrAudioRequired": "Please enter diagnoses text or record an audio",
     "existingAudioRecording": "Existing Audio Recording",
     "editVisit": "Edit Visit",
@@ -444,6 +480,8 @@
       "twoTablets": "2 tablets",
       "threeTablets": "3 tablets",
       "fourTablets": "4 tablets",
+      "fiveTablets": "5 tablets",
+      "sixTablets": "6 tablets",
       "custom": "Custom"
     },
     "periods": {
@@ -506,7 +544,13 @@
     "gender": "Gender",
     "dateOfBirth": "Date of Birth",
     "socialSecurityNumber": "Social Security Number",
-    "job":"Job"
+    "job": "Job",
+    "audio": "Audio",
+    "email": "Email",
+    "phone": "Phone",
+    "status": "Status",
+    "approved": "Approved",
+    "pending": "Pending"
   },
   "vitals": {
     "kg": "kg",
@@ -889,6 +933,7 @@
     "to": "To"
   },
   "scanTypes": {
+    "mri": "MRI",
     "ct": "CT",
     "xray": "X-RAY",
     "ultrasound": "ULTRA SOUND",
@@ -993,7 +1038,8 @@
     "transcriptionComplete": "Transcription complete!",
     "transcriptionFailed": "Failed to transcribe audio",
     "invalidFileType": "Invalid file type. Please upload an audio or video file.",
-    "fileTooLarge": "File is too large. Maximum size is 50MB."
+    "fileTooLarge": "File is too large. Maximum size is 50MB.",
+    "conversionError": "Failed to process audio. Please try again."
   },
   "clinic": {
     "deletedSuccess": "Clinic deleted successfully",

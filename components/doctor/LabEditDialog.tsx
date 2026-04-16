@@ -44,6 +44,7 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
   const t = useTranslations('doctor');
   const tCommon = useTranslations('common');
   const form = useForm<LabFormData>({
+    mode: 'onChange',
     resolver: zodResolver(labSchema),
     defaultValues: {
       name: lab.name || '',
@@ -101,10 +102,12 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
       title={t('editLab')}
       description={t('editLabDescription')}
       isPending={isPending}
+      submitDisabled={!form.formState.isValid}
       onSubmit={form.handleSubmit(handleSubmit)}
       submitLabel={t('updateLab')}
       cancelLabel={tCommon('cancel')}
       size="lg"
+      form={form}
     >
       <div className="space-y-6">
         <FormField
@@ -112,9 +115,9 @@ export function LabEditDialog({ open, onOpenChange, lab, onSuccess }: LabEditDia
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t('labName')}</FormLabel>
+              <FormLabel required>{t('labName')}</FormLabel>
               <FormControl>
-                <Input placeholder="e.g., Blood Test, X-Ray, MRI" {...field} />
+                <Input placeholder={t('labNamePlaceholder')} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
