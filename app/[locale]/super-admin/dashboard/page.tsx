@@ -18,7 +18,7 @@ import {
   CalendarDays,
   CalendarCheck,
   Menu,
-  ShieldCheck,
+  Search,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
@@ -29,9 +29,9 @@ import { ClinicTable } from '@/components/super-admin/ClinicTable';
 import { DoctorTable } from '@/components/super-admin/DoctorTable';
 import { PatientTable } from '@/components/super-admin/PatientTable';
 import { VisitTable } from '@/components/super-admin/VisitTable';
-import { AdminTable } from '@/components/super-admin/AdminTable';
 import { CreateDoctorDialog } from '@/components/super-admin/CreateDoctorDialog';
-import { CreateAdminDialog } from '@/components/super-admin/CreateAdminDialog';
+import { SuperAdminPatientSearch } from '@/components/super-admin/PatientSearch';
+import { SuperAdminPatientProfile } from '@/components/super-admin/PatientProfile';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { useQuery } from '@tanstack/react-query';
 import { useLogout } from '@/lib/api/queries/useAuth';
@@ -42,6 +42,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface SuperAdminDashboardProps {
@@ -137,11 +144,24 @@ const EnhancedStatsCard = ({
   );
 };
 
+interface SelectedPatient {
+  id: string;
+  name: string;
+  gender?: number;
+  dateOfBirth?: string;
+  socialSecurityNumber: string;
+  address?: string | null;
+  job?: string | null;
+}
+
 export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('superAdmin');
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState('clinics');
+  const [selectedClinicId, setSelectedClinicId] = useState<string>('');
+  const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
+  const [showPatientProfile, setShowPatientProfile] = useState(false);
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
 
@@ -152,16 +172,25 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchInterval: 60 * 1000,
   });
 
+  useEffect(() => {
+    if (clinics && clinics.length > 0 && !selectedClinicId) {
+      setSelectedClinicId(clinics[0].id);
+    }
+  }, [clinics, selectedClinicId]);
+
+  const handleSelectPatient = (patient: SelectedPatient) => {
+    setSelectedPatient(patient);
+    setShowPatientProfile(true);
+  };
+
+  const handleBackToList = () => {
+    setSelectedPatient(null);
+    setShowPatientProfile(false);
+  };
+
   const { data: doctorsData, refetch: refetchDoctors } = useQuery({
     queryKey: ['doctors-all'],
     queryFn: () => superAdminApi.getDoctors({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
-  });
-
-  const { data: adminsData, refetch: refetchAdmins } = useQuery({
-    queryKey: ['admins-all'],
-    queryFn: () => superAdminApi.getAdmins({ page: 1, limit: 10000 }),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -204,10 +233,9 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
   const refreshAllData = useCallback(() => {
     refetchClinics();
     refetchDoctors();
-    refetchAdmins();
     refetchPatients();
     refetchVisits();
-  }, [refetchClinics, refetchDoctors, refetchAdmins, refetchPatients, refetchVisits]);
+  }, [refetchClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
   useEffect(() => {
     refreshAllData();
@@ -286,20 +314,10 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
             100
           : 0,
       },
-      {
-        label: t('totalAdmins'),
-        value: adminsData?.totalItems || 0,
-        subtitle: t('totalRegisteredAdmins'),
-        icon: ShieldCheck,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-        progress: Math.min(((adminsData?.totalItems || 0) / 100) * 100, 100),
-      },
     ],
     [
       clinics,
       doctorsData,
-      adminsData,
       patientsData,
       visitsData,
       dailyVisits,
@@ -374,7 +392,6 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="p-2 space-y-2">
                       <CreateDoctorDialog />
-                      <CreateAdminDialog />
                     </div>
                     <DropdownMenuSeparator />
                     <div className="flex items-center gap-2 p-2">
@@ -411,7 +428,6 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
                 <div className="flex items-center gap-2 sm:gap-3">
                   <CreateDoctorDialog />
-                  <CreateAdminDialog />
                   <LanguageToggle
                     locale={locale}
                     variant="outline"
@@ -502,14 +518,49 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
             </div>
 
             {/* Tabs - Mobile Optimized */}
+            
+            {/* Clinic Selection for Medical Data */}
+            {showPatientProfile && (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-gray-100 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-medical-primary" />
+                    <span className="font-medium">{t('selectClinic')}</span>
+                  </div>
+                  <Select
+                    value={selectedClinicId}
+                    onValueChange={setSelectedClinicId}
+                    disabled={!clinics || clinics.length === 0}
+                  >
+                    <SelectTrigger className="w-full sm:w-[250px]">
+                      <SelectValue placeholder={t('selectClinicToManage')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clinics?.map((clinic) => (
+                        <SelectItem key={clinic.id} value={clinic.id}>
+                          {clinic.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             <Tabs
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                if (value !== 'patient-profile') {
+                  setShowPatientProfile(false);
+                  setSelectedPatient(null);
+                }
+              }}
               className="space-y-4"
             >
               {/* Mobile: Scrollable tabs */}
               <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-                <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto md:h-10">
+                <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6 h-auto md:h-10">
                   <TabsTrigger
                     value="clinics"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
@@ -518,11 +569,19 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                     {t('clinics')}
                   </TabsTrigger>
                   <TabsTrigger
-                    value="admins"
+                    value="search"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
                   >
-                    <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    {t('adminsLabel')}
+                    <Search className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {t('searchPatients')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="patient-profile"
+                    className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
+                    disabled={!showPatientProfile || !selectedPatient}
+                  >
+                    <UserRound className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {t('patientProfile')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="doctors"
@@ -535,7 +594,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                     value="patients"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
                   >
-                    <UserRound className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     {t('patients')}
                   </TabsTrigger>
                   <TabsTrigger
@@ -552,8 +611,18 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                 <ClinicTable />
               </TabsContent>
 
-              <TabsContent value="admins" className="space-y-4 mt-4">
-                <AdminTable />
+              <TabsContent value="search" className="space-y-4 mt-4">
+                <SuperAdminPatientSearch onSelectPatient={handleSelectPatient} />
+              </TabsContent>
+
+              <TabsContent value="patient-profile" className="space-y-4 mt-4">
+                {selectedPatient && selectedClinicId && (
+                  <SuperAdminPatientProfile
+                    patientId={selectedPatient.id}
+                    onBack={handleBackToList}
+                    selectedClinicId={selectedClinicId}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="doctors" className="space-y-4 mt-4">
