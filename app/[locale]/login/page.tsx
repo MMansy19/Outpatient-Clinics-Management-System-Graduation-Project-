@@ -1,4 +1,5 @@
 import { LoginForm } from '@/components/auth/LoginForm';
+import { GuestGuard } from '@/components/auth/GuestGuard';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import Image from 'next/image';
 
@@ -10,6 +11,7 @@ export default async function LoginPage(props: LoginPageProps) {
   const params = await props.params;
   const { locale } = params;
   return (
+    <GuestGuard locale={locale}>
     <main className="relative flex min-h-screen items-center justify-center p-4">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
@@ -33,5 +35,6 @@ export default async function LoginPage(props: LoginPageProps) {
         <LoginForm locale={locale} />
       </div>
     </main>
+    </GuestGuard>
   );
 }
