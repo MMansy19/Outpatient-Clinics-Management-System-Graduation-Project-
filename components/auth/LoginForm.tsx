@@ -67,7 +67,7 @@ export function LoginForm({ locale }: LoginFormProps) {
         // Determine the default redirect for this role
         const roleRedirects: Record<number, string> = {
           [Role.SUPER_ADMIN]: `/${locale}/super-admin/dashboard`,
-          [Role.ADMIN]: `/${locale}/doctor/dashboard`,
+          [Role.ADMIN]: `/${locale}/admin/dashboard`,
           [Role.DOCTOR]: `/${locale}/doctor/dashboard`,
         };
         const defaultRedirect = roleRedirects[response.role] ?? `/${locale}/`;
