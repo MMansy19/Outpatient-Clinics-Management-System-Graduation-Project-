@@ -1,4 +1,5 @@
 import { RegisterForm } from '@/components/auth/RegisterForm';
+import { GuestGuard } from '@/components/auth/GuestGuard';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { Button } from '@/components/ui/button';
 import { FlaskConical } from 'lucide-react';
@@ -13,6 +14,7 @@ export default async function RegisterPage(props: RegisterPageProps) {
   const params = await props.params;
   const { locale } = params;
   return (
+    <GuestGuard locale={locale}>
     <main className="relative flex min-h-screen items-center justify-center p-4">
       {/* Background Image */}
       <div className="absolute inset-0 z-0">
@@ -41,5 +43,6 @@ export default async function RegisterPage(props: RegisterPageProps) {
         <RegisterForm locale={locale} />
       </div>
     </main>
+    </GuestGuard>
   );
 }
