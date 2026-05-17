@@ -20,7 +20,9 @@ import {
   FileText,
   Calendar,
   Volume2,
+  Pencil,
 } from 'lucide-react';
+import { EditVisitDialog } from '@/components/super-admin/EditVisitDialog';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
@@ -34,6 +36,8 @@ export function VisitTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [editingVisit, setEditingVisit] = useState<SuperAdminVisitItem | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const limit = 10;
 
   useEffect(() => {
@@ -55,6 +59,23 @@ export function VisitTable() {
 
     loadVisits();
   }, [page]);
+
+  const handleEditSuccess = () => {
+    const loadVisits = async () => {
+      try {
+        setLoading(true);
+        const data = await superAdminApi.getVisits({ page, limit });
+        setVisits(data.items);
+        setTotalPages(data.totalPages);
+        setTotalItems(data.totalItems);
+      } catch (error) {
+        console.error('Failed to load visits:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadVisits();
+  };
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -195,6 +216,19 @@ export function VisitTable() {
                   </div>
                 </div>
               )}
+
+              {/* Edit Action */}
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-medical-primary hover:text-medical-primary/80 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  onClick={() => { setEditingVisit(visit); setIsEditDialogOpen(true); }}
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  {t('edit')}
+                </Button>
+              </div>
             </div>
           ))
         )}
@@ -218,12 +252,13 @@ export function VisitTable() {
                 <TableHead className="font-semibold">
                   {t('createdAt')}
                 </TableHead>
+                <TableHead className="font-semibold">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12">
+                  <TableCell colSpan={5} className="text-center py-12">
                     <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {t('noVisitsFound')}
@@ -248,6 +283,16 @@ export function VisitTable() {
                       </div>
                     </TableCell>
                     <TableCell>{formatDate(visit.createdAt)}</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-medical-primary hover:text-medical-primary/80 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                        onClick={() => { setEditingVisit(visit); setIsEditDialogOpen(true); }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -286,6 +331,13 @@ export function VisitTable() {
           </Button>
         </div>
       </div>
+
+      <EditVisitDialog
+        visit={editingVisit}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        onSuccess={handleEditSuccess}
+      />
 
       <style jsx>{`
         @keyframes fadeInUp {

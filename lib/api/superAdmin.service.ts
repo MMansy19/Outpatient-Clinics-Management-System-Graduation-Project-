@@ -8,6 +8,10 @@ import type {
   ClinicResponse,
   CreateClinicDto,
   UpdateClinicDto,
+  UpdateLabDto,
+  UpdateScanDto,
+  UpdateMedicationDto,
+  UpdateVisitDto,
   DoctorByIdResponse,
   PatientByIdResponse,
 } from './types';
@@ -40,9 +44,16 @@ export const superAdminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/super-admin/doctors */
-  getDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
+  getDoctors: async (
+    params: PaginationParams & { includeDeleted?: boolean; onlyDeleted?: boolean },
+  ): Promise<PaginatedDoctorsResponse> => {
     const response = await apiClient.get<PaginatedDoctorsResponse>('/super-admin/doctors', {
-      params: { page: params.page, limit: params.limit },
+      params: {
+        page: params.page,
+        limit: params.limit,
+        ...(params.includeDeleted !== undefined && { includeDeleted: params.includeDeleted }),
+        ...(params.onlyDeleted !== undefined && { onlyDeleted: params.onlyDeleted }),
+      },
     });
     return response.data;
   },
@@ -102,8 +113,10 @@ export const superAdminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/super-admin/clinics */
-  getClinics: async (): Promise<ClinicResponse[]> => {
-    const response = await apiClient.get<ClinicResponse[]>('/super-admin/clinics');
+  getClinics: async (filter?: { includeDeleted?: boolean; onlyDeleted?: boolean }): Promise<ClinicResponse[]> => {
+    const response = await apiClient.get<ClinicResponse[]>('/super-admin/clinics', {
+      params: filter,
+    });
     return response.data;
   },
 
@@ -119,9 +132,15 @@ export const superAdminApi = {
     return response.data;
   },
 
-  /** DELETE /api/v1/super-admin/clinic/{id} — not yet in Swagger, kept for forward-compat */
+  /** DELETE /api/v1/super-admin/clinic/{id} */
   deleteClinic: async (id: string): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/super-admin/clinic/${id}`);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/clinic/{id}/restore */
+  restoreClinic: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/clinic/${id}/restore`);
     return response.data;
   },
 
@@ -146,6 +165,40 @@ export const superAdminApi = {
   /** DELETE /api/v1/super-admin/doctor/{id} */
   deleteDoctor: async (id: string): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/super-admin/doctor/${id}`);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/doctor/{id}/restore */
+  restoreDoctor: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/doctor/${id}/restore`);
+    return response.data;
+  },
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Record Update Operations
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /** PATCH /api/v1/super-admin/visit/{id} */
+  updateVisit: async (id: string, data: UpdateVisitDto): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/visit/${id}`, data);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/lab/{id} */
+  updateLab: async (id: string, data: UpdateLabDto): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/lab/${id}`, data);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/scan/{id} */
+  updateScan: async (id: string, data: UpdateScanDto): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/scan/${id}`, data);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/medication/{id} */
+  updateMedication: async (id: string, data: UpdateMedicationDto): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/medication/${id}`, data);
     return response.data;
   },
 };

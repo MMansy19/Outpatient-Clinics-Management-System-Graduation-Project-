@@ -213,6 +213,7 @@ export interface DoctorResponse {
   email: string;
   speciality: string;
   isApproved: boolean;
+  isDeleted?: boolean; // present when fetched with includeDeleted/onlyDeleted
   user: {
     id: string;
     socialSecurityNumber: string;
@@ -274,6 +275,7 @@ export interface ClinicResponse {
   name: string;
   speciality: string;
   createdAt?: string; // ISO date string
+  isDeleted?: boolean; // present when fetched with includeDeleted/onlyDeleted
 }
 
 /**
@@ -397,6 +399,33 @@ export interface CreateClinicDto {
 export interface UpdateClinicDto {
   name?: string;
   speciality?: string;
+}
+
+/**
+ * Update Lab DTO
+ */
+export interface UpdateLabDto {
+  name?: string;
+  comments?: string;
+}
+
+/**
+ * Update Scan DTO
+ */
+export interface UpdateScanDto {
+  name?: string;
+  type?: number;
+  comments?: string;
+}
+
+/**
+ * Update Medication DTO
+ */
+export interface UpdateMedicationDto {
+  name?: string;
+  dosage?: string;
+  period?: string;
+  comments?: string;
 }
 
 /**
