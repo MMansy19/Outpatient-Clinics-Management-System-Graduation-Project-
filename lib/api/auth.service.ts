@@ -1,11 +1,10 @@
 import { apiClient } from './client';
-import type { 
-  LoginDto, 
-  LoginResponse, 
-  CreateAdminDto, 
-  CreateDoctorDto, 
+import type {
+  LoginDto,
+  LoginResponse,
+  CreateDoctorDto,
   CreatePatientDto,
-  CreateUserResponse 
+  CreateUserResponse
 } from './types';
 
 /**
@@ -45,25 +44,10 @@ export const authApi = {
   },
 
   /**
-   * Create Admin (SUPER_ADMIN only)
-   * 
+   * Create Doctor (SUPER_ADMIN only)
+   *
    * Requires authentication with SUPER_ADMIN role.
-   * The JWT cookie must be present in the request.
-   * 
-   * @param data - Admin creation data
-   * @returns Success message and user globalId
-   */
-  createAdmin: async (data: CreateAdminDto): Promise<CreateUserResponse> => {
-    const response = await apiClient.post<CreateUserResponse>('/auth/admin/create', data);
-    return response.data;
-  },
-
-  /**
-   * Create Doctor (SUPER_ADMIN or ADMIN)
-   * 
-   * Requires authentication with SUPER_ADMIN or ADMIN role.
-   * Doctors created by normal admins require approval by SUPER_ADMIN.
-   * 
+   *
    * @param data - Doctor creation data (includes speciality)
    * @returns Success message and user globalId
    */
@@ -73,11 +57,11 @@ export const authApi = {
   },
 
   /**
-   * Create Patient (SUPER_ADMIN, ADMIN, or DOCTOR)
-   * 
-   * Requires authentication with SUPER_ADMIN, ADMIN, or DOCTOR role.
+   * Create Patient (SUPER_ADMIN or DOCTOR)
+   *
+   * Requires authentication with SUPER_ADMIN or DOCTOR role.
    * Patients do not have login credentials (no email/password).
-   * 
+   *
    * @param data - Patient creation data (includes address and job)
    * @returns Success message and user globalId
    */

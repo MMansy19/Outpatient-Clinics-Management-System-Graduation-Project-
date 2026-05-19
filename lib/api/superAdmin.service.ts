@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { Gender } from './types';
 import type {
   PaginatedDoctorsResponse,
   PaginatedPatientsResponse,
@@ -39,9 +40,12 @@ export const superAdminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/super-admin/doctors */
-  getDoctors: async (params: PaginationParams): Promise<PaginatedDoctorsResponse> => {
+  getDoctors: async (
+    params: PaginationParams & { includeDeleted?: boolean; onlyDeleted?: boolean } = { page: 1, limit: 10 },
+  ): Promise<PaginatedDoctorsResponse> => {
+    const { includeDeleted, onlyDeleted, ...pagination } = params;
     const response = await apiClient.get<PaginatedDoctorsResponse>('/super-admin/doctors', {
-      params: { page: params.page, limit: params.limit },
+      params: { ...pagination, includeDeleted, onlyDeleted },
     });
     return response.data;
   },
@@ -101,9 +105,15 @@ export const superAdminApi = {
   // ──────────────────────────────────────────────────────────────────────────
 
   /** GET /api/v1/super-admin/clinics */
-  getClinics: async (): Promise<ClinicResponse[]> => {
-    const response = await apiClient.get<ClinicResponse[]>('/super-admin/clinics');
-    return response.data;
+  getClinics: async (params?: { includeDeleted?: boolean }): Promise<ClinicResponse[]> => {
+    const response = await apiClient.get<{
+      items: ClinicResponse[];
+      page: number;
+      limit: number;
+      totalItems: number;
+      totalPages: number;
+    }>('/super-admin/clinics', params as Record<string, unknown>);
+    return response.data.items;
   },
 
   /** POST /api/v1/super-admin/clinic */
@@ -118,9 +128,15 @@ export const superAdminApi = {
     return response.data;
   },
 
-  /** DELETE /api/v1/super-admin/clinic/{id} — not yet in Swagger, kept for forward-compat */
+  /** DELETE /api/v1/super-admin/clinic/{id} — kept for service layer; not exposed in UI */
   deleteClinic: async (id: string): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/super-admin/clinic/${id}`);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/clinic/{id}/restore */
+  restoreClinic: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/clinic/${id}/restore`);
     return response.data;
   },
 
@@ -128,9 +144,15 @@ export const superAdminApi = {
   // Doctor Management
   // ──────────────────────────────────────────────────────────────────────────
 
-  /** DELETE /api/v1/super-admin/doctor/{id} */
+  /** DELETE /api/v1/super-admin/doctor/{id} — kept for service layer; not exposed in UI */
   deleteDoctor: async (id: string): Promise<{ message: string }> => {
     const response = await apiClient.delete<{ message: string }>(`/super-admin/doctor/${id}`);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/doctor/{id}/restore */
+  restoreDoctor: async (id: string): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/doctor/${id}/restore`);
     return response.data;
   },
 
@@ -148,16 +170,35 @@ export const superAdminApi = {
     return response.data;
   },
 
+  /** PATCH /api/v1/super-admin/visit/{id} */
+  updateVisit: async (id: string, data: { diagnoses?: string }): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/visit/${id}`, data);
+    return response.data;
+  },
+
   /** POST /api/v1/super-admin/medication */
   createMedication: async (data: {
     name: string;
-    dosage: string;
-    period: string;
+    dosage: number;
+    period: number;
     comments?: string;
     patientId: string;
     clinicId: string;
   }): Promise<{ message: string; id: string }> => {
+    console.log('[superAdminApi.createMedication] Sending:', {
+      ...data,
+      types: { dosage: typeof data.dosage, period: typeof data.period },
+    });
     const response = await apiClient.post<{ message: string; id: string }>('/super-admin/medication', data);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/medication/{id} */
+  updateMedication: async (
+    id: string,
+    data: { name?: string; dosage?: string; period?: string; comments?: string },
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/medication/${id}`, data);
     return response.data;
   },
 
@@ -170,6 +211,12 @@ export const superAdminApi = {
     clinicId: string;
   }): Promise<{ message: string; id: string }> => {
     const response = await apiClient.post<{ message: string; id: string }>('/super-admin/lab', data);
+    return response.data;
+  },
+
+  /** PATCH /api/v1/super-admin/lab/{id} */
+  updateLab: async (id: string, data: { name?: string; photoUrl?: string; comments?: string }): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/lab/${id}`, data);
     return response.data;
   },
 
@@ -186,6 +233,15 @@ export const superAdminApi = {
     return response.data;
   },
 
+  /** PATCH /api/v1/super-admin/scan/{id} */
+  updateScan: async (
+    id: string,
+    data: { name?: string; type?: number; photoUrl?: string; comments?: string },
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.patch<{ message: string }>(`/super-admin/scan/${id}`, data);
+    return response.data;
+  },
+
   // ──────────────────────────────────────────────────────────────────────────
   // Patient Search & Queries
   // ──────────────────────────────────────────────────────────────────────────
@@ -194,7 +250,7 @@ export const superAdminApi = {
   searchPatientBySSN: async (ssn: string): Promise<{
     id: string;
     name: string;
-    gender: number;
+    gender: Gender;
     dateOfBirth: string;
     socialSecurityNumber: string;
     job: string | null;
@@ -204,7 +260,7 @@ export const superAdminApi = {
     const response = await apiClient.get<{
       id: string;
       name: string;
-      gender: number;
+      gender: Gender;
       dateOfBirth: string;
       socialSecurityNumber: string;
       job: string | null;
@@ -216,37 +272,75 @@ export const superAdminApi = {
 
   /** GET /api/v1/super-admin/patient/{id}/visits */
   getPatientVisits: async (patientId: string): Promise<{
-    patient: {
-      id: string;
-      name: string;
-      socialSecurityNumber: string;
-    };
     visits: {
       id: string;
       diagnoses: string;
       diagnosesAudioUrl: string | null;
-      doctor: { name: string; speciality: string };
-      clinic: { name: string };
+      patientId: string;
+      doctorId: string;
+      doctorName?: string;
+      clinicId?: string;
+      clinicName?: string;
       createdAt: string;
     }[];
   }> => {
-    const response = await apiClient.get<{
-      patient: { id: string; name: string; socialSecurityNumber: string };
-      visits: {
+    // Fetch all required data in parallel
+    const visitsResponse = await apiClient.get<{
+      patient: { id: string; name: string; socialSecurityNumber: string; dateOfBirth: string; gender: number; address: string; job: string };
+      clinics: {
         id: string;
-        diagnoses: string;
-        diagnosesAudioUrl: string | null;
-        doctor: { name: string; speciality: string };
-        clinic: { name: string };
-        createdAt: string;
+        name: string;
+        visits: {
+          id: string;
+          diagnoses: string;
+          diagnosesAudioUrl: string | null;
+          patientId: string;
+          doctorId: string;
+          clinicId: string;
+          createdAt: string;
+        }[];
       }[];
     }>(`/super-admin/patient/${patientId}/visits`);
-    return response.data;
+    const doctorsData = await (superAdminApi as { getDoctors: typeof superAdminApi.getDoctors }).getDoctors({ page: 1, limit: 10000 });
+    const clinicsData = await (superAdminApi as { getClinics: typeof superAdminApi.getClinics }).getClinics();
+    if (!doctorsData || !clinicsData) throw new Error('Failed to load doctor/clinic data');
+
+    // Build lookup maps
+    const doctorMap = new Map<string, string>();
+    const doctors = doctorsData.items || [];
+    for (const d of doctors) {
+      doctorMap.set(d.id, `${d.user.firstName} ${d.user.lastName}`);
+    }
+
+    const clinicMap = new Map<string, string>();
+    for (const c of clinicsData) {
+      clinicMap.set(c.id, c.name);
+    }
+
+    // Extract visits from all clinics with resolved names
+    const visitResponseClinics = visitsResponse.data.clinics || [];
+    const allVisits = [];
+    for (const clinic of visitResponseClinics) {
+      for (const visit of clinic.visits || []) {
+        allVisits.push({
+          id: visit.id,
+          diagnoses: visit.diagnoses,
+          diagnosesAudioUrl: visit.diagnosesAudioUrl,
+          patientId: visit.patientId,
+          doctorId: visit.doctorId,
+          doctorName: doctorMap.get(visit.doctorId) || undefined,
+          clinicId: visit.clinicId || clinic.id,
+          clinicName: clinic.name || clinicMap.get(visit.clinicId || clinic.id),
+          createdAt: visit.createdAt,
+        });
+      }
+    }
+
+    return { visits: allVisits };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/medications */
   getPatientMedications: async (patientId: string): Promise<{
-    patient: { id: string; name: string };
     medications: {
       name: string;
       dosage: string;
@@ -258,8 +352,8 @@ export const superAdminApi = {
     }[];
   }> => {
     const response = await apiClient.get<{
-      patient: { id: string; name: string };
-      medications: {
+      page: number;
+      items: {
         name: string;
         dosage: string;
         period: string;
@@ -268,13 +362,14 @@ export const superAdminApi = {
         doctor: { id: string; name: string; speciality: string };
         createdAt: string;
       }[];
+      totalItems: number;
+      totalPages: number;
     }>(`/super-admin/patient/${patientId}/medications`);
-    return response.data;
+    return { medications: response.data.items };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/labs */
   getPatientLabs: async (patientId: string): Promise<{
-    patient: { id: string; name: string };
     labs: {
       name: string;
       photoUrl: string;
@@ -285,8 +380,8 @@ export const superAdminApi = {
     }[];
   }> => {
     const response = await apiClient.get<{
-      patient: { id: string; name: string };
-      labs: {
+      page: number;
+      items: {
         name: string;
         photoUrl: string;
         comments: string | null;
@@ -294,13 +389,14 @@ export const superAdminApi = {
         doctor: { id: string; name: string; speciality: string };
         createdAt: string;
       }[];
+      totalItems: number;
+      totalPages: number;
     }>(`/super-admin/patient/${patientId}/labs`);
-    return response.data;
+    return { labs: response.data.items };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/scans */
   getPatientScans: async (patientId: string): Promise<{
-    patient: { id: string; name: string };
     scans: {
       name: string;
       type: string;
@@ -312,8 +408,8 @@ export const superAdminApi = {
     }[];
   }> => {
     const response = await apiClient.get<{
-      patient: { id: string; name: string };
-      scans: {
+      page: number;
+      items: {
         name: string;
         type: string;
         photoUrl: string;
@@ -322,8 +418,10 @@ export const superAdminApi = {
         doctor: { id: string; name: string; speciality: string };
         createdAt: string;
       }[];
+      totalItems: number;
+      totalPages: number;
     }>(`/super-admin/patient/${patientId}/scans`);
-    return response.data;
+    return { scans: response.data.items };
   },
 
   // ────────────────────────────────────────────────────────────────���─��───────
