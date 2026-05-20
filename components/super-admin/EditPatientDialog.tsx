@@ -45,8 +45,8 @@ export function EditPatientDialog({
       setFormData({
         firstName: patient.user.firstName,
         lastName: patient.user.lastName,
-        job: patient.job,
-        address: patient.address,
+        job: patient.job ?? '',
+        address: patient.address ?? '',
       });
     }
   }, [patient]);
@@ -58,7 +58,14 @@ export function EditPatientDialog({
 
     try {
       setLoading(true);
-      await superAdminApi.updatePatient(patient.id, formData);
+      // Only send non-empty fields to avoid backend validation error
+      const payload: Record<string, string> = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+      };
+      if (formData.job.trim()) payload.job = formData.job;
+      if (formData.address.trim()) payload.address = formData.address;
+      await superAdminApi.updatePatient(patient.id, payload);
       toast.success(t('patientUpdatedSuccess'));
       onSuccess();
       onOpenChange(false);

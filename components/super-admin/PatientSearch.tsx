@@ -15,12 +15,13 @@ import {
 } from '@/components/ui/card';
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { Gender } from '@/lib/api/types';
 
 interface SuperAdminPatientSearchProps {
   onSelectPatient: (patient: {
     id: string;
     name: string;
-    gender?: number;
+    gender?: Gender;
     dateOfBirth?: string;
     socialSecurityNumber: string;
     address?: string | null;
@@ -74,11 +75,11 @@ export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSe
       onSelectPatient({
         id: patient.id,
         name: patient.name,
-        gender: patient.gender as number | undefined,
-        dateOfBirth: patient.dateOfBirth as string | undefined,
+        gender: patient.gender,
+        dateOfBirth: patient.dateOfBirth,
         socialSecurityNumber: patient.socialSecurityNumber,
-        address: patient.address as string | null | undefined,
-        job: patient.job as string | null | undefined,
+        address: patient.address,
+        job: patient.job,
       });
     } catch (err: any) {
       console.error('Patient search error:', err);
@@ -174,11 +175,11 @@ interface SuperAdminQuickSearchProps {
   onSelectPatient: (patient: {
     id: string;
     name: string;
-    gender: number;
-    dateOfBirth: string;
+    gender?: Gender;
+    dateOfBirth?: string;
     socialSecurityNumber: string;
-    address: string | null;
-    job: string | null;
+    address?: string | null;
+    job?: string | null;
   }) => void;
 }
 

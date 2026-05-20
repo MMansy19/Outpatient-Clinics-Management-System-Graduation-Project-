@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { Gender } from '@/lib/api/types';
 import {
   Card,
   CardContent,
@@ -35,7 +36,7 @@ import {
 } from '@/components/ui/table';
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 
@@ -48,24 +49,28 @@ interface SuperAdminPatientProfileProps {
   patientId: string;
   onBack: () => void;
   selectedClinicId?: string;
-}
-
-interface PatientData {
-  patient: {
+  selectedPatient?: {
     id: string;
     name: string;
     socialSecurityNumber: string;
     dateOfBirth?: string;
-    gender?: number;
-    address?: string;
-    job?: string;
+    gender?: Gender;
+    address?: string | null;
+    job?: string | null;
   };
+}
+
+interface VisitData {
   visits: {
     id: string;
     diagnoses: string;
     diagnosesAudioUrl: string | null;
-    doctor: { name: string; speciality: string };
-    clinic: { name: string };
+    patientId: string;
+    doctorId: string;
+    doctorName?: string;
+    clinicId?: string;
+    clinicName?: string;
+    audio?: string | null;
     createdAt: string;
   }[];
 }
@@ -109,6 +114,7 @@ export function SuperAdminPatientProfile({
   patientId,
   onBack,
   selectedClinicId,
+  selectedPatient,
 }: SuperAdminPatientProfileProps) {
   const t = useTranslations('superAdmin');
   const tCommon = useTranslations('common');
@@ -120,11 +126,9 @@ export function SuperAdminPatientProfile({
   const [isLabDialogOpen, setIsLabDialogOpen] = useState(false);
   const [isScanDialogOpen, setIsScanDialogOpen] = useState(false);
 
-  const { data: patientData, isLoading: loadingPatient } = useQuery<PatientData>({
-    queryKey: ['super-admin-patient', patientId],
-    queryFn: async () => {
-      return await superAdminApi.getPatientVisits(patientId) as PatientData;
-    },
+  const { data: visitData, isLoading: loadingVisits } = useQuery<VisitData>({
+    queryKey: ['super-admin-patient-visits', patientId],
+    queryFn: () => superAdminApi.getPatientVisits(patientId) as Promise<VisitData>,
     enabled: !!patientId,
   });
 
@@ -146,8 +150,8 @@ export function SuperAdminPatientProfile({
     enabled: !!patientId,
   });
 
-  const patient = patientData?.patient;
-  const visits = patientData?.visits || [];
+  const patient = selectedPatient;
+  const visits = visitData?.visits || [];
   const medications = medicationsData?.medications || [];
   const labs = labsData?.labs || [];
   const scans = scansData?.scans || [];
@@ -182,23 +186,29 @@ export function SuperAdminPatientProfile({
     return typeMap[String(typeValue)] || String(typeValue);
   };
 
+  const queryClient = useQueryClient();
+
   const handleVisitSuccess = () => {
     toast.success(t('visitCreatedSuccess'));
+    queryClient.invalidateQueries({ queryKey: ['super-admin-patient-visits', patientId] });
   };
 
   const handleMedicationSuccess = () => {
     toast.success(t('medicationCreatedSuccess'));
+    queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
   };
 
   const handleLabSuccess = () => {
     toast.success(t('labCreatedSuccess'));
+    queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
   };
 
   const handleScanSuccess = () => {
     toast.success(t('scanCreatedSuccess'));
+    queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
   };
 
-  if (loadingPatient) {
+  if (loadingVisits) {
     return (
       <div className="space-y-4">
         <Button variant="outline" onClick={onBack}>
@@ -266,8 +276,8 @@ export function SuperAdminPatientProfile({
             {patient.gender !== undefined && (
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-muted-foreground" />
-                <Badge variant={patient.gender === 0 ? 'default' : 'secondary'}>
-                  {patient.gender === 0 ? t('male') : t('female')}
+                <Badge variant={patient.gender === Gender.MALE ? 'default' : 'secondary'}>
+                  {patient.gender === Gender.MALE ? t('male') : t('female')}
                 </Badge>
               </div>
             )}
@@ -343,7 +353,7 @@ export function SuperAdminPatientProfile({
               </div>
             </CardHeader>
             <CardContent>
-              {loadingPatient ? (
+              {loadingVisits ? (
                 <div className="space-y-2">
                   <div className="skeleton h-16 w-full" />
                   <div className="skeleton h-16 w-full" />
@@ -357,7 +367,7 @@ export function SuperAdminPatientProfile({
                         <TableHead>{tTable('diagnoses')}</TableHead>
                         <TableHead>{t('doctor')}</TableHead>
                         <TableHead>{t('clinic')}</TableHead>
-                        <TableHead>{t('audio')}</TableHead>
+                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -368,12 +378,11 @@ export function SuperAdminPatientProfile({
                             <div className="truncate">{visit.diagnoses || '-'}</div>
                           </TableCell>
                           <TableCell>
-                            Dr. {visit.doctor?.name || 'N/A'}
-                            <span className="text-xs text-muted-foreground block">
-                              {visit.doctor?.speciality}
-                            </span>
+                            Dr. {visit.doctorName || visit.doctorId?.slice(0, 8) || 'N/A'}
                           </TableCell>
-                          <TableCell>{visit.clinic?.name || '-'}</TableCell>
+                          <TableCell>
+                            {visit.clinicName || visit.clinicId?.slice(0, 8) || '-'}
+                          </TableCell>
                           <TableCell>
                             {visit.diagnosesAudioUrl && (
                               <AudioPlayer src={visit.diagnosesAudioUrl} compact />
@@ -435,8 +444,8 @@ export function SuperAdminPatientProfile({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {medications.map((med, index) => (
-                        <TableRow key={index}>
+                      {medications.map((med) => (
+                        <TableRow key={med.doctor?.id ?? med.createdAt}>
                           <TableCell>{formatDate(med.createdAt)}</TableCell>
                           <TableCell className="font-medium">{med.name}</TableCell>
                           <TableCell>{med.dosage}</TableCell>
@@ -503,8 +512,8 @@ export function SuperAdminPatientProfile({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {labs.map((lab, index) => (
-                        <TableRow key={index}>
+                      {labs.map((lab) => (
+                        <TableRow key={lab.doctor?.id ?? lab.createdAt}>
                           <TableCell>{formatDate(lab.createdAt)}</TableCell>
                           <TableCell className="font-medium">{lab.name}</TableCell>
                           <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
@@ -582,8 +591,8 @@ export function SuperAdminPatientProfile({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {scans.map((scan, index) => (
-                        <TableRow key={index}>
+                      {scans.map((scan) => (
+                        <TableRow key={scan.doctor?.id ?? scan.createdAt}>
                           <TableCell>{formatDate(scan.createdAt)}</TableCell>
                           <TableCell className="font-medium">{scan.name}</TableCell>
                           <TableCell>{getScanTypeLabel(scan.type)}</TableCell>
