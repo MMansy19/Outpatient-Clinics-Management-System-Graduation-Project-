@@ -15,16 +15,6 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
@@ -35,13 +25,7 @@ export function ClinicTable() {
   const [searchQuery, setSearchQuery] = useState('');
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [deletingClinicId, setDeletingClinicId] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  useEffect(() => {
-    loadClinics();
-  }, []);
 
   const loadClinics = async () => {
     try {
@@ -56,26 +40,15 @@ export function ClinicTable() {
     }
   };
 
+  useEffect(() => {
+    loadClinics();
+  }, []);
+
   const filteredClinics = clinics?.filter(
     (clinic) =>
       clinic.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       clinic.speciality.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const handleDelete = async (id: string) => {
-    try {
-      setIsDeleting(true);
-      await superAdminApi.deleteClinic(id);
-      toast.success(t('clinicDeleted') || 'Clinic deleted successfully');
-      setDeletingClinicId(null);
-      loadClinics();
-    } catch (error) {
-      console.error('Failed to delete clinic:', error);
-      toast.error(t('clinicDeleteError') || 'Failed to delete clinic');
-    } finally {
-      setIsDeleting(false);
-    }
-  };
 
   const handleAddSuccess = () => {
     loadClinics();
@@ -91,6 +64,30 @@ export function ClinicTable() {
       </div>
     );
   }
+
+  const renderClinicCard = (clinic: ClinicResponse) => (
+    <div
+      key={clinic.id}
+      className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+    >
+      <div className="flex items-start gap-3">
+        <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-medical-primary/10 flex items-center justify-center">
+          <Building2 className="h-5 w-5 text-medical-primary" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
+            {clinic.name}
+          </h3>
+          <div className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-medical-secondary" />
+            <span className="text-sm text-gray-600 dark:text-gray-400">
+              {clinic.speciality}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="space-y-4">
@@ -110,8 +107,7 @@ export function ClinicTable() {
           className="bg-medical-primary hover:bg-medical-primary/90 h-11 whitespace-nowrap"
         >
           <Plus className="mr-2 h-4 w-4" />
-          <span className="hidden sm:inline">{t('addClinic')}</span>
-          <span className="sm:hidden">{t('addClinic')}</span>
+          <span>{t('addClinic')}</span>
         </Button>
       </div>
 
@@ -123,36 +119,7 @@ export function ClinicTable() {
             <p className="text-muted-foreground">{t('noClinics')}</p>
           </div>
         ) : (
-          filteredClinics?.map((clinic, index) => (
-            <div
-              key={clinic.id}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
-              style={{
-                animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`,
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-medical-primary/10 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-medical-primary" />
-                </div>
-
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate mb-1">
-                    {clinic.name}
-                  </h3>
-
-                  <div className="flex items-center gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-medical-secondary" />
-                      <span className="text-sm text-gray-600 dark:text-gray-400">
-                        {clinic.speciality}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))
+          filteredClinics?.map((clinic) => renderClinicCard(clinic))
         )}
       </div>
 
@@ -162,12 +129,8 @@ export function ClinicTable() {
           <Table>
             <TableHeader>
               <TableRow className="bg-gray-50 dark:bg-gray-900/50">
-                <TableHead className="font-semibold">
-                  {t('clinicName')}
-                </TableHead>
-                <TableHead className="font-semibold">
-                  {t('speciality')}
-                </TableHead>
+                <TableHead className="font-semibold">{t('clinicName')}</TableHead>
+                <TableHead className="font-semibold">{t('speciality')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -180,10 +143,7 @@ export function ClinicTable() {
                 </TableRow>
               ) : (
                 filteredClinics?.map((clinic) => (
-                  <TableRow
-                    key={clinic.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
-                  >
+                  <TableRow key={clinic.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
                     <TableCell className="font-medium">{clinic.name}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1.5">
@@ -205,40 +165,10 @@ export function ClinicTable() {
         onSuccess={handleAddSuccess}
       />
 
-      <AlertDialog
-        open={!!deletingClinicId}
-        onOpenChange={(open) => !open && setDeletingClinicId(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{t('confirmDelete')}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t('deleteClinicWarning')}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{t('cancel')}</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => deletingClinicId && handleDelete(deletingClinicId)}
-              disabled={isDeleting}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              {t('delete')}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       <style jsx>{`
         @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(10px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
