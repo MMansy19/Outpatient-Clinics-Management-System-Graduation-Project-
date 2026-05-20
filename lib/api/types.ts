@@ -16,9 +16,8 @@ export enum Language {
 
 export enum Role {
   SUPER_ADMIN = 0,
-  ADMIN = 1,
+  DOCTOR = 1,
   PATIENT = 2,
-  DOCTOR = 3,
 }
 
 export enum Gender {
@@ -40,7 +39,7 @@ export interface LoginResponse {
   language: Language;
   role: Role;
   /**
-   * Clinic ID for ADMIN role. This is used to scope admin actions to their clinic.
+   * Clinic ID to scope doctor actions to their clinic.
    */
   clinicId?: string;
 }
@@ -48,18 +47,6 @@ export interface LoginResponse {
 // ============================================================================
 // User Creation DTOs
 // ============================================================================
-
-export interface CreateAdminDto {
-  firstName: string;
-  lastName: string;
-  language: Language;
-  socialSecurityNumber: string; // 14 digits
-  email: string;
-  phone: string;
-  password: string; // Minimum 8 characters
-  speciality: string;
-  clinicId: string;
-}
 
 export interface CreateDoctorDto {
   firstName: string;
@@ -110,11 +97,6 @@ export interface User {
   isDeleted: boolean;
 }
 
-export interface Admin extends User {
-  email: string;
-  phone: string;
-}
-
 export interface Doctor extends User {
   email: string;
   phone: string;
@@ -148,7 +130,7 @@ export interface ApiError {
 export interface CreateVisitDto {
   diagnoses: string;
   patientId: string; // UUID format
-  clinicId?: string; // Optional - backend reads from JWT for admin/doctor
+  clinicId?: string; // Optional - backend reads from JWT for doctor
 }
 
 export interface CreateVisitResponse {
@@ -213,6 +195,7 @@ export interface DoctorResponse {
   email: string;
   speciality: string;
   isApproved: boolean;
+  isDeleted?: boolean;
   user: {
     id: string;
     socialSecurityNumber: string;
@@ -258,22 +241,15 @@ export interface VisitResponse {
 }
 
 /**
- * Admin Clinic Info Response (GET /admin/clinic)
- * Returns the clinic name and id for the logged-in clinic manager.
- */
-export interface AdminClinicInfoResponse {
-  name: string;
-  id: string;
-}
-
-/**
- * Clinic Response (from admin endpoint)
+ * Clinic Response
  */
 export interface ClinicResponse {
   id: string;
   name: string;
   speciality: string;
   createdAt?: string; // ISO date string
+  deletedAt?: string | null;
+  isDeleted?: boolean;
 }
 
 /**
@@ -313,14 +289,12 @@ export interface SuperAdminVisitItem {
   id: string;
   diagnoses: string;
   diagnosesAudioUrl: string | null;
-  patient: {
-    name: string;
-    id: string;
-  };
-  doctor: {
-    name: string;
-    id: string;
-  };
+  patientId: string;
+  patientName?: string;
+  doctorId: string;
+  doctorName?: string;
+  clinicId?: string;
+  clinicName?: string;
   createdAt: string; // ISO date string
 }
 
@@ -334,36 +308,8 @@ export interface SuperAdminPaginatedVisitsResponse {
   totalPages: number;
 }
 
-/**
- * Admin Response (from super-admin endpoint)
- */
-export interface AdminResponse {
-  id: string;
-  phone: string;
-  email: string;
-  speciality: string;
-  user: {
-    id: string;
-    socialSecurityNumber: string;
-    gender: Gender;
-    firstName: string;
-    lastName: string;
-    dateOfBirth: string;
-  };
-}
-
-/**
- * Paginated Admins Response
- */
-export interface PaginatedAdminsResponse {
-  page: number;
-  items: AdminResponse[];
-  totalItems: number;
-  totalPages: number;
-}
-
 // ============================================================================
-// Admin Update DTOs
+// Update DTOs
 // ============================================================================
 
 /**
@@ -448,187 +394,3 @@ export interface UpdateVisitDto {
   clinicId?: string;
 }
 
-// ============================================================================
-// Admin Module Response Types
-// ============================================================================
-
-/**
- * Admin Patient (flat structure, used in admin endpoints)
- */
-export interface AdminPatientItem {
-  id: string;
-  name: string;
-  gender: number; // 0 = MALE, 1 = FEMALE
-  dateOfBirth: string;
-  socialSecurityNumber: string;
-  address: string | null;
-  job: string | null;
-}
-
-/**
- * Admin Paginated Patients Response
- */
-export interface AdminPaginatedPatientsResponse {
-  page: number;
-  items: AdminPatientItem[];
-  totalItems: number;
-  totalPages: number;
-}
-
-/**
- * Admin Visit Item (admin's own visits)
- */
-export interface AdminVisitItem {
-  id: string;
-  diagnoses: string;
-  diagnosesAudioUrl: string | null;
-  patient: { name: string; id: string };
-  admin: { name: string; id: string };
-  createdAt: string;
-}
-
-/**
- * Admin Paginated Visits Response
- */
-export interface AdminPaginatedVisitsResponse {
-  page: number;
-  items: AdminVisitItem[];
-  totalItems: number;
-  totalPages: number;
-}
-
-/**
- * Admin Patient Visits Response
- */
-export interface AdminPatientVisitsResponse {
-  patient: AdminPatientItem;
-  clinics: {
-    id: string;
-    name: string;
-    visits: {
-      doctor: { name: string; speciality: string };
-      diagnosesAudioUrl: string | null;
-      diagnoses: string;
-      createdAt: string;
-    }[];
-  }[];
-}
-
-/**
- * Admin Patient Medications Response
- */
-export interface AdminPatientMedicationsResponse {
-  patient: AdminPatientItem;
-  medications: {
-    name: string;
-    dosage: string;
-    period: string;
-    comments: string | null;
-    commentsAudioUrl: string | null;
-    doctor: { id: string; name: string; speciality: string };
-    createdAt: string;
-  }[];
-}
-
-/**
- * Admin Patient Labs Response
- */
-export interface AdminPatientLabsResponse {
-  patient: AdminPatientItem;
-  labs: {
-    name: string;
-    photoUrl: string;
-    comments: string | null;
-    commentsAudioUrl: string | null;
-    doctor: { id: string; name: string; speciality: string };
-    createdAt: string;
-  }[];
-}
-
-/**
- * Admin Patient Scans Response
- */
-export interface AdminPatientScansResponse {
-  patient: AdminPatientItem;
-  scans: {
-    name: string;
-    type: string;
-    photoUrl: string;
-    comments: string | null;
-    commentsAudioUrl: string | null;
-    doctor: { id: string; name: string; speciality: string };
-    createdAt: string;
-  }[];
-}
-
-/**
- * Admin Patient Search Response (by SSN)
- */
-export interface AdminPatientSearchResponse {
-  id: string;
-  name: string;
-  gender: number;
-  dateOfBirth: string;
-  socialSecurityNumber: string;
-  job: string | null;
-  address: string | null;
-  createdAt: string;
-}
-
-/**
- * Admin Clinic Doctor Item
- */
-export interface AdminClinicDoctorItem {
-  id: string;
-  phone: string;
-  email: string;
-  speciality: string;
-  isApproved: boolean;
-  socialSecurityNumber: string;
-  gender: number;
-  name: string;
-  dateOfBirth: string;
-  createdAt: string;
-}
-
-/**
- * Admin Clinic Doctors Response
- */
-export interface AdminClinicDoctorsResponse {
-  page: number;
-  items: AdminClinicDoctorItem[];
-  totalItems: number;
-  totalPages: number;
-}
-
-/**
- * Admin Clinic Patients Response
- */
-export interface AdminClinicPatientsResponse {
-  page: number;
-  items: AdminPatientItem[];
-  totalItems: number;
-  totalPages: number;
-}
-
-/**
- * Admin Clinic Visit Item
- */
-export interface AdminClinicVisitItem {
-  id: string;
-  diagnoses: string;
-  diagnosesAudioUrl: string | null;
-  patient: { name: string; id: string };
-  doctor: { name: string; speciality: string; id: string };
-  createdAt: string;
-}
-
-/**
- * Admin Clinic Visits Response
- */
-export interface AdminClinicVisitsResponse {
-  page: number;
-  items: AdminClinicVisitItem[];
-  totalItems: number;
-  totalPages: number;
-}
