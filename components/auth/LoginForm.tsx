@@ -67,7 +67,6 @@ export function LoginForm({ locale }: LoginFormProps) {
         // Determine the default redirect for this role
         const roleRedirects: Record<number, string> = {
           [Role.SUPER_ADMIN]: `/${locale}/super-admin/dashboard`,
-          [Role.ADMIN]: `/${locale}/admin/dashboard`,
           [Role.DOCTOR]: `/${locale}/doctor/dashboard`,
         };
         const defaultRedirect = roleRedirects[response.role] ?? `/${locale}/`;
@@ -76,8 +75,7 @@ export function LoginForm({ locale }: LoginFormProps) {
         // the user's role scope. This prevents e.g. a super-admin from
         // being sent to /doctor/dashboard via a stale ?redirect= param.
         const rolePathPrefixes: Record<number, string[]> = {
-          [Role.SUPER_ADMIN]: ['/super-admin/', '/admin/'],
-          [Role.ADMIN]: ['/admin/', '/doctor/'],
+          [Role.SUPER_ADMIN]: ['/super-admin/'],
           [Role.DOCTOR]: ['/doctor/'],
         };
         const allowedPrefixes = rolePathPrefixes[response.role] ?? [];
