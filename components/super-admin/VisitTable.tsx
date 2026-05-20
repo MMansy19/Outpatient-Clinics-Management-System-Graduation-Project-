@@ -34,17 +34,63 @@ export function VisitTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
+  const [doctorNames, setDoctorNames] = useState<Map<string, string>>(new Map());
+  const [patientNames, setPatientNames] = useState<Map<string, string>>(new Map());
   const limit = 10;
 
   useEffect(() => {
     const loadVisits = async () => {
       try {
         setLoading(true);
-        const data = await superAdminApi.getVisits({ page, limit });
+        const [visitsData, doctorsData, patientsData] = await Promise.all([
+          superAdminApi.getVisits({ page, limit }),
+          superAdminApi.getDoctors({ page: 1, limit: 10000 }),
+          superAdminApi.getPatients({ page: 1, limit: 10000 }),
+        ]);
 
-        setVisits(data.items);
-        setTotalPages(data.totalPages);
-        setTotalItems(data.totalItems);
+        setVisits(visitsData.items);
+        setTotalPages(visitsData.totalPages);
+        setTotalItems(visitsData.totalItems);
+
+        // Build patient name lookup from the patients list
+        const patNameMap = new Map<string, string>();
+        for (const p of patientsData.items || []) {
+          patNameMap.set(p.id, `${p.user.firstName} ${p.user.lastName}`);
+        }
+        setPatientNames(patNameMap);
+
+        // Get doctor names from patient visits (each patient has embedded doctor.name)
+        const uniquePatientIds = [...new Set(visitsData.items.map((v) => v.patientId))];
+        const docNameMap = new Map<string, string>();
+
+        await Promise.all(
+          uniquePatientIds.map(async (patientId) => {
+            try {
+              const patientVisits = await superAdminApi.getPatientVisits(patientId);
+              for (const visit of patientVisits.visits || []) {
+                if (visit.doctorName) {
+                  // Store name keyed by the doctor UUID if available
+                  if (visit.doctorId) {
+                    docNameMap.set(visit.doctorId, visit.doctorName);
+                  }
+                  // Also store name keyed by name itself for entries without doctorId
+                  docNameMap.set(visit.doctorName, visit.doctorName);
+                }
+              }
+            } catch {
+              // skip
+            }
+          })
+        );
+
+        // Fallback: fill from doctors list for IDs that exist there
+        for (const d of doctorsData.items || []) {
+          if (!docNameMap.has(d.id)) {
+            docNameMap.set(d.id, `${d.user.firstName} ${d.user.lastName}`);
+          }
+        }
+
+        setDoctorNames(docNameMap);
       } catch (error) {
         console.error('Failed to load visits:', error);
         toast.error('Failed to load visits');
@@ -132,7 +178,7 @@ export function VisitTable() {
                     {formatDate(visit.createdAt)}
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                    {t('visitNumber')}
+                    {t('visitId')}
                     {visit.id.slice(0, 8)}
                   </h3>
                 </div>
@@ -149,7 +195,7 @@ export function VisitTable() {
                       {t('patientName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.patient?.name || tCommon('loading')}
+                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -163,7 +209,7 @@ export function VisitTable() {
                       {t('doctorName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.doctor?.name || tCommon('loading')}
+                      {doctorNames.get(visit.doctorId) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -237,10 +283,10 @@ export function VisitTable() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <TableCell className="font-medium">
-                      {visit.patient?.name || tCommon('loading')}
+                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {visit.doctor?.name || tCommon('loading')}
+                      Dr. {(visit.doctorId ? doctorNames.get(visit.doctorId) : undefined) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>
