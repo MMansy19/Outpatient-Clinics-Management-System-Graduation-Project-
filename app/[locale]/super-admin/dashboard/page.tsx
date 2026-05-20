@@ -21,7 +21,7 @@ import {
   Search,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
-import { Role } from '@/lib/api/types';
+import { Role, Gender } from '@/lib/api/types';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -30,6 +30,7 @@ import { DoctorTable } from '@/components/super-admin/DoctorTable';
 import { PatientTable } from '@/components/super-admin/PatientTable';
 import { VisitTable } from '@/components/super-admin/VisitTable';
 import { CreateDoctorDialog } from '@/components/super-admin/CreateDoctorDialog';
+import { CreatePatientDialog } from '@/components/super-admin/CreatePatientDialog';
 import { SuperAdminPatientSearch } from '@/components/super-admin/PatientSearch';
 import { SuperAdminPatientProfile } from '@/components/super-admin/PatientProfile';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
@@ -147,7 +148,7 @@ const EnhancedStatsCard = ({
 interface SelectedPatient {
   id: string;
   name: string;
-  gender?: number;
+  gender?: Gender;
   dateOfBirth?: string;
   socialSecurityNumber: string;
   address?: string | null;
@@ -172,6 +173,13 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchInterval: 60 * 1000,
   });
 
+  const { data: allClinics, refetch: refetchAllClinics } = useQuery({
+    queryKey: ['clinics-all'],
+    queryFn: () => superAdminApi.getClinics({ includeDeleted: true }),
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+
   useEffect(() => {
     if (clinics && clinics.length > 0 && !selectedClinicId) {
       setSelectedClinicId(clinics[0].id);
@@ -181,6 +189,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
   const handleSelectPatient = (patient: SelectedPatient) => {
     setSelectedPatient(patient);
     setShowPatientProfile(true);
+    setActiveTab('patient-profile');
   };
 
   const handleBackToList = () => {
@@ -232,10 +241,11 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
   const refreshAllData = useCallback(() => {
     refetchClinics();
+    refetchAllClinics();
     refetchDoctors();
     refetchPatients();
     refetchVisits();
-  }, [refetchClinics, refetchDoctors, refetchPatients, refetchVisits]);
+  }, [refetchClinics, refetchAllClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
   useEffect(() => {
     refreshAllData();
@@ -392,6 +402,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="p-2 space-y-2">
                       <CreateDoctorDialog />
+                      <CreatePatientDialog />
                     </div>
                     <DropdownMenuSeparator />
                     <div className="flex items-center gap-2 p-2">
@@ -428,6 +439,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
                 <div className="flex items-center gap-2 sm:gap-3">
                   <CreateDoctorDialog />
+                  <CreatePatientDialog />
                   <LanguageToggle
                     locale={locale}
                     variant="outline"
@@ -530,13 +542,13 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                   <Select
                     value={selectedClinicId}
                     onValueChange={setSelectedClinicId}
-                    disabled={!clinics || clinics.length === 0}
+                    disabled={!allClinics || allClinics.length === 0}
                   >
                     <SelectTrigger className="w-full sm:w-[250px]">
                       <SelectValue placeholder={t('selectClinicToManage')} />
                     </SelectTrigger>
                     <SelectContent>
-                      {clinics?.map((clinic) => (
+                      {allClinics?.map((clinic) => (
                         <SelectItem key={clinic.id} value={clinic.id}>
                           {clinic.name}
                         </SelectItem>
@@ -621,6 +633,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                     patientId={selectedPatient.id}
                     onBack={handleBackToList}
                     selectedClinicId={selectedClinicId}
+                    selectedPatient={selectedPatient}
                   />
                 )}
               </TabsContent>
@@ -630,7 +643,10 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
               </TabsContent>
 
               <TabsContent value="patients" className="space-y-4 mt-4">
-                <PatientTable />
+                <PatientTable
+                  onRefresh={refetchPatients}
+                  onSelectPatient={handleSelectPatient}
+                />
               </TabsContent>
 
               <TabsContent value="visits" className="space-y-4 mt-4">
