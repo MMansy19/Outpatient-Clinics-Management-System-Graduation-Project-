@@ -185,10 +185,6 @@ export const superAdminApi = {
     patientId: string;
     clinicId: string;
   }): Promise<{ message: string; id: string }> => {
-    console.log('[superAdminApi.createMedication] Sending:', {
-      ...data,
-      types: { dosage: typeof data.dosage, period: typeof data.period },
-    });
     const response = await apiClient.post<{ message: string; id: string }>('/super-admin/medication', data);
     return response.data;
   },
@@ -284,53 +280,39 @@ export const superAdminApi = {
       createdAt: string;
     }[];
   }> => {
-    // Fetch all required data in parallel
     const visitsResponse = await apiClient.get<{
       patient: { id: string; name: string; socialSecurityNumber: string; dateOfBirth: string; gender: number; address: string; job: string };
       clinics: {
         id: string;
         name: string;
         visits: {
-          id: string;
+          id?: string;
+          doctor: { name: string; speciality: string };
           diagnoses: string;
           diagnosesAudioUrl: string | null;
-          patientId: string;
-          doctorId: string;
-          clinicId: string;
+          patientId?: string;
+          doctorId?: string;
+          clinicId?: string;
           createdAt: string;
         }[];
       }[];
     }>(`/super-admin/patient/${patientId}/visits`);
-    const doctorsData = await (superAdminApi as { getDoctors: typeof superAdminApi.getDoctors }).getDoctors({ page: 1, limit: 10000 });
-    const clinicsData = await (superAdminApi as { getClinics: typeof superAdminApi.getClinics }).getClinics();
-    if (!doctorsData || !clinicsData) throw new Error('Failed to load doctor/clinic data');
 
-    // Build lookup maps
-    const doctorMap = new Map<string, string>();
-    const doctors = doctorsData.items || [];
-    for (const d of doctors) {
-      doctorMap.set(d.id, `${d.user.firstName} ${d.user.lastName}`);
-    }
-
-    const clinicMap = new Map<string, string>();
-    for (const c of clinicsData) {
-      clinicMap.set(c.id, c.name);
-    }
-
-    // Extract visits from all clinics with resolved names
+    // Extract visits from all clinics — doctor/clinic names come directly from backend
+    // doctorId may be absent (backend doesn't include it), so we leave it empty string
     const visitResponseClinics = visitsResponse.data.clinics || [];
     const allVisits = [];
     for (const clinic of visitResponseClinics) {
       for (const visit of clinic.visits || []) {
         allVisits.push({
-          id: visit.id,
+          id: visit.id || visit.createdAt,
           diagnoses: visit.diagnoses,
           diagnosesAudioUrl: visit.diagnosesAudioUrl,
-          patientId: visit.patientId,
-          doctorId: visit.doctorId,
-          doctorName: doctorMap.get(visit.doctorId) || undefined,
-          clinicId: visit.clinicId || clinic.id,
-          clinicName: clinic.name || clinicMap.get(visit.clinicId || clinic.id),
+          patientId: visit.patientId || patientId,
+          doctorId: visit.doctorId || '',  // may be absent in backend response
+          doctorName: visit.doctor?.name,
+          clinicId: clinic.id,
+          clinicName: clinic.name,
           createdAt: visit.createdAt,
         });
       }
