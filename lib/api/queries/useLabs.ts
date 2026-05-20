@@ -6,11 +6,8 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
 import type { Lab } from '@/types/entities/Lab';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
-import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -55,17 +52,11 @@ const labsKeys = {
 export const useGetPatientLabs = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: labsKeys.patient(patientId),
     queryFn: async () => {
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientLabs(patientId);
-      }
-      if (isAdmin) {
-        return await adminApi.getPatientLabs(patientId);
       }
       return await doctorApi.getPatientLabs(patientId);
     },
@@ -143,15 +134,9 @@ export const useCreateLab = (): UseMutationResult<
   { patientId: string; data: { name: string; comments: string } | FormData }
 > => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
     mutationFn: ({ patientId, data }) => {
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
-      if (isAdmin) {
-        return adminApi.createLab(patientId, data);
-      }
       return doctorApi.createLab(patientId, data);
     },
     onSuccess: (response, variables) => {

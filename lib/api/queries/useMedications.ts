@@ -6,18 +6,15 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
 import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
-import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
 
 /**
  * Query Key Factory for Medications
- * 
+ *
  * Centralized query key management for better cache control.
  */
 const medicationsKeys = {
@@ -58,17 +55,11 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 export const useGetPatientMedications = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: medicationsKeys.patient(patientId),
     queryFn: async () => {
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientMedications(patientId);
-      }
-      if (isAdmin) {
-        return await adminApi.getPatientMedications(patientId);
       }
       return await doctorApi.getPatientMedications(patientId);
     },
@@ -80,12 +71,12 @@ export const useGetPatientMedications = (
 
 /**
  * Get Medication Details
- * 
+ *
  * Retrieves detailed information for a specific medication.
- * 
+ *
  * @param {string} medicationId - Medication UUID
  * @returns {UseQueryResult} Query result with medication details
- * 
+ *
  * @example
  * ```typescript
  * const { data: medication, isLoading } = useGetMedication(medicationId);
@@ -108,16 +99,16 @@ export const useGetMedication = (
 
 /**
  * Create Medication
- * 
+ *
  * Mutation hook for creating a new medication record.
  * Automatically invalidates related queries on success.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const createMedicationMutation = useCreateMedication();
- * 
+ *
  * const handleSubmit = (data: CreateMedicationDto) => {
  *   createMedicationMutation.mutate(data, {
  *     onSuccess: (response) => {
@@ -130,7 +121,7 @@ export const useGetMedication = (
  *     },
  *   });
  * };
- * 
+ *
  * return (
  *   <Form onSubmit={handleSubmit}>
  *     <Button disabled={createMedicationMutation.isPending}>
@@ -146,15 +137,9 @@ export const useCreateMedication = (): UseMutationResult<
   CreateMedicationDto | FormData
 > => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
     mutationFn: (data: CreateMedicationDto | FormData) => {
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
-      if (isAdmin) {
-        return adminApi.createMedication(data);
-      }
       return doctorApi.createMedication(data);
     },
     onSuccess: (response, variables) => {
@@ -184,16 +169,16 @@ export const useCreateMedication = (): UseMutationResult<
 
 /**
  * Update Medication
- * 
+ *
  * Mutation hook for updating an existing medication record.
  * Supports partial updates.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const updateMedicationMutation = useUpdateMedication();
- * 
+ *
  * const handleUpdate = () => {
  *   updateMedicationMutation.mutate(
  *     {
@@ -238,15 +223,15 @@ export const useUpdateMedication = (): UseMutationResult<
 
 /**
  * Delete Medication
- * 
+ *
  * Mutation hook for soft-deleting a medication record.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const deleteMedicationMutation = useDeleteMedication();
- * 
+ *
  * const handleDelete = (medicationId: string, patientId: string) => {
  *   if (confirm('Are you sure you want to delete this medication?')) {
  *     deleteMedicationMutation.mutate(
@@ -298,14 +283,14 @@ export const useDeleteMedication = (): UseMutationResult<
 
 /**
  * Create Medication with Optimistic Update
- * 
+ *
  * This is an advanced pattern that updates the UI immediately
  * before the server responds, improving perceived performance.
- * 
+ *
  * @example
  * ```typescript
  * const { mutate } = useCreateMedicationOptimistic();
- * 
+ *
  * mutate(medicationData, {
  *   onSuccess: () => toast.success('Medication created'),
  *   onError: () => toast.error('Failed - changes reverted'),
