@@ -571,32 +571,6 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
             {/* Tabs - Mobile Optimized */}
             
             {/* Clinic Selection for Medical Data */}
-            {showPatientProfile && (
-              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-gray-100 dark:border-gray-700">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5 text-medical-primary" />
-                    <span className="font-medium">{t('selectClinic')}</span>
-                  </div>
-                  <Select
-                    value={selectedClinicId}
-                    onValueChange={setSelectedClinicId}
-                    disabled={!allClinics || allClinics.length === 0}
-                  >
-                    <SelectTrigger className="w-full sm:w-[250px]">
-                      <SelectValue placeholder={t('selectClinicToManage')} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {allClinics?.map((clinic) => (
-                        <SelectItem key={clinic.id} value={clinic.id}>
-                          {clinic.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            )}
 
             <Tabs
               value={activeTab}
