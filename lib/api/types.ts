@@ -21,8 +21,8 @@ export enum Role {
 }
 
 export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
+  MALE = 0,
+  FEMALE = 1,
 }
 
 // ============================================================================
@@ -290,13 +290,19 @@ export interface SuperAdminVisitItem {
   id: string;
   diagnoses: string;
   diagnosesAudioUrl: string | null;
-  patientId: string;
-  patientName?: string;
-  doctorId: string;
-  doctorName?: string;
-  clinicId?: string;
-  clinicName?: string;
-  createdAt: string; // ISO date string
+  patient: {
+    id: string;
+    name: string;
+  };
+  doctor: {
+    id: string;
+    name: string;
+  };
+  clinic: {
+    id: string;
+    name: string;
+  };
+  createdAt: Date; // ISO date string
 }
 
 /**

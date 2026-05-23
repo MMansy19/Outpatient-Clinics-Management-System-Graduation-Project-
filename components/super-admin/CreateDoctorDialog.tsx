@@ -216,7 +216,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormLabel required>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -234,7 +234,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormLabel required>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -254,7 +254,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
+                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="30202041234567"
@@ -277,7 +277,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('email')}</FormLabel>
+                  <FormLabel required>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -296,7 +296,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
+                  <FormLabel required>{t('phoneNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('phonePlaceholder')}
@@ -318,7 +318,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="clinicId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinic')}</FormLabel>
+                  <FormLabel required>{t('clinic')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -360,7 +360,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('medicalSpeciality')}</FormLabel>
+                  <FormLabel required>{t('medicalSpeciality')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -390,7 +390,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('password')}</FormLabel>
+                  <FormLabel required>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
