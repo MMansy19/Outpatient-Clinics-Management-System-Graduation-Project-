@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Upload } from 'lucide-react';
 
 import {
   Dialog,
@@ -26,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 interface SuperAdminLabDialogProps {
@@ -38,7 +39,6 @@ interface SuperAdminLabDialogProps {
 
 const labSchema = z.object({
   name: z.string().min(1, 'Lab name is required'),
-  photoUrl: z.string().optional(),
   comments: z.string().optional(),
 });
 
@@ -55,33 +55,39 @@ export function SuperAdminLabDialog({
   const tCommon = useTranslations('common');
 
   const [isPending, setIsPending] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<LabFormData>({
     mode: 'onChange',
     resolver: zodResolver(labSchema),
     defaultValues: {
       name: '',
-      photoUrl: '',
       comments: '',
     },
   });
+
+  const queryClient = useQueryClient();
 
   const onSubmit = async (data: LabFormData) => {
     setIsPending(true);
     try {
       await superAdminApi.createLab({
         name: data.name,
-        photoUrl: data.photoUrl || photoPreview || undefined,
-        comments: data.comments,
+        image: imageFile || undefined,
+        comments: data.comments || undefined,
         patientId,
         clinicId,
       });
 
       toast.success(t('labCreatedSuccess'));
       form.reset();
-      setPhotoPreview(null);
+      setImageFile(null);
+      setImagePreview(null);
+      if (imageInputRef.current) imageInputRef.current.value = '';
       onOpenChange(false);
+      await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
       onSuccess?.();
     } catch (error) {
       console.error('Failed to create lab:', error);
@@ -91,12 +97,13 @@ export function SuperAdminLabDialog({
     }
   };
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
-        setPhotoPreview(reader.result as string);
+        setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -130,35 +137,34 @@ export function SuperAdminLabDialog({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="photoUrl"
-              render={() => (
-                <FormItem>
-                  <FormLabel>{t('labPhoto')}</FormLabel>
-                  <FormControl>
-                    <div className="space-y-2">
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoChange}
-                        disabled={isPending}
+            <FormItem>
+              <FormLabel>{t('labPhoto')}</FormLabel>
+              <FormControl>
+                <div className="space-y-2">
+                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
+                    <Upload className="h-4 w-4" />
+                    <span>{t('chooseFile')}</span>
+                    <input
+                      ref={imageInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      disabled={isPending}
+                      className="hidden"
+                    />
+                  </label>
+                  {imagePreview && (
+                    <div className="relative w-full h-32 border rounded-lg overflow-hidden">
+                      <img
+                        src={imagePreview}
+                        alt="Lab preview"
+                        className="w-full h-full object-contain"
                       />
-                      {photoPreview && (
-                        <div className="relative w-full h-32 border rounded-lg overflow-hidden">
-                          <img
-                            src={photoPreview}
-                            alt="Lab preview"
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
-                      )}
                     </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                  )}
+                </div>
+              </FormControl>
+            </FormItem>
 
             <FormField
               control={form.control}
