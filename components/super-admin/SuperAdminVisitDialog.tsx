@@ -24,8 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 interface SuperAdminVisitDialogProps {
@@ -38,7 +39,7 @@ interface SuperAdminVisitDialogProps {
 }
 
 const visitSchema = z.object({
-  diagnoses: z.string().optional(),
+  diagnoses: z.string().min(1, 'Diagnoses is required'),
 });
 
 type VisitFormData = z.infer<typeof visitSchema>;
@@ -56,7 +57,7 @@ export function SuperAdminVisitDialog({
 
   const [isPending, setIsPending] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const form = useForm<VisitFormData>({
     mode: 'onChange',
@@ -66,42 +67,16 @@ export function SuperAdminVisitDialog({
     },
   });
 
-  const diagnosesValue = form.watch('diagnoses');
-  const visitContentReady =
-    (diagnosesValue?.trim()?.length ?? 0) > 0 || !!audioFile;
-
   const onSubmit = async (data: VisitFormData) => {
-    const hasText = data.diagnoses && data.diagnoses.trim().length > 0;
-    const hasAudio = !!audioFile;
-
-    if (!hasText && !hasAudio) {
-      setValidationError(tVisit('diagnosesOrAudioRequired'));
-      return;
-    }
-    setValidationError(null);
     setIsPending(true);
-
     try {
-      if (hasAudio && audioFile) {
-        const formData = new FormData();
-        formData.append('diagnoses', data.diagnoses || '');
-        formData.append('audio', audioFile);
-        formData.append('patientId', patientId);
-        formData.append('clinicId', clinicId);
-        
-        await superAdminApi.createVisit({
-          diagnoses: data.diagnoses,
-          patientId,
-          clinicId,
-        } as any);
-      } else {
-        await superAdminApi.createVisit({
-          diagnoses: data.diagnoses,
-          patientId,
-          clinicId,
-        });
-      }
-
+      await superAdminApi.createVisit({
+        diagnoses: data.diagnoses,
+        patientId,
+        clinicId,
+        audio: audioFile || undefined,
+      });
+      queryClient.invalidateQueries({ queryKey: ['super-admin-patient-visits', patientId] });
       toast.success(tVisit('visitCreated'));
       form.reset();
       setAudioFile(null);
@@ -115,16 +90,8 @@ export function SuperAdminVisitDialog({
     }
   };
 
-  const handleOpenChange = (isOpen: boolean) => {
-    if (!isOpen) {
-      setAudioFile(null);
-      setValidationError(null);
-    }
-    onOpenChange(isOpen);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -141,12 +108,15 @@ export function SuperAdminVisitDialog({
                 <FormItem>
                   <FormLabel required>{tVisit('diagnosesTreatmentPlan')}</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
+                    <VoiceFormField
+                      field={field}
                       placeholder={tVisit('enterDiagnosesTreatmentPlan')}
-                      className="min-h-[150px]"
-                      rows={6}
+                      label=""
+                      description=""
                       disabled={isPending}
+                      multiline
+                      rows={6}
+                      onAudioCaptured={(file) => setAudioFile(file)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -154,22 +124,18 @@ export function SuperAdminVisitDialog({
               )}
             />
 
-            {validationError && (
-              <p className="text-sm font-medium text-destructive">{validationError}</p>
-            )}
-
             <div className="flex justify-end gap-3 pt-4">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => handleOpenChange(false)}
+                onClick={() => onOpenChange(false)}
                 disabled={isPending}
               >
                 {tCommon('cancel')}
               </Button>
               <Button
                 type="submit"
-                disabled={isPending || !visitContentReady}
+                disabled={isPending || !form.formState.isValid}
                 className="bg-medical-primary hover:bg-medical-primary/90"
               >
                 {isPending ? (
