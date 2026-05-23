@@ -79,7 +79,8 @@ export function OfflineIndicator() {
                 d="M3 3l8.735 8.735m0 0a.374.374 0 11.53.53m-.53-.53l.53.53m0 0L21 21M8.25 8.829a4.49 4.49 0 011.765-.764m3.726 1.258a4.501 4.501 0 01.912.747M1.5 8.651a10.477 10.477 0 012.574-2.089m3.063-1.308A10.492 10.492 0 0112 4.5c2.205 0 4.25.68 5.938 1.843m2.476 2.088A10.451 10.451 0 0122.5 8.651"
               />
             </svg>
-            <span>{t('offlineBanner')}</span>
+            <span className="hidden sm:inline">{t('offlineBanner')}</span>
+            <span className="sm:hidden">{t('offlineBannerShort')}</span>
             {hasPending && (
               <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs">
                 {queueSize} pending

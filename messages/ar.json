@@ -858,6 +858,7 @@
     "doctorRestored": "تم استعادة الطبيب بنجاح",
     "doctorRestoreError": "فشل استعادة الطبيب",
     "offlineBanner": "أنت غير متصل بالإنترنت — سيتم حفظ التغييرات محلياً ومزامنتها عند إعادة الاتصال",
+    "offlineBannerShort": "أنت غير متصل بالإنترنت",
     "registerPatient": "تسجيل مريض",
     "registerPatientDescription": "تسجيل مريض جديد في النظام. يجب ملء جميع الحقول المطلوبة.",
     "creatingPatient": "جاري الإنشاء...",

@@ -779,6 +779,7 @@
     "doctorRestored": "Doctor restored successfully",
     "doctorRestoreError": "Failed to restore doctor",
     "offlineBanner": "You're offline — changes will be saved locally and synced when reconnected",
+    "offlineBannerShort": "You're offline",
     "registerPatient": "Register Patient",
     "registerPatientDescription": "Register a new patient in the system. All required fields must be filled.",
     "creatingPatient": "Creating...",
