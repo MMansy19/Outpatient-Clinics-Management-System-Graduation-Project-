@@ -433,11 +433,9 @@ export const superAdminApi = {
       id: string;
       diagnoses: string;
       diagnosesAudioUrl: string | null;
-      patientId: string;
-      doctorId: string;
-      doctorName?: string;
-      clinicId?: string;
-      clinicName?: string;
+      patient: { id: string; name: string };
+      doctor: { id: string; name: string };
+      clinic: { id: string; name: string };
       createdAt: string;
     }[];
   }> => {
@@ -448,7 +446,8 @@ export const superAdminApi = {
         name: string;
         visits: {
           id?: string;
-          doctor: { name: string; speciality: string };
+          patient?: { id?: string; name?: string };
+          doctor: { id?: string; name: string; speciality: string };
           diagnoses: string;
           diagnosesAudioUrl: string | null;
           patientId?: string;
@@ -469,11 +468,9 @@ export const superAdminApi = {
           id: visit.id || visit.createdAt,
           diagnoses: visit.diagnoses,
           diagnosesAudioUrl: visit.diagnosesAudioUrl,
-          patientId: visit.patientId || patientId,
-          doctorId: visit.doctorId || '',  // may be absent in backend response
-          doctorName: visit.doctor?.name,
-          clinicId: clinic.id,
-          clinicName: clinic.name,
+          patient: { id: patientId, name: visit.patient?.name || '' },
+          doctor: { id: visit.doctor?.id || '', name: visit.doctor?.name || '' },
+          clinic: { id: clinic.id, name: clinic.name },
           createdAt: visit.createdAt,
         });
       }

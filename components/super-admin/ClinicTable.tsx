@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import { Plus, Search, Building2, Sparkles } from 'lucide-react';
-import { toast } from 'sonner';
 
 import {
   Table,
@@ -18,31 +18,25 @@ import { Input } from '@/components/ui/input';
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { ClinicResponse } from '@/lib/api/types';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { AddClinicDialog } from './AddClinicDialog';
+import { OfflineEmptyState } from './OfflineEmptyState';
 
 export function ClinicTable() {
   const t = useTranslations('admin');
+  const { isOnline } = useNetworkStatus();
   const [searchQuery, setSearchQuery] = useState('');
-  const [clinics, setClinics] = useState<ClinicResponse[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
-  const loadClinics = async () => {
-    try {
-      setLoading(true);
-      const data = await superAdminApi.getClinics();
-      setClinics(data);
-    } catch (error) {
-      console.error('Failed to load clinics:', error);
-      toast.error('Failed to load clinics');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    loadClinics();
-  }, []);
+  const { data: clinics, isLoading, refetch } = useQuery<ClinicResponse[]>({
+    queryKey: ['clinics'],
+    queryFn: () => superAdminApi.getClinics(),
+    networkMode: 'offlineFirst',
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: 'always',
+  });
 
   const filteredClinics = clinics?.filter(
     (clinic) =>
@@ -51,10 +45,14 @@ export function ClinicTable() {
   );
 
   const handleAddSuccess = () => {
-    loadClinics();
+    void refetch();
   };
 
-  if (loading) {
+  // First-ever load only: show spinner online, or offline-empty-state offline.
+  if (isLoading && !clinics) {
+    if (!isOnline) {
+      return <OfflineEmptyState label={t('clinics') ?? 'clinics'} />;
+    }
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">

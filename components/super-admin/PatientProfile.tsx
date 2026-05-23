@@ -64,11 +64,9 @@ interface VisitData {
     id: string;
     diagnoses: string;
     diagnosesAudioUrl: string | null;
-    patientId: string;
-    doctorId: string;
-    doctorName?: string;
-    clinicId?: string;
-    clinicName?: string;
+    patient: { id: string; name: string };
+    doctor: { id: string; name: string };
+    clinic: { id: string; name: string };
     audio?: string | null;
     createdAt: string;
   }[];
@@ -377,10 +375,10 @@ export function SuperAdminPatientProfile({
                             )}
                           </TableCell>
                           <TableCell>
-                            Dr. {visit.doctorName || visit.doctorId?.slice(0, 8) || 'N/A'}
+                            {visit.doctor?.name || 'N/A'}
                           </TableCell>
                           <TableCell>
-                            {visit.clinicName || visit.clinicId?.slice(0, 8) || '-'}
+                            {visit.clinic?.name || '-'}
                           </TableCell>
                         </TableRow>
                       ))}

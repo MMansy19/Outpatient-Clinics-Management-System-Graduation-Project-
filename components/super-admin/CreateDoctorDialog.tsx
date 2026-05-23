@@ -118,12 +118,13 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
   };
 
   const onSubmit = (data: CreateDoctorFormData) => {
-    console.log('🔍 Creating doctor with data:', data);
+    const fullName = `${data.firstName} ${data.lastName}`;
+    // Snapshot values so we can restore the form if the backend rejects
+    // the submission after we've optimistically closed the dialog.
+    const submittedValues = { ...data };
 
     createDoctor(data, {
       onSuccess: (response) => {
-        console.log('✅ Doctor created successfully:', response);
-        const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         if (
           response &&
           typeof response === 'object' &&
@@ -136,11 +137,15 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             toastMessages.doctor.createSuccessDescription(fullName)
           );
         }
-        form.reset();
-        setOpen(false);
       },
       onError: (error: unknown) => {
         console.error('❌ Create doctor error:', error);
+
+        // Restore the dialog with the values the user submitted so they
+        // can correct the error and retry. We've already closed the
+        // dialog optimistically below.
+        form.reset(submittedValues);
+        setOpen(true);
 
         // Handle different error cases
         if (
@@ -154,8 +159,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             data?: unknown;
             status?: number;
           };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
 
           // Check if it's a "User already exists" error
           if (
@@ -189,6 +192,12 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         }
       },
     });
+
+    // Close optimistically — don't make the user wait for the network.
+    // For the offline / network-failure case the mutation has already been
+    // queued by useOfflineMutation, so onSuccess will fire with offline=true.
+    form.reset();
+    setOpen(false);
   };
 
   return (

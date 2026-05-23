@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   Table,
@@ -25,10 +26,13 @@ import {
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
 import { Gender } from '@/lib/api/types';
-import { toast } from 'sonner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { EditPatientDialog } from './EditPatientDialog';
 import { CreatePatientDialog } from './CreatePatientDialog';
+import { OfflineEmptyState } from './OfflineEmptyState';
 import { Plus, ExternalLink } from 'lucide-react';
+
+const LIST_PAGE_LIMIT = 10000;
 
 interface SelectedPatient {
   id: string;
@@ -47,36 +51,37 @@ interface PatientTableProps {
 
 export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) {
   const t = useTranslations('admin');
-  const [patients, setPatients] = useState<PatientResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOnline } = useNetworkStatus();
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const [editingPatient, setEditingPatient] = useState<PatientResponse | null>(
     null
   );
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const limit = 10;
 
-  const loadPatients = useCallback(async () => {
-    try {
-      setLoading(true);
-      const data = await superAdminApi.getPatients({ page, limit });
-      setPatients(data.items);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.totalItems);
-    } catch (error) {
-      console.error('Failed to load patients:', error);
-      toast.error('Failed to load patients');
-    } finally {
-      setLoading(false);
-      onRefresh?.();
-    }
-  }, [page, limit, onRefresh]);
+  const { data, isLoading } = useQuery({
+    queryKey: ['patients-all'],
+    queryFn: () => superAdminApi.getPatients({ page: 1, limit: LIST_PAGE_LIMIT }),
+    networkMode: 'offlineFirst',
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: 'always',
+  });
 
-  useEffect(() => {
-    loadPatients();
-  }, [loadPatients]);
+  const allPatients = useMemo<PatientResponse[]>(() => data?.items ?? [], [data]);
+  const totalItems = allPatients.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const patients = useMemo(
+    () => allPatients.slice((page - 1) * limit, page * limit),
+    [allPatients, page]
+  );
+
+  const refreshList = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: ['patients-all'] });
+    onRefresh?.();
+  }, [queryClient, onRefresh]);
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -96,8 +101,8 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
   };
 
   const handleEditSuccess = useCallback(() => {
-    loadPatients();
-  }, [loadPatients]);
+    refreshList();
+  }, [refreshList]);
 
   const toSelectedPatient = (patient: PatientResponse) => ({
     id: patient.id,
@@ -121,7 +126,10 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
     });
   };
 
-  if (loading) {
+  if (isLoading && !data) {
+    if (!isOnline) {
+      return <OfflineEmptyState label={t('patients') ?? 'patients'} />;
+    }
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
@@ -137,7 +145,7 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
       {/* Header with Add Button */}
       <div className="flex justify-end">
         <CreatePatientDialog
-          onSuccess={loadPatients}
+          onSuccess={refreshList}
           trigger={
             <Button className="bg-medical-primary hover:bg-medical-primary/90">
               <Plus className="mr-2 h-4 w-4" />

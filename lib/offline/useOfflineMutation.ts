@@ -6,6 +6,47 @@ import { queueMutation, type QueueMutationParams } from './mutationQueue';
 import { useAuthStore } from '@/stores/authStore';
 import type { MutationType } from './db';
 
+/**
+ * Returns true for axios/fetch errors that indicate the network never
+ * reached the server (no response). These should be treated as "offline"
+ * and the mutation queued for replay rather than reported as a failure.
+ */
+function isNetworkLikeError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as {
+    code?: string;
+    message?: string;
+    response?: unknown;
+    request?: unknown;
+  };
+  // axios populates `response` on HTTP responses. Absence means no response.
+  if (e.response) return false;
+  if (e.code === 'ERR_NETWORK' || e.code === 'ECONNABORTED' || e.code === 'ETIMEDOUT') return true;
+  if (typeof e.message === 'string') {
+    const m = e.message.toLowerCase();
+    if (
+      m.includes('network error') ||
+      m.includes('failed to fetch') ||
+      m.includes('load failed') ||
+      m.includes('offline')
+    ) {
+      return true;
+    }
+  }
+  // axios always sets `request` on send; if request is set but no response → network failed
+  return e.request !== undefined;
+}
+
+function isBrowserOffline(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  if (navigator.onLine === false) return true;
+  // Network Information API (Chrome/Edge): catches the case where
+  // navigator.onLine is wrongly true but no usable connection exists.
+  const conn = (navigator as unknown as { connection?: { type?: string } }).connection;
+  if (conn && conn.type === 'none') return true;
+  return false;
+}
+
 interface OfflineMutationConfig<TData, TVariables> {
   /** Normal online mutation function */
   mutationFn: (variables: TVariables) => Promise<TData>;
@@ -36,30 +77,44 @@ export function useOfflineMutation<TData = unknown, TVariables = unknown>(
 
   return useMutation<TData | { offline: true; clientTempId: string }, Error, TVariables>({
     mutationFn: async (variables: TVariables) => {
-      // Online — execute normally
-      if (isOnline) {
-        return config.mutationFn(variables);
-      }
-
-      // Offline — queue for later sync
-      const endpoint =
-        typeof config.offlineConfig.endpoint === 'function'
-          ? config.offlineConfig.endpoint(variables)
-          : config.offlineConfig.endpoint;
-
-      const params: QueueMutationParams = {
-        type: config.offlineConfig.type,
-        endpoint,
-        method: config.offlineConfig.method,
-        payload: config.offlineConfig.getPayload(variables),
-        patientId: config.offlineConfig.getPatientId?.(variables),
-        patientName: config.offlineConfig.getPatientName?.(variables),
-        userId: user?.name,
-        blobs: config.offlineConfig.getBlobs?.(variables),
+      const buildQueueParams = (): QueueMutationParams => {
+        const endpoint =
+          typeof config.offlineConfig.endpoint === 'function'
+            ? config.offlineConfig.endpoint(variables)
+            : config.offlineConfig.endpoint;
+        return {
+          type: config.offlineConfig.type,
+          endpoint,
+          method: config.offlineConfig.method,
+          payload: config.offlineConfig.getPayload(variables),
+          patientId: config.offlineConfig.getPatientId?.(variables),
+          patientName: config.offlineConfig.getPatientName?.(variables),
+          userId: user?.name,
+          blobs: config.offlineConfig.getBlobs?.(variables),
+        };
       };
 
-      const clientTempId = await queueMutation(params);
-      return { offline: true, clientTempId } as TData;
+      const enqueueAndReturn = async () => {
+        const clientTempId = await queueMutation(buildQueueParams());
+        return { offline: true as const, clientTempId } as unknown as TData;
+      };
+
+      // Fast offline path: trust the browser / polled status synchronously.
+      if (!isOnline || isBrowserOffline()) {
+        return enqueueAndReturn();
+      }
+
+      // Online path with network-failure fallback. If the request fails
+      // because the network never reached the server (no response), queue
+      // it instead of surfacing a "Network error" toast to the user.
+      try {
+        return await config.mutationFn(variables);
+      } catch (err) {
+        if (isNetworkLikeError(err)) {
+          return enqueueAndReturn();
+        }
+        throw err;
+      }
     },
     onSuccess: () => {
       // Invalidate cached queries so UI updates

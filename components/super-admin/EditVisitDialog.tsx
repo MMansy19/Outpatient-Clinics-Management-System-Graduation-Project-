@@ -50,7 +50,7 @@ export function EditVisitDialog({
 
     setLoading(true);
     updateVisit(
-      { id: visit.id, data: { diagnoses }, patientId: visit.patientId },
+      { id: visit.id, data: { diagnoses }, patientId: visit.patient?.id },  
       {
         onSuccess: (result) => {
           showOfflineAwareSuccess(result, {

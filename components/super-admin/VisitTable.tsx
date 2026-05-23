@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   Table,
@@ -25,35 +26,37 @@ import {
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
-import { toast } from 'sonner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { OfflineEmptyState } from './OfflineEmptyState';
+
+const LIST_PAGE_LIMIT = 10000;
 
 export function VisitTable() {
   const t = useTranslations('admin');
-  const [visits, setVisits] = useState<SuperAdminVisitItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
-  useEffect(() => {
-    const loadVisits = async () => {
-      try {
-        setLoading(true);
-        const visitsData = await superAdminApi.getVisits({ page, limit });
-        setVisits(visitsData.items);
-        setTotalPages(visitsData.totalPages);
-        setTotalItems(visitsData.totalItems);
-      } catch (error) {
-        console.error('Failed to load visits:', error);
-        toast.error('Failed to load visits');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data, isLoading } = useQuery({
+    queryKey: ['visits-all'],
+    queryFn: () => superAdminApi.getVisits({ page: 1, limit: LIST_PAGE_LIMIT }),
+    networkMode: 'offlineFirst',
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: 'always',
+  });
 
-    loadVisits();
-  }, [page]);
+  const allVisits = useMemo<SuperAdminVisitItem[]>(
+    () => data?.items ?? [],
+    [data]
+  );
+  const totalItems = allVisits.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const visits = useMemo(
+    () => allVisits.slice((page - 1) * limit, page * limit),
+    [allVisits, page]
+  );
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -67,7 +70,7 @@ export function VisitTable() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -77,7 +80,10 @@ export function VisitTable() {
     });
   };
 
-  if (loading) {
+  if (isLoading && !data) {
+    if (!isOnline) {
+      return <OfflineEmptyState label={t('visits') ?? 'visits'} />;
+    }
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-center">

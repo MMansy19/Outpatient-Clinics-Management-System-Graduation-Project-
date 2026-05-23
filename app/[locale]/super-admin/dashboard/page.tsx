@@ -257,7 +257,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
           visitDate.setHours(0, 0, 0, 0);
           return visitDate.getTime() === today.getTime();
         })
-        .map((v) => v.doctorId)
+        .map((v) => v.doctor?.id)
         .filter(Boolean)
     );
     const active = doctorsData?.items?.filter((d) => doctorIdsToday.has(d.id)).length ?? 0;

@@ -9,9 +9,20 @@ interface NetworkStatus {
   wasOffline: boolean;
   /** Mark wasOffline as acknowledged (hides the "back online" toast) */
   acknowledgeReconnect: () => void;
+  /** Force an immediate connectivity check (e.g. before submitting a form). */
+  forceRecheck: () => Promise<boolean>;
 }
 
 const PING_INTERVAL_MS = 10_000;
+const PING_TIMEOUT_MS = 1_500;
+
+function detectBrowserOffline(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  if (navigator.onLine === false) return true;
+  const conn = (navigator as unknown as { connection?: { type?: string } }).connection;
+  if (conn && conn.type === 'none') return true;
+  return false;
+}
 
 export function useNetworkStatus(): NetworkStatus {
   const [isOnline, setIsOnline] = useState(true);
@@ -19,58 +30,60 @@ export function useNetworkStatus(): NetworkStatus {
   const prevOnline = useRef(true);
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const checkConnectivity = useCallback(async () => {
+  const applyState = useCallback((next: boolean) => {
+    const was = prevOnline.current;
+    setIsOnline(next);
+    if (!was && next) setWasOffline(true);
+    if (was && !next) setWasOffline(false);
+    prevOnline.current = next;
+  }, []);
+
+  const checkConnectivity = useCallback(async (): Promise<boolean> => {
+    // Trust the browser's offline signal — no need to ping.
+    if (detectBrowserOffline()) return false;
     try {
-      await apiClient.get('/super-admin', { timeout: 5000 });
+      await apiClient.get('/super-admin', { timeout: PING_TIMEOUT_MS });
       return true;
     } catch {
       return false;
     }
   }, []);
 
+  const forceRecheck = useCallback(async () => {
+    const next = await checkConnectivity();
+    applyState(next);
+    return next;
+  }, [checkConnectivity, applyState]);
+
   const handleOnline = useCallback(() => {
-    setIsOnline(true);
-    if (!prevOnline.current) {
-      setWasOffline(true);
-    }
-    prevOnline.current = true;
-  }, []);
+    applyState(true);
+  }, [applyState]);
 
   const handleOffline = useCallback(() => {
-    setIsOnline(false);
-    prevOnline.current = false;
-  }, []);
+    applyState(false);
+  }, [applyState]);
 
   const acknowledgeReconnect = useCallback(() => {
     setWasOffline(false);
   }, []);
 
   useEffect(() => {
-    // Set initial state from navigator.onLine
-    setIsOnline(navigator.onLine);
-    prevOnline.current = navigator.onLine;
+    // Set initial state from the browser. Treat the browser's "offline"
+    // signal as authoritative — only ping when the browser claims online.
+    const initialOnline = !detectBrowserOffline();
+    setIsOnline(initialOnline);
+    prevOnline.current = initialOnline;
 
-    // Listen for browser offline events
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
-    // Active polling ping to verify backend connectivity
     const startPing = async () => {
       const online = await checkConnectivity();
-      setIsOnline(online);
-      prevOnline.current = online;
+      applyState(online);
 
       pingIntervalRef.current = setInterval(async () => {
         const stillOnline = await checkConnectivity();
-        const was = prevOnline.current;
-        setIsOnline(stillOnline);
-        if (!was && stillOnline) {
-          setWasOffline(true);
-        }
-        if (was && !stillOnline) {
-          setWasOffline(false);
-        }
-        prevOnline.current = stillOnline;
+        applyState(stillOnline);
       }, PING_INTERVAL_MS);
     };
 
@@ -81,7 +94,7 @@ export function useNetworkStatus(): NetworkStatus {
       window.removeEventListener('offline', handleOffline);
       if (pingIntervalRef.current) clearInterval(pingIntervalRef.current);
     };
-  }, [handleOnline, handleOffline, checkConnectivity]);
+  }, [handleOnline, handleOffline, checkConnectivity, applyState]);
 
-  return { isOnline, wasOffline, acknowledgeReconnect };
+  return { isOnline, wasOffline, acknowledgeReconnect, forceRecheck };
 }

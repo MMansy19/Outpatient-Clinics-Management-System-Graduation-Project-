@@ -34,7 +34,6 @@ import {
   extractGovernorateFromNationalId,
 } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
-import { Gender } from '@/lib/api/types';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { EnrichedScanData } from '@/types/ocr';
 
@@ -99,10 +98,11 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
       address: data.address || undefined,
       job: data.job || undefined,
     };
+    const fullName = `${data.firstName} ${data.lastName}`;
+    const submittedValues = { ...data };
 
     createPatient(payload, {
       onSuccess: (response) => {
-        const fullName = `${data.firstName} ${data.lastName}`;
         if (
           response &&
           typeof response === 'object' &&
@@ -116,12 +116,15 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
             description: `${fullName} (${data.socialSecurityNumber})`,
           });
         }
-        form.reset();
-        setOpen(false);
         onSuccess?.();
       },
       onError: (error: unknown) => {
         console.error('Create patient error:', error);
+
+        // Re-open dialog with the user's values so they can correct & retry.
+        form.reset(submittedValues);
+        setOpen(true);
+
         const err = error as { response?: { data?: unknown; status?: number } };
         if (err.response?.status === 400) {
           toast.error(t('patientAlreadyExists') || 'Patient already exists', {
@@ -134,6 +137,12 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
         }
       },
     });
+
+    // Close optimistically — offline / network-failure cases are queued
+    // automatically by useOfflineMutation and will fire onSuccess with
+    // offline=true; real validation errors re-open the dialog above.
+    form.reset();
+    setOpen(false);
   };
 
   return (
@@ -252,7 +261,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
                             {t('gender')}:
                           </span>
                           <span>
-                            {extractedInfo.gender === Gender.MALE
+                            {extractedInfo.gender === 'MALE'
                               ? t('male')
                               : t('female')}
                           </span>

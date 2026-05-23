@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   Table,
@@ -24,35 +25,34 @@ import {
 } from 'lucide-react';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { DoctorResponse } from '@/lib/api/types';
-import { toast } from 'sonner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { OfflineEmptyState } from './OfflineEmptyState';
+
+const LIST_PAGE_LIMIT = 10000;
 
 export function DoctorTable() {
   const t = useTranslations('admin');
-  const [doctors, setDoctors] = useState<DoctorResponse[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
-  const loadDoctors = async () => {
-    try {
-      setLoading(true);
-      const data = await superAdminApi.getDoctors({ page, limit });
-      setDoctors(data.items);
-      setTotalPages(data.totalPages);
-      setTotalItems(data.totalItems);
-    } catch (error) {
-      console.error('Failed to load doctors:', error);
-      toast.error('Failed to load doctors');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading } = useQuery({
+    queryKey: ['doctors-all'],
+    queryFn: () => superAdminApi.getDoctors({ page: 1, limit: LIST_PAGE_LIMIT }),
+    networkMode: 'offlineFirst',
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: 'always',
+  });
 
-  useEffect(() => {
-    loadDoctors();
-  }, [page]);
+  const allDoctors = useMemo<DoctorResponse[]>(() => data?.items ?? [], [data]);
+  const totalItems = allDoctors.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const doctors = useMemo(
+    () => allDoctors.slice((page - 1) * limit, page * limit),
+    [allDoctors, page]
+  );
 
   const handlePreviousPage = () => {
     if (page > 1) setPage(page - 1);
@@ -112,7 +112,10 @@ export function DoctorTable() {
     </div>
   );
 
-  if (loading) {
+  if (isLoading && !data) {
+    if (!isOnline) {
+      return <OfflineEmptyState label={t('doctors') ?? 'doctors'} />;
+    }
     return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
