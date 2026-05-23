@@ -13,7 +13,6 @@ interface GuestGuardProps {
 
 const roleRedirects: Record<number, string> = {
   [Role.SUPER_ADMIN]: '/super-admin/dashboard',
-  [Role.ADMIN]: '/admin/dashboard',
   [Role.DOCTOR]: '/doctor/dashboard',
 };
 

@@ -177,6 +177,13 @@ function getResponseHeaders(upstreamHeaders: Headers): Headers {
     }
   }
 
+  // Strip content-encoding so axios (browser) doesn't double-decode the body.
+  // The Next.js server handles decompression transparently — we pass the
+  // already-decoded body, but axios may see a gzip header and try to decompress
+  // again, causing ERR_CONTENT_DECODING_FAILED.
+  headers.delete('content-encoding');
+  headers.delete('transfer-encoding');
+
   // Explicitly forward Set-Cookie headers.
   // Headers.entries() may merge multiple Set-Cookie values into one
   // comma-separated string, which breaks cookies. Use getSetCookie()

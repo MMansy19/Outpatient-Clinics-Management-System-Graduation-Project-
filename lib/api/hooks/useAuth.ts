@@ -1,11 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '../auth.service';
-import type { 
-  LoginDto, 
-  CreateAdminDto, 
-  CreateDoctorDto, 
-  CreatePatientDto 
+import type {
+  LoginDto,
+  CreateDoctorDto,
+  CreatePatientDto
 } from '../types';
 
 /**
@@ -89,37 +88,10 @@ export function useLogout() {
 }
 
 /**
- * Create Admin Hook
- * 
- * Requires SUPER_ADMIN role.
- * 
- * Usage:
- * const { mutate: createAdmin, isPending } = useCreateAdmin();
- * createAdmin(adminData, {
- *   onSuccess: (response) => {
- *     toast.success(`Admin created with ID: ${response.id}`);
- *   }
- * });
- */
-export function useCreateAdmin() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateAdminDto) => {
-      return await authApi.createAdmin(data);
-    },
-    onSuccess: () => {
-      // Invalidate admin list query
-      queryClient.invalidateQueries({ queryKey: ['admins'] });
-    },
-  });
-}
-
-/**
  * Create Doctor Hook
- * 
- * Requires SUPER_ADMIN or ADMIN role.
- * 
+ *
+ * Requires SUPER_ADMIN role.
+ *
  * Usage:
  * const { mutate: createDoctor, isPending } = useCreateDoctor();
  * createDoctor(doctorData, {
@@ -144,9 +116,9 @@ export function useCreateDoctor() {
 
 /**
  * Create Patient Hook
- * 
- * Requires SUPER_ADMIN, ADMIN, or DOCTOR role.
- * 
+ *
+ * Requires SUPER_ADMIN or DOCTOR role.
+ *
  * Usage:
  * const { mutate: createPatient, isPending } = useCreatePatient();
  * createPatient(patientData, {
@@ -163,17 +135,8 @@ export function useCreatePatient() {
       return await authApi.createPatient(data);
     },
     onSuccess: (data) => {
-      // Invalidate all patient queries to ensure fresh data
-      console.log('🔄 Invalidating patient queries after creation...');
+      console.log('Patient created:', data);
       queryClient.invalidateQueries({ queryKey: ['patients'] });
-
-      // Also invalidate the specific nationalId query using the socialSecurityNumber from the response
-      if (data.socialSecurityNumber) {
-        queryClient.invalidateQueries({
-          queryKey: ['patients', 'nationalId', data.socialSecurityNumber],
-        });
-        console.log(`🔄 Invalidated query for nationalId: ${data.socialSecurityNumber}`);
-      }
     },
   });
 }

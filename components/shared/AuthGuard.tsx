@@ -10,9 +10,8 @@ import { Loader2 } from 'lucide-react';
 /** Map string role names (as the backend may return) to the numeric Role enum */
 const ROLE_NAME_MAP: Record<string, Role> = {
   SUPER_ADMIN: Role.SUPER_ADMIN,
-  ADMIN: Role.ADMIN,
-  PATIENT: Role.PATIENT,
   DOCTOR: Role.DOCTOR,
+  PATIENT: Role.PATIENT,
 };
 
 function normalizeRole(role: unknown): Role | undefined {

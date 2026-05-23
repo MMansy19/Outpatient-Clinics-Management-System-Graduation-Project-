@@ -26,8 +26,26 @@ import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
 import { toast } from 'sonner';
 import { EditPatientDialog } from './EditPatientDialog';
+import { CreatePatientDialog } from './CreatePatientDialog';
+import { Plus, ExternalLink } from 'lucide-react';
+import type { Gender } from '@/lib/api/types';
 
-export function PatientTable() {
+interface SelectedPatient {
+  id: string;
+  name: string;
+  gender?: Gender;
+  dateOfBirth?: string;
+  socialSecurityNumber: string;
+  address?: string | null;
+  job?: string | null;
+}
+
+interface PatientTableProps {
+  onRefresh?: () => void;
+  onSelectPatient?: (patient: SelectedPatient) => void;
+}
+
+export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) {
   const t = useTranslations('admin');
   const [patients, setPatients] = useState<PatientResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,8 +70,9 @@ export function PatientTable() {
       toast.error('Failed to load patients');
     } finally {
       setLoading(false);
+      onRefresh?.();
     }
-  }, [page, limit]);
+  }, [page, limit, onRefresh]);
 
   useEffect(() => {
     loadPatients();
@@ -80,6 +99,20 @@ export function PatientTable() {
     loadPatients();
   }, [loadPatients]);
 
+  const toSelectedPatient = (patient: PatientResponse) => ({
+    id: patient.id,
+    name: `${patient.user.firstName} ${patient.user.lastName}`,
+    gender: patient.user.gender,
+    dateOfBirth: patient.user.dateOfBirth,
+    socialSecurityNumber: patient.user.socialSecurityNumber,
+    address: patient.address,
+    job: patient.job,
+  });
+
+  const handleRowClick = (patient: PatientResponse) => {
+    onSelectPatient?.(toSelectedPatient(patient));
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -101,6 +134,19 @@ export function PatientTable() {
 
   return (
     <div className="space-y-4">
+      {/* Header with Add Button */}
+      <div className="flex justify-end">
+        <CreatePatientDialog
+          onSuccess={loadPatients}
+          trigger={
+            <Button className="bg-medical-primary hover:bg-medical-primary/90">
+              <Plus className="mr-2 h-4 w-4" />
+              {t('registerPatient')}
+            </Button>
+          }
+        />
+      </div>
+
       {/* Mobile Card View (< md) */}
       <div className="md:hidden space-y-3">
         {patients.length === 0 ? (
@@ -112,10 +158,11 @@ export function PatientTable() {
           patients.map((patient, index) => (
             <div
               key={patient.id}
-              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+              className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200 cursor-pointer"
               style={{
                 animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both`,
               }}
+              onClick={() => handleRowClick(patient)}
             >
               {/* Header with name and edit button */}
               <div className="flex items-start justify-between mb-3">
@@ -128,20 +175,34 @@ export function PatientTable() {
                     <h3 className="font-semibold text-gray-900 dark:text-gray-100 truncate">
                       {patient.user.firstName} {patient.user.lastName}
                     </h3>
-                    {/* <Badge variant="outline" className="mt-1 text-xs">
-                      {patient.user.gender}
-                    </Badge> */}
                   </div>
                 </div>
 
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleEditPatient(patient)}
-                  className="flex-shrink-0 h-8 w-8 p-0"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRowClick(patient);
+                    }}
+                    className="h-8 w-8 p-0 text-blue-600"
+                    title={t('viewProfile')}
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditPatient(patient);
+                    }}
+                    className="flex-shrink-0 h-8 w-8 p-0"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
 
               {/* Patient Details */}
@@ -224,7 +285,8 @@ export function PatientTable() {
                 patients.map((patient) => (
                   <TableRow
                     key={patient.id}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
+                    className="hover:bg-gray-50 dark:hover:bg-gray-900/30 cursor-pointer"
+                    onClick={() => handleRowClick(patient)}
                   >
                     <TableCell className="font-medium">
                       {patient.user.firstName} {patient.user.lastName}

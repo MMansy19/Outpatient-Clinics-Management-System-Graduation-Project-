@@ -18,10 +18,12 @@ import {
   CalendarDays,
   CalendarCheck,
   Menu,
-  ShieldCheck,
+  Search,
+  UserPlus,
+  ActivitySquare,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
-import { Role } from '@/lib/api/types';
+import { Role, Gender } from '@/lib/api/types';
 import { ThemeToggle } from '@/components/shared/ThemeToggle';
 import { LanguageToggle } from '@/components/shared/LanguageToggle';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -29,9 +31,10 @@ import { ClinicTable } from '@/components/super-admin/ClinicTable';
 import { DoctorTable } from '@/components/super-admin/DoctorTable';
 import { PatientTable } from '@/components/super-admin/PatientTable';
 import { VisitTable } from '@/components/super-admin/VisitTable';
-import { AdminTable } from '@/components/super-admin/AdminTable';
 import { CreateDoctorDialog } from '@/components/super-admin/CreateDoctorDialog';
-import { CreateAdminDialog } from '@/components/super-admin/CreateAdminDialog';
+import { CreatePatientDialog } from '@/components/super-admin/CreatePatientDialog';
+import { SuperAdminPatientSearch } from '@/components/super-admin/PatientSearch';
+import { SuperAdminPatientProfile } from '@/components/super-admin/PatientProfile';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { useQuery } from '@tanstack/react-query';
 import { useLogout } from '@/lib/api/queries/useAuth';
@@ -42,6 +45,13 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface SuperAdminDashboardProps {
@@ -137,11 +147,24 @@ const EnhancedStatsCard = ({
   );
 };
 
+interface SelectedPatient {
+  id: string;
+  name: string;
+  gender?: Gender;
+  dateOfBirth?: string;
+  socialSecurityNumber: string;
+  address?: string | null;
+  job?: string | null;
+}
+
 export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps) {
   const { locale } = use(params);
   const t = useTranslations('superAdmin');
   // const router = useRouter();
   const [activeTab, setActiveTab] = useState('clinics');
+  const [selectedClinicId, setSelectedClinicId] = useState<string>('');
+  const [selectedPatient, setSelectedPatient] = useState<SelectedPatient | null>(null);
+  const [showPatientProfile, setShowPatientProfile] = useState(false);
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
 
@@ -152,16 +175,33 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchInterval: 60 * 1000,
   });
 
-  const { data: doctorsData, refetch: refetchDoctors } = useQuery({
-    queryKey: ['doctors-all'],
-    queryFn: () => superAdminApi.getDoctors({ page: 1, limit: 10000 }),
+  const { data: allClinics, refetch: refetchAllClinics } = useQuery({
+    queryKey: ['clinics-all'],
+    queryFn: () => superAdminApi.getClinics({ includeDeleted: true }),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
 
-  const { data: adminsData, refetch: refetchAdmins } = useQuery({
-    queryKey: ['admins-all'],
-    queryFn: () => superAdminApi.getAdmins({ page: 1, limit: 10000 }),
+  useEffect(() => {
+    if (clinics && clinics.length > 0 && !selectedClinicId) {
+      setSelectedClinicId(clinics[0].id);
+    }
+  }, [clinics, selectedClinicId]);
+
+  const handleSelectPatient = (patient: SelectedPatient) => {
+    setSelectedPatient(patient);
+    setShowPatientProfile(true);
+    setActiveTab('patient-profile');
+  };
+
+  const handleBackToList = () => {
+    setSelectedPatient(null);
+    setShowPatientProfile(false);
+  };
+
+  const { data: doctorsData, refetch: refetchDoctors } = useQuery({
+    queryKey: ['doctors-all'],
+    queryFn: () => superAdminApi.getDoctors({ page: 1, limit: 10000 }),
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
   });
@@ -201,13 +241,41 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     return { dailyVisits: daily, weeklyVisits: weekly };
   }, [visitsData?.items]);
 
+  // Calculate daily new patients and active doctors (with visits today)
+  const { dailyPatients, activeDoctorsToday } = useMemo(() => {
+    const patients = patientsData?.items || [];
+    const visits = visitsData?.items || [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const daily = patients.filter((p) => {
+      const created = new Date(p.createdAt);
+      created.setHours(0, 0, 0, 0);
+      return created.getTime() === today.getTime();
+    }).length;
+
+    const doctorIdsToday = new Set(
+      visits
+        .filter((v) => {
+          const visitDate = new Date(v.createdAt);
+          visitDate.setHours(0, 0, 0, 0);
+          return visitDate.getTime() === today.getTime();
+        })
+        .map((v) => v.doctor?.id)
+        .filter(Boolean)
+    );
+    const active = doctorsData?.items?.filter((d) => doctorIdsToday.has(d.id)).length ?? 0;
+
+    return { dailyPatients: daily, activeDoctorsToday: active };
+  }, [patientsData?.items, doctorsData?.items, visitsData?.items]);
+
   const refreshAllData = useCallback(() => {
     refetchClinics();
+    refetchAllClinics();
     refetchDoctors();
-    refetchAdmins();
     refetchPatients();
     refetchVisits();
-  }, [refetchClinics, refetchDoctors, refetchAdmins, refetchPatients, refetchVisits]);
+  }, [refetchClinics, refetchAllClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
   useEffect(() => {
     refreshAllData();
@@ -274,36 +342,35 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
         progress: Math.min((weeklyVisits / 1000) * 100, 100),
       },
       {
-        label: t('pendingApprovals'),
-        value: doctorsData?.items?.filter((d) => !d.isApproved).length || 0,
-        subtitle: t('doctorsAwaitingApproval'),
-        icon: Clock,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-        progress: doctorsData?.items?.length
-          ? (doctorsData?.items?.filter((d) => !d.isApproved).length /
-              doctorsData?.items?.length) *
-            100
-          : 0,
+        label: t('dailyPatients'),
+        value: dailyPatients,
+        subtitle: t('newPatientsToday'),
+        icon: UserPlus,
+        color: 'text-violet-600',
+        bgColor: 'bg-violet-100 dark:bg-violet-900/30',
+        progress: Math.min((dailyPatients / 50) * 100, 100),
       },
       {
-        label: t('totalAdmins'),
-        value: adminsData?.totalItems || 0,
-        subtitle: t('totalRegisteredAdmins'),
-        icon: ShieldCheck,
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-100 dark:bg-purple-900/30',
-        progress: Math.min(((adminsData?.totalItems || 0) / 100) * 100, 100),
+        label: t('activeDoctorsToday'),
+        value: activeDoctorsToday,
+        subtitle: t('doctorsWithVisitsToday'),
+        icon: ActivitySquare,
+        color: 'text-teal-600',
+        bgColor: 'bg-teal-100 dark:bg-teal-900/30',
+        progress: doctorsData?.items?.length
+          ? (activeDoctorsToday / doctorsData.items.length) * 100
+          : 0,
       },
     ],
     [
       clinics,
       doctorsData,
-      adminsData,
       patientsData,
       visitsData,
       dailyVisits,
       weeklyVisits,
+      dailyPatients,
+      activeDoctorsToday,
       t,
     ]
   );
@@ -374,7 +441,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                   <DropdownMenuContent align="end" className="w-56">
                     <div className="p-2 space-y-2">
                       <CreateDoctorDialog />
-                      <CreateAdminDialog />
+                      <CreatePatientDialog />
                     </div>
                     <DropdownMenuSeparator />
                     <div className="flex items-center gap-2 p-2">
@@ -411,7 +478,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
                 <div className="flex items-center gap-2 sm:gap-3">
                   <CreateDoctorDialog />
-                  <CreateAdminDialog />
+                  <CreatePatientDialog />
                   <LanguageToggle
                     locale={locale}
                     variant="outline"
@@ -502,14 +569,49 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
             </div>
 
             {/* Tabs - Mobile Optimized */}
+            
+            {/* Clinic Selection for Medical Data */}
+            {showPatientProfile && (
+              <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg rounded-xl p-4 shadow-lg border border-gray-100 dark:border-gray-700">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="h-5 w-5 text-medical-primary" />
+                    <span className="font-medium">{t('selectClinic')}</span>
+                  </div>
+                  <Select
+                    value={selectedClinicId}
+                    onValueChange={setSelectedClinicId}
+                    disabled={!allClinics || allClinics.length === 0}
+                  >
+                    <SelectTrigger className="w-full sm:w-[250px]">
+                      <SelectValue placeholder={t('selectClinicToManage')} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allClinics?.map((clinic) => (
+                        <SelectItem key={clinic.id} value={clinic.id}>
+                          {clinic.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
             <Tabs
               value={activeTab}
-              onValueChange={setActiveTab}
+              onValueChange={(value) => {
+                setActiveTab(value);
+                if (value !== 'patient-profile') {
+                  setShowPatientProfile(false);
+                  setSelectedPatient(null);
+                }
+              }}
               className="space-y-4"
             >
               {/* Mobile: Scrollable tabs */}
               <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
-                <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-5 h-auto md:h-10">
+                <TabsList className="inline-flex w-auto min-w-full md:grid md:w-full md:grid-cols-6 h-auto md:h-10">
                   <TabsTrigger
                     value="clinics"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
@@ -518,11 +620,19 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                     {t('clinics')}
                   </TabsTrigger>
                   <TabsTrigger
-                    value="admins"
+                    value="search"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
                   >
-                    <ShieldCheck className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    {t('adminsLabel')}
+                    <Search className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {t('searchPatients')}
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="patient-profile"
+                    className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
+                    disabled={!showPatientProfile || !selectedPatient}
+                  >
+                    <UserRound className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    {t('patientProfile')}
                   </TabsTrigger>
                   <TabsTrigger
                     value="doctors"
@@ -535,7 +645,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                     value="patients"
                     className="text-xs sm:text-sm px-3 py-2 whitespace-nowrap data-[state=active]:bg-medical-primary data-[state=active]:text-white"
                   >
-                    <UserRound className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     {t('patients')}
                   </TabsTrigger>
                   <TabsTrigger
@@ -552,8 +662,19 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
                 <ClinicTable />
               </TabsContent>
 
-              <TabsContent value="admins" className="space-y-4 mt-4">
-                <AdminTable />
+              <TabsContent value="search" className="space-y-4 mt-4">
+                <SuperAdminPatientSearch onSelectPatient={handleSelectPatient} />
+              </TabsContent>
+
+              <TabsContent value="patient-profile" className="space-y-4 mt-4">
+                {selectedPatient && selectedClinicId && (
+                  <SuperAdminPatientProfile
+                    patientId={selectedPatient.id}
+                    onBack={handleBackToList}
+                    selectedClinicId={selectedClinicId}
+                    selectedPatient={selectedPatient}
+                  />
+                )}
               </TabsContent>
 
               <TabsContent value="doctors" className="space-y-4 mt-4">
@@ -561,7 +682,10 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
               </TabsContent>
 
               <TabsContent value="patients" className="space-y-4 mt-4">
-                <PatientTable />
+                <PatientTable
+                  onRefresh={refetchPatients}
+                  onSelectPatient={handleSelectPatient}
+                />
               </TabsContent>
 
               <TabsContent value="visits" className="space-y-4 mt-4">

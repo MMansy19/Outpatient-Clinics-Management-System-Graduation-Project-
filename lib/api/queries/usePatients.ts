@@ -5,8 +5,6 @@ import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
 import type { CreatePatientRequest } from '@/types/api';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
-import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
 
 const PATIENTS_KEY = ['patients'];
 
@@ -16,9 +14,6 @@ interface PatientsResponse {
 }
 
 export const useSearchPatients = (filters: SearchFilters): UseQueryResult<PatientsResponse, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'search', filters],
     queryFn: async () => {
@@ -46,11 +41,6 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
       if (filters.maxAge !== undefined) params.append('max_age', filters.maxAge.toString());
       if (filters.nationalId) params.append('national_id', filters.nationalId);
 
-      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
-      if (isAdmin) {
-        const response = await apiClient.get<PatientsResponse>(`/admin/patients?${params.toString()}`);
-        return response.data;
-      }
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);
       return response.data;
     },
@@ -61,17 +51,9 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
 };
 
 export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
-      // ADMIN uses admin endpoint, DOCTOR uses doctorApi
-      if (isAdmin) {
-        const response = await apiClient.get<Patient>(`/admin/patient/${id}`);
-        return response.data;
-      }
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
       return response.data;
     },
@@ -81,44 +63,12 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
 };
 
 export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient | null, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
     queryFn: async () => {
       try {
-        let patientData: Patient | null;
-        if (isAdmin) {
-          // Try the SSN-specific endpoint first (searches globally),
-          // fall back to clinic-scoped search if it errors
-          try {
-            const ssnResponse = await apiClient.get<Patient>(
-              `/admin/patient/${encodeURIComponent(socialSecurityNumber)}`
-            );
-            patientData = ssnResponse.data || null;
-          } catch {
-            // SSN endpoint failed — fall back to paginated search
-            const response = await apiClient.get<{ items?: any[]; patients?: any[] }>(
-              `/admin/patients?search=${encodeURIComponent(socialSecurityNumber)}`
-            );
-            const items = response.data?.items || response.data?.patients || [];
-            const match = items.find((p: any) =>
-              p.socialSecurityNumber === socialSecurityNumber ||
-              p.user?.socialSecurityNumber === socialSecurityNumber
-            );
-            patientData = match || null;
-          }
-        } else {
-          const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
-          patientData = response.data;
-        }
-
-        if (!patientData) {
-          return null;
-        }
-
-        return patientData;
+        const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+        return response.data;
       } catch (error) {
         if (axios.isAxiosError(error)) {
           const status = error.response?.status;

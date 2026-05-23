@@ -107,23 +107,6 @@ export type LoginFormData = z.infer<typeof loginSchema>;
 // User Creation Schemas
 // ============================================================================
 
-export const createAdminSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
-  language: z.nativeEnum(Language),
-  socialSecurityNumber: socialSecurityNumberSchema,
-  email: emailSchema,
-  phone: phoneNumberSchema,
-  password: passwordSchema,
-  speciality: z
-    .string()
-    .min(2, 'Speciality must be at least 2 characters')
-    .max(128, 'Speciality must not exceed 128 characters'),
-  clinicId: z.string().uuid('Please select a valid clinic'),
-});
-
-export type CreateAdminFormData = z.infer<typeof createAdminSchema>;
-
 export const createDoctorSchema = z.object({
   firstName: nameSchema,
   lastName: nameSchema,

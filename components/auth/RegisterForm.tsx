@@ -68,8 +68,6 @@ export function RegisterForm({ locale }: RegisterFormProps) {
         // Redirect based on user role
         if (response.user.role === UserRole.SUPER_ADMIN) {
           router.push(`/${locale}/super-admin/dashboard`);
-        } else if (response.user.role === UserRole.ADMIN) {
-          router.push(`/${locale}/admin/dashboard`);
         } else if (response.user.role === UserRole.DOCTOR) {
           router.push(`/${locale}/doctor/dashboard`);
         } else {
@@ -162,9 +160,6 @@ export function RegisterForm({ locale }: RegisterFormProps) {
                   <SelectContent>
                     <SelectItem value={UserRole.DOCTOR}>
                       {t('roleDoctor')}
-                    </SelectItem>
-                    <SelectItem value={UserRole.ADMIN}>
-                      {t('roleAdmin')}
                     </SelectItem>
                   </SelectContent>
                 </Select>

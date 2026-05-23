@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { adminApi } from '@/lib/api/admin.service';
 import { authApi } from '@/lib/api/auth.service';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import type { CreateDoctorDto, AdminClinicDoctorsResponse } from '@/lib/api/types';
+import type { CreateDoctorDto } from '@/lib/api/types';
 
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
@@ -17,30 +16,6 @@ export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClini
       const url = clinicId ? `/super-admin/doctors?clinic_id=${clinicId}` : '/super-admin/doctors';
       const response = await apiClient.get<DoctorWithClinic[]>(url);
       return response.data;
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-};
-
-/**
- * Get doctors in the admin's clinic
- *
- * The backend determines the clinic from the JWT cookie.
- * No clinicId query parameter needed.
- *
- * @param page - Page number (default 1)
- * @param limit - Items per page (default 30)
- * @returns Paginated list of doctors in the clinic
- */
-export const useGetClinicDoctors = (
-  page: number = 1,
-  limit: number = 30
-): UseQueryResult<AdminClinicDoctorsResponse, Error> => {
-  return useQuery({
-    queryKey: [...DOCTORS_KEY, 'clinic', { page, limit }],
-    queryFn: async () => {
-      const response = await adminApi.getClinicDoctors({ page, limit });
-      return response;
     },
     staleTime: 5 * 60 * 1000,
   });

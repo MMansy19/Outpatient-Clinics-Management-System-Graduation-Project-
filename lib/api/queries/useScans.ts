@@ -6,11 +6,8 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
 import type { Scan } from '@/types/entities/Scan';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
-import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
 
 /**
  * Toggle between mock data and real backend API
@@ -55,17 +52,11 @@ const scansKeys = {
 export const useGetPatientScans = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: scansKeys.patient(patientId),
     queryFn: async () => {
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientScans(patientId);
-      }
-      if (isAdmin) {
-        return await adminApi.getPatientScans(patientId);
       }
       return await doctorApi.getPatientScans(patientId);
     },
@@ -143,15 +134,9 @@ export const useCreateScan = (): UseMutationResult<
   { patientId: string; data: { name: string; comments: string; type: string } | FormData }
 > => {
   const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
 
   return useMutation({
     mutationFn: ({ patientId, data }) => {
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
-      if (isAdmin) {
-        return adminApi.createScan(patientId, data);
-      }
       return doctorApi.createScan(patientId, data);
     },
     onSuccess: (response, variables) => {

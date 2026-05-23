@@ -4,8 +4,6 @@ import type {
   CreateVisitResponse,
   CreateMedicationDto,
   CreateMedicationResponse,
-  AdminPatientLabsResponse,
-  AdminPatientScansResponse,
 } from './types';
 import type {
   ScanNationalIdResponse,
@@ -417,8 +415,8 @@ export const doctorApi = {
    * @returns {Promise<any[]>} Array of patient labs
    * @throws {AxiosError} When request fails
    */
-  getPatientLabs: async (patientId: string): Promise<AdminPatientLabsResponse> => {
-    const response = await apiClient.get<AdminPatientLabsResponse>(
+  getPatientLabs: async (patientId: string): Promise<any> => {
+    const response = await apiClient.get<any>(
       `/doctor/patient/${patientId}/labs`
     );
     return response.data;
@@ -523,8 +521,8 @@ export const doctorApi = {
    * @returns {Promise<any[]>} Array of patient scans
    * @throws {AxiosError} When request fails
    */
-  getPatientScans: async (patientId: string): Promise<AdminPatientScansResponse> => {
-    const response = await apiClient.get<AdminPatientScansResponse>(
+  getPatientScans: async (patientId: string): Promise<any> => {
+    const response = await apiClient.get<any>(
       `/doctor/patient/${patientId}/scans`
     );
     return response.data;

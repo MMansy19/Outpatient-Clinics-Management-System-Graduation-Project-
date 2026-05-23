@@ -20,9 +20,7 @@ import {
   FileText,
   Calendar,
   Volume2,
-  Pencil,
 } from 'lucide-react';
-import { EditVisitDialog } from '@/components/super-admin/EditVisitDialog';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
@@ -36,19 +34,55 @@ export function VisitTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [editingVisit, setEditingVisit] = useState<SuperAdminVisitItem | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [doctorNames, setDoctorNames] = useState<Map<string, string>>(new Map());
+  const [patientNames, setPatientNames] = useState<Map<string, string>>(new Map());
   const limit = 10;
 
   useEffect(() => {
     const loadVisits = async () => {
       try {
         setLoading(true);
-        const data = await superAdminApi.getVisits({ page, limit });
+        const [visitsData, doctorsData, patientsData] = await Promise.all([
+          superAdminApi.getVisits({ page, limit }),
+          superAdminApi.getDoctors({ page: 1, limit: 10000 }),
+          superAdminApi.getPatients({ page: 1, limit: 10000 }),
+        ]);
 
-        setVisits(data.items);
-        setTotalPages(data.totalPages);
-        setTotalItems(data.totalItems);
+        setVisits(visitsData.items);
+        setTotalPages(visitsData.totalPages);
+        setTotalItems(visitsData.totalItems);
+
+        // Build patient name lookup from the patients list
+        const patNameMap = new Map<string, string>();
+        for (const p of patientsData.items || []) {
+          patNameMap.set(p.id, `${p.user.firstName} ${p.user.lastName}`);
+        }
+        setPatientNames(patNameMap);
+
+        // Build doctor name lookup: first try doctors list, then fallback to per-ID fetch
+        const docNameMap = new Map<string, string>();
+
+        // Pre-fill from doctors list (fast, single request)
+        for (const d of doctorsData.items || []) {
+          docNameMap.set(d.id, `Dr. ${d.user.firstName} ${d.user.lastName}`);
+        }
+
+        // For any doctorId we don't have yet, fetch individual doctor
+        const missingIds = [...new Set(visitsData.items.map((v) => v.doctorId))].filter(
+          (id) => !docNameMap.has(id)
+        );
+        await Promise.all(
+          missingIds.map(async (id) => {
+            try {
+              const doc = await superAdminApi.getDoctorById(id);
+              docNameMap.set(id, `Dr. ${doc.firstName} ${doc.lastName}`);
+            } catch {
+              // leave as-is (will show ID fallback)
+            }
+          })
+        );
+
+        setDoctorNames(docNameMap);
       } catch (error) {
         console.error('Failed to load visits:', error);
         toast.error('Failed to load visits');
@@ -59,23 +93,6 @@ export function VisitTable() {
 
     loadVisits();
   }, [page]);
-
-  const handleEditSuccess = () => {
-    const loadVisits = async () => {
-      try {
-        setLoading(true);
-        const data = await superAdminApi.getVisits({ page, limit });
-        setVisits(data.items);
-        setTotalPages(data.totalPages);
-        setTotalItems(data.totalItems);
-      } catch (error) {
-        console.error('Failed to load visits:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadVisits();
-  };
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -153,7 +170,7 @@ export function VisitTable() {
                     {formatDate(visit.createdAt)}
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                    {t('visitNumber')}
+                    {t('visitId')}
                     {visit.id.slice(0, 8)}
                   </h3>
                 </div>
@@ -170,7 +187,7 @@ export function VisitTable() {
                       {t('patientName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.patient?.name || tCommon('loading')}
+                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -184,7 +201,7 @@ export function VisitTable() {
                       {t('doctorName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.doctor?.name || tCommon('loading')}
+                      {doctorNames.get(visit.doctorId) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
                     </p>
                   </div>
                 </div>
@@ -216,19 +233,6 @@ export function VisitTable() {
                   </div>
                 </div>
               )}
-
-              {/* Edit Action */}
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 flex justify-end">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-medical-primary hover:text-medical-primary/80 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                  onClick={() => { setEditingVisit(visit); setIsEditDialogOpen(true); }}
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  {t('edit')}
-                </Button>
-              </div>
             </div>
           ))
         )}
@@ -252,13 +256,12 @@ export function VisitTable() {
                 <TableHead className="font-semibold">
                   {t('createdAt')}
                 </TableHead>
-                <TableHead className="font-semibold">{t('actions')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12">
+                  <TableCell colSpan={4} className="text-center py-12">
                     <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {t('noVisitsFound')}
@@ -272,10 +275,10 @@ export function VisitTable() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <TableCell className="font-medium">
-                      {visit.patient?.name || tCommon('loading')}
+                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {visit.doctor?.name || tCommon('loading')}
+                      Dr. {(visit.doctorId ? doctorNames.get(visit.doctorId) : undefined) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>
@@ -283,16 +286,6 @@ export function VisitTable() {
                       </div>
                     </TableCell>
                     <TableCell>{formatDate(visit.createdAt)}</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-medical-primary hover:text-medical-primary/80 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                        onClick={() => { setEditingVisit(visit); setIsEditDialogOpen(true); }}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
                   </TableRow>
                 ))
               )}
@@ -331,13 +324,6 @@ export function VisitTable() {
           </Button>
         </div>
       </div>
-
-      <EditVisitDialog
-        visit={editingVisit}
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        onSuccess={handleEditSuccess}
-      />
 
       <style jsx>{`
         @keyframes fadeInUp {
