@@ -19,6 +19,8 @@ import {
   CalendarCheck,
   Menu,
   Search,
+  UserPlus,
+  ActivitySquare,
 } from 'lucide-react';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role, Gender } from '@/lib/api/types';
@@ -239,6 +241,34 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     return { dailyVisits: daily, weeklyVisits: weekly };
   }, [visitsData?.items]);
 
+  // Calculate daily new patients and active doctors (with visits today)
+  const { dailyPatients, activeDoctorsToday } = useMemo(() => {
+    const patients = patientsData?.items || [];
+    const visits = visitsData?.items || [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const daily = patients.filter((p) => {
+      const created = new Date(p.createdAt);
+      created.setHours(0, 0, 0, 0);
+      return created.getTime() === today.getTime();
+    }).length;
+
+    const doctorIdsToday = new Set(
+      visits
+        .filter((v) => {
+          const visitDate = new Date(v.createdAt);
+          visitDate.setHours(0, 0, 0, 0);
+          return visitDate.getTime() === today.getTime();
+        })
+        .map((v) => v.doctor?.id)
+        .filter(Boolean)
+    );
+    const active = doctorsData?.items?.filter((d) => doctorIdsToday.has(d.id)).length ?? 0;
+
+    return { dailyPatients: daily, activeDoctorsToday: active };
+  }, [patientsData?.items, doctorsData?.items, visitsData?.items]);
+
   const refreshAllData = useCallback(() => {
     refetchClinics();
     refetchAllClinics();
@@ -312,16 +342,23 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
         progress: Math.min((weeklyVisits / 1000) * 100, 100),
       },
       {
-        label: t('pendingApprovals'),
-        value: doctorsData?.items?.filter((d) => !d.isApproved).length || 0,
-        subtitle: t('doctorsAwaitingApproval'),
-        icon: Clock,
-        color: 'text-yellow-600',
-        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
+        label: t('dailyPatients'),
+        value: dailyPatients,
+        subtitle: t('newPatientsToday'),
+        icon: UserPlus,
+        color: 'text-violet-600',
+        bgColor: 'bg-violet-100 dark:bg-violet-900/30',
+        progress: Math.min((dailyPatients / 50) * 100, 100),
+      },
+      {
+        label: t('activeDoctorsToday'),
+        value: activeDoctorsToday,
+        subtitle: t('doctorsWithVisitsToday'),
+        icon: ActivitySquare,
+        color: 'text-teal-600',
+        bgColor: 'bg-teal-100 dark:bg-teal-900/30',
         progress: doctorsData?.items?.length
-          ? (doctorsData?.items?.filter((d) => !d.isApproved).length /
-              doctorsData?.items?.length) *
-            100
+          ? (activeDoctorsToday / doctorsData.items.length) * 100
           : 0,
       },
     ],
@@ -332,6 +369,8 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
       visitsData,
       dailyVisits,
       weeklyVisits,
+      dailyPatients,
+      activeDoctorsToday,
       t,
     ]
   );
