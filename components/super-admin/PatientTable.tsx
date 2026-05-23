@@ -24,11 +24,11 @@ import {
 } from 'lucide-react';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { PatientResponse } from '@/lib/api/types';
+import { Gender } from '@/lib/api/types';
 import { toast } from 'sonner';
 import { EditPatientDialog } from './EditPatientDialog';
 import { CreatePatientDialog } from './CreatePatientDialog';
 import { Plus, ExternalLink } from 'lucide-react';
-import type { Gender } from '@/lib/api/types';
 
 interface SelectedPatient {
   id: string;
@@ -296,7 +296,11 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
                       {formatDate(patient.user.dateOfBirth)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{patient.user.gender}</Badge>
+                      <Badge variant="outline">
+                        {patient.user.gender === Gender.MALE
+                          ? t('male')
+                          : t('female')}
+                      </Badge>
                     </TableCell>
                     <TableCell>{patient.job}</TableCell>
                     <TableCell className="max-w-[200px] truncate">
@@ -306,7 +310,10 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleEditPatient(patient)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditPatient(patient);
+                        }}
                       >
                         <Pencil className="h-4 w-4 mr-2" />
                         {t('edit')}
