@@ -33,6 +33,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 interface SuperAdminMedicationDialogProps {
@@ -75,19 +76,9 @@ export function SuperAdminMedicationDialog({
     },
   });
 
+  const queryClient = useQueryClient();
+
   const onSubmit = async (data: MedicationFormData) => {
-    console.log('[Medication Dialog] Submitting:', {
-      name: data.name,
-      dosage: data.dosage,
-      period: data.period,
-      comments: data.comments,
-      patientId,
-      clinicId,
-      types: {
-        dosage: typeof data.dosage,
-        period: typeof data.period,
-      },
-    });
     setIsPending(true);
     try {
       await superAdminApi.createMedication({
@@ -100,6 +91,7 @@ export function SuperAdminMedicationDialog({
       });
 
       toast.success(t('medicationCreatedSuccess'));
+      await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
       form.reset();
       onOpenChange(false);
       onSuccess?.();
