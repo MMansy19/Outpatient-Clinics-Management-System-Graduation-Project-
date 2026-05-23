@@ -234,8 +234,8 @@ export function SuperAdminPatientProfile({
   }
 
   return (
-    <div className="space-y-4">
-      <Button variant="outline" onClick={onBack}>
+    <div className="space-y-3 sm:space-y-4">
+      <Button variant="outline" onClick={onBack} className="text-sm sm:text-base">
         <ArrowLeft className="h-4 w-4 mr-2" />
         {t('backToPatients')}
       </Button>
@@ -243,14 +243,14 @@ export function SuperAdminPatientProfile({
       {/* Patient Header */}
       <Card className="bg-gradient-to-r from-medical-primary/10 to-medical-secondary/10 border-medical-primary/20">
         <CardHeader className="pb-2">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-4">
-              <div className="h-16 w-16 rounded-full bg-medical-primary/20 flex items-center justify-center">
-                <User className="h-8 w-8 text-medical-primary" />
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div className="flex items-center gap-3 sm:gap-4">
+              <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-medical-primary/20 flex items-center justify-center">
+                <User className="h-6 w-6 sm:h-8 sm:w-8 text-medical-primary" />
               </div>
               <div>
-                <CardTitle className="text-xl">{patient.name}</CardTitle>
-                <CardDescription className="mt-1">
+                <CardTitle className="text-lg sm:text-xl">{patient.name}</CardTitle>
+                <CardDescription className="mt-1 text-xs sm:text-sm">
                   <span className="font-mono">{patient.socialSecurityNumber || patientId}</span>
                 </CardDescription>
               </div>
@@ -258,7 +258,7 @@ export function SuperAdminPatientProfile({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-4 text-sm">
+          <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
             <div className="flex items-center gap-2">
               <Calendar className="h-4 w-4 text-muted-foreground" />
               <span>
@@ -294,32 +294,32 @@ export function SuperAdminPatientProfile({
 
       {/* Medical Data Tabs */}
       <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full">
-          <TabsTrigger value="profile" className="gap-2">
-            <Activity className="h-4 w-4" />
+        <TabsList className="grid grid-cols-4 w-full overflow-x-auto">
+          <TabsTrigger value="profile" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline"><Activity className="h-4 w-4" /></span>
             {t('visits')}
-            <Badge variant="secondary" className="ml-1">
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {visits.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="medications" className="gap-2">
-            <Pill className="h-4 w-4" />
-            {t('medications')}
-            <Badge variant="secondary" className="ml-1">
+          <TabsTrigger value="medications" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline"><Pill className="h-4 w-4" /></span>
+            Med.
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {medications.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="labs" className="gap-2">
-            <TestTube2 className="h-4 w-4" />
-            {t('labs')}
-            <Badge variant="secondary" className="ml-1">
+          <TabsTrigger value="labs" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline"><TestTube2 className="h-4 w-4" /></span>
+            Labs
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {labs.length}
             </Badge>
           </TabsTrigger>
-          <TabsTrigger value="scans" className="gap-2">
-            <ScanLine className="h-4 w-4" />
-            {t('scans')}
-            <Badge variant="secondary" className="ml-1">
+          <TabsTrigger value="scans" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
+            <span className="hidden sm:inline"><ScanLine className="h-4 w-4" /></span>
+            Scans
+            <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {scans.length}
             </Badge>
           </TabsTrigger>
@@ -328,11 +328,11 @@ export function SuperAdminPatientProfile({
         {/* Visits Tab */}
         <TabsContent value="profile">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2 sm:pb-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle>{t('visits')}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">{t('visits')}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {visits.length} {t('totalVisits')}
                   </CardDescription>
                 </div>
@@ -340,7 +340,7 @@ export function SuperAdminPatientProfile({
                   size="sm"
                   onClick={() => setIsVisitDialogOpen(true)}
                   disabled={!selectedClinicId}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
+                  className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('addVisit')}
@@ -399,11 +399,11 @@ export function SuperAdminPatientProfile({
         {/* Medications Tab */}
         <TabsContent value="medications">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2 sm:pb-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle>{t('medications')}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">{t('medications')}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {medications.length} {t('totalMedications')}
                   </CardDescription>
                 </div>
@@ -411,7 +411,7 @@ export function SuperAdminPatientProfile({
                   size="sm"
                   onClick={() => setIsMedicationDialogOpen(true)}
                   disabled={!selectedClinicId}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
+                  className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('addMedication')}
@@ -468,11 +468,11 @@ export function SuperAdminPatientProfile({
         {/* Labs Tab */}
         <TabsContent value="labs">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2 sm:pb-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle>{t('labs')}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">{t('labs')}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {labs.length} {t('totalLabs')}
                   </CardDescription>
                 </div>
@@ -480,7 +480,7 @@ export function SuperAdminPatientProfile({
                   size="sm"
                   onClick={() => setIsLabDialogOpen(true)}
                   disabled={!selectedClinicId}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
+                  className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('addLab')}
@@ -546,11 +546,11 @@ export function SuperAdminPatientProfile({
         {/* Scans Tab */}
         <TabsContent value="scans">
           <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2 sm:pb-0">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div>
-                  <CardTitle>{t('scans')}</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-base sm:text-lg">{t('scans')}</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
                     {scans.length} {t('totalScans')}
                   </CardDescription>
                 </div>
@@ -558,7 +558,7 @@ export function SuperAdminPatientProfile({
                   size="sm"
                   onClick={() => setIsScanDialogOpen(true)}
                   disabled={!selectedClinicId}
-                  className="bg-medical-primary hover:bg-medical-primary/90"
+                  className="bg-medical-primary hover:bg-medical-primary/90 w-full sm:w-auto"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   {t('addScan')}
