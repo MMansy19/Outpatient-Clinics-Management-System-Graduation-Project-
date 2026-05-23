@@ -59,36 +59,28 @@ export function VisitTable() {
         }
         setPatientNames(patNameMap);
 
-        // Get doctor names from patient visits (each patient has embedded doctor.name)
-        const uniquePatientIds = [...new Set(visitsData.items.map((v) => v.patientId))];
+        // Build doctor name lookup: first try doctors list, then fallback to per-ID fetch
         const docNameMap = new Map<string, string>();
 
+        // Pre-fill from doctors list (fast, single request)
+        for (const d of doctorsData.items || []) {
+          docNameMap.set(d.id, `Dr. ${d.user.firstName} ${d.user.lastName}`);
+        }
+
+        // For any doctorId we don't have yet, fetch individual doctor
+        const missingIds = [...new Set(visitsData.items.map((v) => v.doctorId))].filter(
+          (id) => !docNameMap.has(id)
+        );
         await Promise.all(
-          uniquePatientIds.map(async (patientId) => {
+          missingIds.map(async (id) => {
             try {
-              const patientVisits = await superAdminApi.getPatientVisits(patientId);
-              for (const visit of patientVisits.visits || []) {
-                if (visit.doctorName) {
-                  // Store name keyed by the doctor UUID if available
-                  if (visit.doctorId) {
-                    docNameMap.set(visit.doctorId, visit.doctorName);
-                  }
-                  // Also store name keyed by name itself for entries without doctorId
-                  docNameMap.set(visit.doctorName, visit.doctorName);
-                }
-              }
+              const doc = await superAdminApi.getDoctorById(id);
+              docNameMap.set(id, `Dr. ${doc.firstName} ${doc.lastName}`);
             } catch {
-              // skip
+              // leave as-is (will show ID fallback)
             }
           })
         );
-
-        // Fallback: fill from doctors list for IDs that exist there
-        for (const d of doctorsData.items || []) {
-          if (!docNameMap.has(d.id)) {
-            docNameMap.set(d.id, `${d.user.firstName} ${d.user.lastName}`);
-          }
-        }
 
         setDoctorNames(docNameMap);
       } catch (error) {
