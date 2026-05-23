@@ -82,7 +82,7 @@ interface MedicationsData {
     period: string;
     comments: string | null;
     commentsAudioUrl: string | null;
-    doctor: { id: string; name: string; speciality: string };
+    doctor: { id?: string; name: string; speciality: string | null };
     createdAt: string;
   }[];
 }
@@ -189,22 +189,18 @@ export function SuperAdminPatientProfile({
   const queryClient = useQueryClient();
 
   const handleVisitSuccess = () => {
-    toast.success(t('visitCreatedSuccess'));
     queryClient.invalidateQueries({ queryKey: ['super-admin-patient-visits', patientId] });
   };
 
   const handleMedicationSuccess = () => {
-    toast.success(t('medicationCreatedSuccess'));
     queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
   };
 
   const handleLabSuccess = () => {
-    toast.success(t('labCreatedSuccess'));
     queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
   };
 
   const handleScanSuccess = () => {
-    toast.success(t('scanCreatedSuccess'));
     queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
   };
 
@@ -367,7 +363,6 @@ export function SuperAdminPatientProfile({
                         <TableHead>{tTable('diagnoses')}</TableHead>
                         <TableHead>{t('doctor')}</TableHead>
                         <TableHead>{t('clinic')}</TableHead>
-                        <TableHead>{tTable('audio')}</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -376,17 +371,17 @@ export function SuperAdminPatientProfile({
                           <TableCell>{formatDate(visit.createdAt)}</TableCell>
                           <TableCell className="max-w-[300px]">
                             <div className="truncate">{visit.diagnoses || '-'}</div>
+                            {visit.diagnosesAudioUrl && (
+                              <div className="mt-1">
+                                <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
                             Dr. {visit.doctorName || visit.doctorId?.slice(0, 8) || 'N/A'}
                           </TableCell>
                           <TableCell>
                             {visit.clinicName || visit.clinicId?.slice(0, 8) || '-'}
-                          </TableCell>
-                          <TableCell>
-                            {visit.diagnosesAudioUrl && (
-                              <AudioPlayer src={visit.diagnosesAudioUrl} compact />
-                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -633,45 +628,37 @@ export function SuperAdminPatientProfile({
       {/* Dialogs */}
       {selectedClinicId && (
         <>
-          {isVisitDialogOpen && (
-            <SuperAdminVisitDialog
-              open={isVisitDialogOpen}
-              onOpenChange={setIsVisitDialogOpen}
-              patientId={patientId}
-              clinicId={selectedClinicId}
-              onSuccess={handleVisitSuccess}
-            />
-          )}
+          <SuperAdminVisitDialog
+            open={isVisitDialogOpen}
+            onOpenChange={setIsVisitDialogOpen}
+            patientId={patientId}
+            clinicId={selectedClinicId}
+            onSuccess={handleVisitSuccess}
+          />
 
-          {isMedicationDialogOpen && (
-            <SuperAdminMedicationDialog
-              open={isMedicationDialogOpen}
-              onOpenChange={setIsMedicationDialogOpen}
-              patientId={patientId}
-              clinicId={selectedClinicId}
-              onSuccess={handleMedicationSuccess}
-            />
-          )}
+          <SuperAdminMedicationDialog
+            open={isMedicationDialogOpen}
+            onOpenChange={setIsMedicationDialogOpen}
+            patientId={patientId}
+            clinicId={selectedClinicId}
+            onSuccess={handleMedicationSuccess}
+          />
 
-          {isLabDialogOpen && (
-            <SuperAdminLabDialog
-              open={isLabDialogOpen}
-              onOpenChange={setIsLabDialogOpen}
-              patientId={patientId}
-              clinicId={selectedClinicId}
-              onSuccess={handleLabSuccess}
-            />
-          )}
+          <SuperAdminLabDialog
+            open={isLabDialogOpen}
+            onOpenChange={setIsLabDialogOpen}
+            patientId={patientId}
+            clinicId={selectedClinicId}
+            onSuccess={handleLabSuccess}
+          />
 
-          {isScanDialogOpen && (
-            <SuperAdminScanDialog
-              open={isScanDialogOpen}
-              onOpenChange={setIsScanDialogOpen}
-              patientId={patientId}
-              clinicId={selectedClinicId}
-              onSuccess={handleScanSuccess}
-            />
-          )}
+          <SuperAdminScanDialog
+            open={isScanDialogOpen}
+            onOpenChange={setIsScanDialogOpen}
+            patientId={patientId}
+            clinicId={selectedClinicId}
+            onSuccess={handleScanSuccess}
+          />
         </>
       )}
     </div>
