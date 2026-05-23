@@ -44,13 +44,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 
 interface SuperAdminDashboardProps {
@@ -174,7 +167,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchInterval: 60 * 1000,
   });
 
-  const { data: allClinics, refetch: refetchAllClinics } = useQuery({
+  const { refetch: refetchAllClinics } = useQuery({
     queryKey: ['clinics-all'],
     queryFn: () => superAdminApi.getClinics({ includeDeleted: true }),
     staleTime: 30 * 1000,
