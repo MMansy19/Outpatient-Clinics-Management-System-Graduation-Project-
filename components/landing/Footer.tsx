@@ -45,7 +45,7 @@ export function Footer({ locale }: FooterProps) {
             <Link href={`/${locale}`} className="flex items-center space-x-3">
               <div className="relative w-20 h-20">
                 <Image
-                  src="/logo-chatgpt.png"
+                  src="/logo.png"
                   alt="Outpatient Clinic Logo"
                   fill
                   className="object-contain"

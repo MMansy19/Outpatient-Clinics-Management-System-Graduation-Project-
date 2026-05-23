@@ -218,10 +218,10 @@ export default function HomePage({ params }: HomePageProps) {
   }, [locale]);
 
   const partners = [
-    { name: 'Cairo University', logo: '/logo-chatgpt.png' },
-    { name: 'Kasr Al Ainy Hospital', logo: '/logo-chatgpt.png' },
-    { name: 'Ministry of Health', logo: '/logo-chatgpt.png' },
-    { name: 'WHO Egypt', logo: '/logo-chatgpt.png' },
+    { name: 'Cairo University', logo: '/logo.png' },
+    { name: 'Kasr Al Ainy Hospital', logo: '/logo.png' },
+    { name: 'Ministry of Health', logo: '/logo.png' },
+    { name: 'WHO Egypt', logo: '/logo.png' },
   ];
 
   const stats = [
@@ -239,8 +239,8 @@ export default function HomePage({ params }: HomePageProps) {
     alternateName: locale === 'ar' ? 'عيادة خارجية' : 'Outpatient Clinic',
     description: t('hero.subtitle'),
     url: `https://codeblue.eg/${locale}`,
-    logo: 'https://codeblue.eg/logo-chatgpt.png',
-    image: 'https://codeblue.eg/logo-chatgpt.png',
+    logo: 'https://codeblue.eg/logo.png',
+    image: 'https://codeblue.eg/logo.png',
     telephone: '+20223648603',
     email: 'info@codeblue.eg',
     address: {

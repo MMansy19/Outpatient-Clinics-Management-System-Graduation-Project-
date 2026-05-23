@@ -40,7 +40,7 @@ export function Navbar({ locale }: NavbarProps) {
           <Link href={`/${locale}`} className="flex items-center space-x-3">
             <div className="relative w-16 h-16">
               <Image
-                src="/logo-chatgpt.png"
+                src="/logo.png"
                 alt="Outpatient Clinic Logo"
                 fill
                 className="object-contain"
