@@ -165,9 +165,51 @@ export const superAdminApi = {
     diagnoses?: string;
     patientId: string;
     clinicId: string;
-  }): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/visit', data);
-    return response.data;
+    audio?: File;
+  }): Promise<void> => {
+    if (data.audio) {
+      const formData = new FormData();
+      if (data.diagnoses) formData.append('diagnoses', data.diagnoses);
+      formData.append('patientId', data.patientId);
+      formData.append('clinicId', data.clinicId);
+      formData.append('audio', data.audio);
+      await apiClient.post('/super-admin/visit', formData);
+    } else {
+      await apiClient.post('/super-admin/visit', data);
+    }
+  },
+
+  /** POST /api/v1/super-admin/visit — with data refetch */
+  createVisitAndRefetch: async (data: {
+    diagnoses?: string;
+    patientId: string;
+    clinicId: string;
+    audio?: File;
+  }): Promise<{
+    visits: {
+      id: string;
+      diagnoses: string;
+      diagnosesAudioUrl: string | null;
+      patientId: string;
+      doctorId: string;
+      doctorName?: string;
+      clinicId?: string;
+      clinicName?: string;
+      createdAt: string;
+    }[];
+  }> => {
+    if (data.audio) {
+      const formData = new FormData();
+      if (data.diagnoses) formData.append('diagnoses', data.diagnoses);
+      formData.append('patientId', data.patientId);
+      formData.append('clinicId', data.clinicId);
+      formData.append('audio', data.audio);
+      await apiClient.post('/super-admin/visit', formData);
+    } else {
+      await apiClient.post('/super-admin/visit', data);
+    }
+    const result = await superAdminApi.getPatientVisits(data.patientId);
+    return JSON.parse(JSON.stringify(result));
   },
 
   /** PATCH /api/v1/super-admin/visit/{id} */
@@ -182,11 +224,52 @@ export const superAdminApi = {
     dosage: number;
     period: number;
     comments?: string;
+    audio?: File;
     patientId: string;
     clinicId: string;
-  }): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/medication', data);
-    return response.data;
+  }): Promise<void> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('dosage', String(data.dosage));
+    formData.append('period', String(data.period));
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.comments) formData.append('comments', data.comments);
+    if (data.audio) formData.append('audio', data.audio);
+    await apiClient.post('/super-admin/medication', formData);
+  },
+
+  /** POST /api/v1/super-admin/medication — with data refetch */
+  createMedicationAndRefetch: async (data: {
+    name: string;
+    dosage: number;
+    period: number;
+    comments?: string;
+    audio?: File;
+    patientId: string;
+    clinicId: string;
+  }): Promise<{
+    medications: {
+      name: string;
+      dosage: string;
+      period: string;
+      comments: string | null;
+      commentsAudioUrl: string | null;
+      doctor: { id?: string; name: string; speciality: string | null };
+      createdAt: string;
+    }[];
+  }> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('dosage', String(data.dosage));
+    formData.append('period', String(data.period));
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.comments) formData.append('comments', data.comments);
+    if (data.audio) formData.append('audio', data.audio);
+    await apiClient.post('/super-admin/medication', formData);
+    const result = await superAdminApi.getPatientMedications(data.patientId);
+    return JSON.parse(JSON.stringify({ medications: result.medications }));
   },
 
   /** PATCH /api/v1/super-admin/medication/{id} */
@@ -201,13 +284,50 @@ export const superAdminApi = {
   /** POST /api/v1/super-admin/lab */
   createLab: async (data: {
     name: string;
-    photoUrl?: string;
+    image?: File;
+    audio?: File;
     comments?: string;
     patientId: string;
     clinicId: string;
-  }): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/lab', data);
-    return response.data;
+  }): Promise<void> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.image) formData.append('image', data.image);
+    if (data.audio) formData.append('audio', data.audio);
+    if (data.comments) formData.append('comments', data.comments);
+    await apiClient.post('/super-admin/lab', formData);
+  },
+
+  /** POST /api/v1/super-admin/lab — with data refetch */
+  createLabAndRefetch: async (data: {
+    name: string;
+    image?: File;
+    audio?: File;
+    comments?: string;
+    patientId: string;
+    clinicId: string;
+  }): Promise<{
+    labs: {
+      name: string;
+      photoUrl: string;
+      comments: string | null;
+      commentsAudioUrl: string | null;
+      doctor: { id?: string; name: string; speciality: string | null };
+      createdAt: string;
+    }[];
+  }> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.image) formData.append('image', data.image);
+    if (data.audio) formData.append('audio', data.audio);
+    if (data.comments) formData.append('comments', data.comments);
+    await apiClient.post('/super-admin/lab', formData);
+    const result = await superAdminApi.getPatientLabs(data.patientId);
+    return JSON.parse(JSON.stringify({ labs: result.labs }));
   },
 
   /** PATCH /api/v1/super-admin/lab/{id} */
@@ -220,13 +340,54 @@ export const superAdminApi = {
   createScan: async (data: {
     name: string;
     type: number;
-    photoUrl?: string;
+    image?: File;
+    audio?: File;
     comments?: string;
     patientId: string;
     clinicId: string;
-  }): Promise<{ message: string; id: string }> => {
-    const response = await apiClient.post<{ message: string; id: string }>('/super-admin/scan', data);
-    return response.data;
+  }): Promise<void> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('type', String(data.type));
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.image) formData.append('image', data.image);
+    if (data.audio) formData.append('audio', data.audio);
+    if (data.comments) formData.append('comments', data.comments);
+    await apiClient.post('/super-admin/scan', formData);
+  },
+
+  /** POST /api/v1/super-admin/scan — with data refetch */
+  createScanAndRefetch: async (data: {
+    name: string;
+    type: number;
+    image?: File;
+    audio?: File;
+    comments?: string;
+    patientId: string;
+    clinicId: string;
+  }): Promise<{
+    scans: {
+      name: string;
+      type: string;
+      photoUrl: string;
+      comments: string | null;
+      commentsAudioUrl: string | null;
+      doctor: { id?: string; name: string; speciality: string | null };
+      createdAt: string;
+    }[];
+  }> => {
+    const formData = new FormData();
+    formData.append('name', data.name);
+    formData.append('type', String(data.type));
+    formData.append('patientId', data.patientId);
+    formData.append('clinicId', data.clinicId);
+    if (data.image) formData.append('image', data.image);
+    if (data.audio) formData.append('audio', data.audio);
+    if (data.comments) formData.append('comments', data.comments);
+    await apiClient.post('/super-admin/scan', formData);
+    const result = await superAdminApi.getPatientScans(data.patientId);
+    return JSON.parse(JSON.stringify({ scans: result.scans }));
   },
 
   /** PATCH /api/v1/super-admin/scan/{id} */
@@ -329,25 +490,34 @@ export const superAdminApi = {
       period: string;
       comments: string | null;
       commentsAudioUrl: string | null;
-      doctor: { id: string; name: string; speciality: string };
+      doctor: { id: string; name: string; speciality: string | null };
       createdAt: string;
     }[];
   }> => {
     const response = await apiClient.get<{
-      page: number;
-      items: {
+      patient?: { id: string; name: string; gender: number; dateOfBirth: string; socialSecurityNumber: string; address: string | null; job: string | null };
+      medications: {
         name: string;
         dosage: string;
         period: string;
         comments: string | null;
         commentsAudioUrl: string | null;
-        doctor: { id: string; name: string; speciality: string };
+        doctor: { id?: string; name: string; speciality: string | null };
         createdAt: string;
       }[];
-      totalItems: number;
-      totalPages: number;
+      page?: number;
+      items?: unknown[];
+      totalItems?: number;
+      totalPages?: number;
     }>(`/super-admin/patient/${patientId}/medications`);
-    return { medications: response.data.items };
+    const data = response.data as Record<string, unknown>;
+    if (Array.isArray(data)) {
+      return { medications: data as unknown[] };
+    }
+    if (Array.isArray(data['medications'])) {
+      return { medications: data['medications'] as unknown[] };
+    }
+    return { medications: (data['items'] ?? []) as unknown[] };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/labs */
@@ -357,24 +527,33 @@ export const superAdminApi = {
       photoUrl: string;
       comments: string | null;
       commentsAudioUrl: string | null;
-      doctor: { id: string; name: string; speciality: string };
+      doctor: { id: string; name: string; speciality: string | null };
       createdAt: string;
     }[];
   }> => {
     const response = await apiClient.get<{
-      page: number;
-      items: {
+      patient?: { id: string; name: string; gender: number; dateOfBirth: string; socialSecurityNumber: string; address: string | null; job: string | null };
+      labs: {
         name: string;
         photoUrl: string;
         comments: string | null;
         commentsAudioUrl: string | null;
-        doctor: { id: string; name: string; speciality: string };
+        doctor: { id?: string; name: string; speciality: string | null };
         createdAt: string;
       }[];
-      totalItems: number;
-      totalPages: number;
+      page?: number;
+      items?: unknown[];
+      totalItems?: number;
+      totalPages?: number;
     }>(`/super-admin/patient/${patientId}/labs`);
-    return { labs: response.data.items };
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return { labs: data as typeof data extends (infer T)[] ? T : never };
+    }
+    if (Array.isArray(data.labs)) {
+      return { labs: data.labs as typeof data.labs };
+    }
+    return { labs: (data.items ?? []) as typeof data extends { items: infer I } ? I : never };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/scans */
@@ -385,25 +564,34 @@ export const superAdminApi = {
       photoUrl: string;
       comments: string | null;
       commentsAudioUrl: string | null;
-      doctor: { id: string; name: string; speciality: string };
+      doctor: { id: string; name: string; speciality: string | null };
       createdAt: string;
     }[];
   }> => {
     const response = await apiClient.get<{
-      page: number;
-      items: {
+      patient?: { id: string; name: string; gender: number; dateOfBirth: string; socialSecurityNumber: string; address: string | null; job: string | null };
+      scans: {
         name: string;
         type: string;
         photoUrl: string;
         comments: string | null;
         commentsAudioUrl: string | null;
-        doctor: { id: string; name: string; speciality: string };
+        doctor: { id?: string; name: string; speciality: string | null };
         createdAt: string;
       }[];
-      totalItems: number;
-      totalPages: number;
+      page?: number;
+      items?: unknown[];
+      totalItems?: number;
+      totalPages?: number;
     }>(`/super-admin/patient/${patientId}/scans`);
-    return { scans: response.data.items };
+    const data = response.data;
+    if (Array.isArray(data)) {
+      return { scans: data as typeof data extends (infer T)[] ? T : never };
+    }
+    if (Array.isArray(data.scans)) {
+      return { scans: data.scans as typeof data.scans };
+    }
+    return { scans: (data.items ?? []) as typeof data extends { items: infer I } ? I : never };
   },
 
   // ────────────────────────────────────────────────────────────────���─��───────
