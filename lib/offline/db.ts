@@ -87,7 +87,37 @@ export interface OfflineScan {
 }
 
 export type MutationStatus = 'pending' | 'syncing' | 'failed' | 'synced';
-export type MutationType = 'createVisit' | 'createMedication' | 'createLab' | 'createScan' | 'createPatient' | 'updateVisit' | 'updateMedication' | 'updateLab' | 'updateScan';
+export type MutationType =
+  // Doctor-scoped (existing)
+  | 'createVisit'
+  | 'createMedication'
+  | 'createLab'
+  | 'createScan'
+  | 'createPatient'
+  | 'updateVisit'
+  | 'updateMedication'
+  | 'updateLab'
+  | 'updateScan'
+  | 'deleteVisit'
+  | 'deleteMedication'
+  | 'deleteLab'
+  | 'deleteScan'
+  // Super-admin-scoped
+  | 'createClinic'
+  | 'updateClinic'
+  | 'deleteClinic'
+  | 'createDoctor'
+  | 'updateDoctor'
+  | 'deleteDoctor'
+  | 'updatePatient'
+  | 'superAdminCreateVisit'
+  | 'superAdminUpdateVisit'
+  | 'superAdminCreateMedication'
+  | 'superAdminUpdateMedication'
+  | 'superAdminCreateLab'
+  | 'superAdminUpdateLab'
+  | 'superAdminCreateScan'
+  | 'superAdminUpdateScan';
 
 export interface QueuedMutation {
   autoId?: number;

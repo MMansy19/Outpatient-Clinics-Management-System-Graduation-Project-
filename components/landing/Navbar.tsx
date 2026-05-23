@@ -30,7 +30,6 @@ export function Navbar({ locale }: NavbarProps) {
     { href: `/${locale}#clinics`, label: t('clinics') },
     { href: `/${locale}#doctors`, label: t('doctors') },
     { href: `/${locale}#partners`, label: t('partners') },
-    { href: `/${locale}/api-test`, label: t('apiTest') },
   ];
 
   return (
@@ -42,13 +41,13 @@ export function Navbar({ locale }: NavbarProps) {
             <div className="relative w-16 h-16">
               <Image
                 src="/logo-chatgpt.png"
-                alt="CodeBlue Logo"
+                alt="Outpatient Clinic Logo"
                 fill
                 className="object-contain"
               />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">
-              CodeBlue
+              Outpatient Clinic
             </span>
           </Link>
 

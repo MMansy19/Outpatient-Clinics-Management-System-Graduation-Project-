@@ -46,13 +46,13 @@ export function Footer({ locale }: FooterProps) {
               <div className="relative w-20 h-20">
                 <Image
                   src="/logo-chatgpt.png"
-                  alt="CodeBlue Logo"
+                  alt="Outpatient Clinic Logo"
                   fill
                   className="object-contain"
                 />
               </div>
               <span className="text-xl font-bold text-white">
-                CodeBlue
+                Outpatient Clinic
               </span>
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed">

@@ -24,7 +24,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminCreateVisit } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { VoiceFormField } from '@/components/shared/VoiceFormField';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -58,6 +59,7 @@ export function SuperAdminVisitDialog({
   const [isPending, setIsPending] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const queryClient = useQueryClient();
+  const { mutate: createVisit } = useSuperAdminCreateVisit();
 
   const form = useForm<VisitFormData>({
     mode: 'onChange',
@@ -69,25 +71,29 @@ export function SuperAdminVisitDialog({
 
   const onSubmit = async (data: VisitFormData) => {
     setIsPending(true);
-    try {
-      await superAdminApi.createVisit({
+    createVisit(
+      {
         diagnoses: data.diagnoses,
         patientId,
         clinicId,
         audio: audioFile || undefined,
-      });
-      queryClient.invalidateQueries({ queryKey: ['super-admin-patient-visits', patientId] });
-      toast.success(tVisit('visitCreated'));
-      form.reset();
-      setAudioFile(null);
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create visit:', error);
-      toast.error(tVisit('visitCreateError'));
-    } finally {
-      setIsPending(false);
-    }
+      },
+      {
+        onSuccess: (result) => {
+          queryClient.invalidateQueries({ queryKey: ['super-admin-patient-visits', patientId] });
+          showOfflineAwareSuccess(result, { onlineMessage: tVisit('visitCreated') });
+          form.reset();
+          setAudioFile(null);
+          onOpenChange(false);
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to create visit:', error);
+          toast.error(tVisit('visitCreateError'));
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   return (

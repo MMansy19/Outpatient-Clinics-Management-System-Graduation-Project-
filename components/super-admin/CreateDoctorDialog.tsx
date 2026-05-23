@@ -124,10 +124,18 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       onSuccess: (response) => {
         console.log('✅ Doctor created successfully:', response);
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
-        toast.success(
-          toastMessages.doctor.createSuccess,
-          toastMessages.doctor.createSuccessDescription(fullName)
-        );
+        if (
+          response &&
+          typeof response === 'object' &&
+          (response as { offline?: boolean }).offline === true
+        ) {
+          toast.success('Saved offline', `${fullName} will be created when you reconnect.`);
+        } else {
+          toast.success(
+            toastMessages.doctor.createSuccess,
+            toastMessages.doctor.createSuccessDescription(fullName)
+          );
+        }
         form.reset();
         setOpen(false);
       },

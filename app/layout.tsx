@@ -65,7 +65,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CodeBlue',
+    title: 'Outpatient Clinic',
     startupImage: '/logo-chatgpt.png',
   },
   openGraph: {

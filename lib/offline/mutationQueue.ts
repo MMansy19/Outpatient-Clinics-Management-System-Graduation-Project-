@@ -152,6 +152,26 @@ const MUTATION_LABELS: Record<MutationType, string> = {
   updateMedication: 'Update Medication',
   updateLab: 'Update Lab',
   updateScan: 'Update Scan',
+  deleteVisit: 'Delete Visit',
+  deleteMedication: 'Delete Medication',
+  deleteLab: 'Delete Lab',
+  deleteScan: 'Delete Scan',
+  // Super-admin
+  createClinic: 'New Clinic',
+  updateClinic: 'Update Clinic',
+  deleteClinic: 'Delete Clinic',
+  createDoctor: 'New Doctor',
+  updateDoctor: 'Update Doctor',
+  deleteDoctor: 'Delete Doctor',
+  updatePatient: 'Update Patient',
+  superAdminCreateVisit: 'New Visit (Admin)',
+  superAdminUpdateVisit: 'Update Visit (Admin)',
+  superAdminCreateMedication: 'New Medication (Admin)',
+  superAdminUpdateMedication: 'Update Medication (Admin)',
+  superAdminCreateLab: 'New Lab (Admin)',
+  superAdminUpdateLab: 'Update Lab (Admin)',
+  superAdminCreateScan: 'New Scan (Admin)',
+  superAdminUpdateScan: 'Update Scan (Admin)',
 };
 
 export function getMutationLabel(type: MutationType): string {

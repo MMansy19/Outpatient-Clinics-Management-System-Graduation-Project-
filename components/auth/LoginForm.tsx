@@ -116,7 +116,7 @@ export function LoginForm({ locale }: LoginFormProps) {
           <div className="relative h-32 w-32">
             <Image
               src="/logo-chatgpt.png"
-              alt="CodeBlue Logo"
+              alt="Outpatient Clinic Logo"
               fill
               className="object-contain"
             />

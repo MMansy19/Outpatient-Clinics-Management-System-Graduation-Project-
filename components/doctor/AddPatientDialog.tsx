@@ -162,11 +162,12 @@ export function AddPatientDialog({
           toastMessages.patient.createSuccess,
           toastMessages.patient.createSuccessDescription(fullName)
         );
-        console.log('🔍 Patient created - ID:', response.id, 'National ID:', socialSecurityNumber);
+        const patientId = 'id' in response ? response.id : undefined;
+        console.log('🔍 Patient created - ID:', patientId, 'National ID:', socialSecurityNumber);
         console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
-        const numericId = parseInt(response.id) || 0;
+        const numericId = patientId ? parseInt(patientId) || 0 : 0;
         onSuccess?.({ id: numericId, socialSecurityNumber });
       },
       onError: (error: unknown) => {

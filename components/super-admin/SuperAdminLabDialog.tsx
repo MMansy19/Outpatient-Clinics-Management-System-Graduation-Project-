@@ -25,7 +25,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminCreateLab } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -69,32 +70,36 @@ export function SuperAdminLabDialog({
   });
 
   const queryClient = useQueryClient();
+  const { mutate: createLab } = useSuperAdminCreateLab();
 
   const onSubmit = async (data: LabFormData) => {
     setIsPending(true);
-    try {
-      await superAdminApi.createLab({
+    createLab(
+      {
         name: data.name,
         image: imageFile || undefined,
         comments: data.comments || undefined,
         patientId,
         clinicId,
-      });
-
-      toast.success(t('labCreatedSuccess'));
-      form.reset();
-      setImageFile(null);
-      setImagePreview(null);
-      if (imageInputRef.current) imageInputRef.current.value = '';
-      onOpenChange(false);
-      await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create lab:', error);
-      toast.error(t('labCreateError'));
-    } finally {
-      setIsPending(false);
-    }
+      },
+      {
+        onSuccess: async (result) => {
+          showOfflineAwareSuccess(result, { onlineMessage: t('labCreatedSuccess') });
+          form.reset();
+          setImageFile(null);
+          setImagePreview(null);
+          if (imageInputRef.current) imageInputRef.current.value = '';
+          onOpenChange(false);
+          await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to create lab:', error);
+          toast.error(t('labCreateError'));
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

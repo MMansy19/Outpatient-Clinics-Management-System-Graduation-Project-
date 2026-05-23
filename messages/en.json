@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "CodeBlue",
+    "appName": "Outpatient Clinic",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -42,6 +42,7 @@
       "title": "Transform Healthcare with Smart Clinical Solutions",
       "subtitle": "Empowering Kasr Al Ainy Hospital with AI-driven patient management, seamless medical records, and instant clinical decisions",
       "ctaDoctor": "Register as Doctor",
+      "cta": "Register",
       "ctaPatient": "Register as Patient"
     },
     "stats": {
@@ -71,7 +72,7 @@
       }
     },
     "register": {
-      "title": "Join CodeBlue Today",
+      "title": "Join Outpatient Clinic Today",
       "subtitle": "Choose your role and experience the future of healthcare management",
       "doctor": {
         "title": "For Healthcare Professionals",
@@ -128,7 +129,7 @@
     },
     "cta": {
       "title": "Ready to Transform Healthcare?",
-      "subtitle": "Join thousands of healthcare professionals and patients using CodeBlue",
+      "subtitle": "Join thousands of healthcare professionals and patients using Outpatient Clinic",
       "button": "Get Started Now"
     }
   },
@@ -153,7 +154,7 @@
     "terms": "Terms of Service",
     "hipaa": "HIPAA Compliance",
     "secured": "Secured by",
-    "copyright": "CodeBlue Team - Cairo University",
+    "copyright": "Outpatient Clinic Team - Cairo University",
     "allRights": "All rights reserved. Built for educational purposes."
   },
   "auth": {

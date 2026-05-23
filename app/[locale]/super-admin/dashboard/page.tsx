@@ -37,6 +37,7 @@ import { SuperAdminPatientProfile } from '@/components/super-admin/PatientProfil
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { useQuery } from '@tanstack/react-query';
 import { useLogout } from '@/lib/api/queries/useAuth';
+import { SuperAdminPrefetchOverlay } from '@/components/super-admin/SuperAdminPrefetchOverlay';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -160,18 +161,19 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
 
+  // Note: refetchInterval removed in favour of the prefetch overlay + manual
+  // "Sync now" action. staleTime is generous so cached IDB data is shown
+  // immediately offline; refetchOnReconnect (set globally) keeps us fresh.
   const { data: clinics, refetch: refetchClinics } = useQuery({
     queryKey: ['clinics'],
     queryFn: () => superAdminApi.getClinics(),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { refetch: refetchAllClinics } = useQuery({
     queryKey: ['clinics-all'],
     queryFn: () => superAdminApi.getClinics({ includeDeleted: true }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -194,23 +196,24 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
   const { data: doctorsData, refetch: refetchDoctors } = useQuery({
     queryKey: ['doctors-all'],
     queryFn: () => superAdminApi.getDoctors({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: patientsData, refetch: refetchPatients } = useQuery({
     queryKey: ['patients-all'],
     queryFn: () => superAdminApi.getPatients({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 
   const { data: visitsData, refetch: refetchVisits } = useQuery({
     queryKey: ['visits-all'],
     queryFn: () => superAdminApi.getVisits({ page: 1, limit: 10000 }),
-    staleTime: 30 * 1000,
-    refetchInterval: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
+
+  // ── Offline prefetch overlay state ──────────────────────────────────────
+  const [prefetchRefreshKey, setPrefetchRefreshKey] = useState(0);
+  const [lastSyncAt, setLastSyncAt] = useState<number>(0);
 
   // Calculate daily and weekly visits
   const { dailyVisits, weeklyVisits } = useMemo(() => {
@@ -263,6 +266,9 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
   }, [patientsData?.items, doctorsData?.items, visitsData?.items]);
 
   const refreshAllData = useCallback(() => {
+    // Force a full prefetch run (lists + recent patients) and also refetch
+    // the active dashboard queries so the UI reflects the latest server data.
+    setPrefetchRefreshKey((k) => k + 1);
     refetchClinics();
     refetchAllClinics();
     refetchDoctors();
@@ -270,9 +276,13 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     refetchVisits();
   }, [refetchClinics, refetchAllClinics, refetchDoctors, refetchPatients, refetchVisits]);
 
-  useEffect(() => {
-    refreshAllData();
-  }, [activeTab, refreshAllData]);
+  const formattedLastSync = useMemo(() => {
+    if (!lastSyncAt) return null;
+    return new Date(lastSyncAt).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }, [lastSyncAt]);
 
   const stats = useMemo(
     () => [
@@ -395,6 +405,10 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
   return (
     <AuthGuard allowedRoles={[Role.SUPER_ADMIN]} locale={locale}>
+      <SuperAdminPrefetchOverlay
+        refreshKey={prefetchRefreshKey}
+        onComplete={setLastSyncAt}
+      />
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         {/* Animated background elements */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -511,6 +525,11 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
               >
                 <Activity className="w-3 h-3 md:mr-2" />
                 <span className="hidden md:inline">{t('refresh')}</span>
+                {formattedLastSync && (
+                  <span className="ml-2 hidden text-[10px] text-muted-foreground md:inline">
+                    {formattedLastSync}
+                  </span>
+                )}
               </Button>
             </div>
 

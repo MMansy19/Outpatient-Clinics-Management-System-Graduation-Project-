@@ -26,7 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useUpdateClinic } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import type { ClinicResponse } from '@/lib/api/types';
 import { z } from 'zod';
 
@@ -52,6 +53,7 @@ export function EditClinicDialog({
 }: EditClinicDialogProps) {
   const t = useTranslations('admin');
   const [isPending, setIsPending] = useState(false);
+  const { mutate: updateClinic } = useUpdateClinic();
 
   const form = useForm<ClinicFormData>({
     resolver: zodResolver(clinicSchema),
@@ -72,28 +74,29 @@ export function EditClinicDialog({
 
   const onSubmit = async (data: ClinicFormData) => {
     if (!clinic) return;
-
-    try {
-      setIsPending(true);
-      await superAdminApi.updateClinic(clinic.id, {
-        name: data.name,
-        speciality: data.speciality,
-      });
-
-      toast.success(t('clinicUpdated') || 'Clinic updated successfully');
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to update clinic:', error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(
-        err?.response?.data?.message ||
-          t('clinicUpdateError') ||
-          'Failed to update clinic'
-      );
-    } finally {
-      setIsPending(false);
-    }
+    setIsPending(true);
+    updateClinic(
+      { id: clinic.id, data: { name: data.name, speciality: data.speciality } },
+      {
+        onSuccess: (result) => {
+          showOfflineAwareSuccess(result, {
+            onlineMessage: t('clinicUpdated') || 'Clinic updated successfully',
+          });
+          onOpenChange(false);
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to update clinic:', error);
+          const err = error as { response?: { data?: { message?: string } } };
+          toast.error(
+            err?.response?.data?.message ||
+              t('clinicUpdateError') ||
+              'Failed to update clinic',
+          );
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   return (

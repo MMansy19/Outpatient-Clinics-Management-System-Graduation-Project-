@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminUpdatePatient } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import type { PatientResponse } from '@/lib/api/types';
 
 interface EditPatientDialogProps {
@@ -32,6 +33,7 @@ export function EditPatientDialog({
 }: EditPatientDialogProps) {
   const t = useTranslations('admin');
   const [loading, setLoading] = useState(false);
+  const { mutate: updatePatient } = useSuperAdminUpdatePatient();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -56,25 +58,32 @@ export function EditPatientDialog({
 
     if (!patient) return;
 
-    try {
-      setLoading(true);
-      // Only send non-empty fields to avoid backend validation error
-      const payload: Record<string, string> = {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-      };
-      if (formData.job.trim()) payload.job = formData.job;
-      if (formData.address.trim()) payload.address = formData.address;
-      await superAdminApi.updatePatient(patient.id, payload);
-      toast.success(t('patientUpdatedSuccess'));
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to update patient:', error);
-      toast.error(t('patientUpdateFailed'));
-    } finally {
-      setLoading(false);
-    }
+    // Only send non-empty fields to avoid backend validation error
+    const payload: Record<string, string> = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+    };
+    if (formData.job.trim()) payload.job = formData.job;
+    if (formData.address.trim()) payload.address = formData.address;
+
+    setLoading(true);
+    updatePatient(
+      { id: patient.id, data: payload },
+      {
+        onSuccess: (result) => {
+          showOfflineAwareSuccess(result, {
+            onlineMessage: t('patientUpdatedSuccess'),
+          });
+          onSuccess();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          console.error('Failed to update patient:', error);
+          toast.error(t('patientUpdateFailed'));
+        },
+        onSettled: () => setLoading(false),
+      },
+    );
   };
 
   if (!patient) return null;

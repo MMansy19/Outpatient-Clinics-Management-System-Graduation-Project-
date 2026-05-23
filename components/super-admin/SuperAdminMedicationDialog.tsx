@@ -32,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminCreateMedication } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -77,30 +78,34 @@ export function SuperAdminMedicationDialog({
   });
 
   const queryClient = useQueryClient();
+  const { mutate: createMedication } = useSuperAdminCreateMedication();
 
   const onSubmit = async (data: MedicationFormData) => {
     setIsPending(true);
-    try {
-      await superAdminApi.createMedication({
+    createMedication(
+      {
         name: data.name,
         dosage: data.dosage,
         period: data.period,
         comments: data.comments || undefined,
         patientId,
         clinicId,
-      });
-
-      toast.success(t('medicationCreatedSuccess'));
-      await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
-      form.reset();
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create medication:', error);
-      toast.error(t('medicationCreateError'));
-    } finally {
-      setIsPending(false);
-    }
+      },
+      {
+        onSuccess: async (result) => {
+          showOfflineAwareSuccess(result, { onlineMessage: t('medicationCreatedSuccess') });
+          await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
+          form.reset();
+          onOpenChange(false);
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to create medication:', error);
+          toast.error(t('medicationCreateError'));
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   return (

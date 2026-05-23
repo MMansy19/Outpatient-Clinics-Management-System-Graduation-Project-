@@ -83,11 +83,21 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
     };
 
     createPatient(payload, {
-      onSuccess: () => {
+      onSuccess: (response) => {
         const fullName = `${data.firstName} ${data.lastName}`;
-        toast.success(t('patientCreated') || 'Patient created successfully', {
-          description: `${fullName} (${data.socialSecurityNumber})`,
-        });
+        if (
+          response &&
+          typeof response === 'object' &&
+          (response as { offline?: boolean }).offline === true
+        ) {
+          toast.success('Saved offline', {
+            description: `${fullName} will be created when you reconnect.`,
+          });
+        } else {
+          toast.success(t('patientCreated') || 'Patient created successfully', {
+            description: `${fullName} (${data.socialSecurityNumber})`,
+          });
+        }
         form.reset();
         setOpen(false);
         onSuccess?.();

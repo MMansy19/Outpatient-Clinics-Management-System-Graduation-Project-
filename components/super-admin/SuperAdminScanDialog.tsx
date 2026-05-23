@@ -32,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminCreateScan } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -87,33 +88,37 @@ export function SuperAdminScanDialog({
   });
 
   const queryClient = useQueryClient();
+  const { mutate: createScan } = useSuperAdminCreateScan();
 
   const onSubmit = async (data: ScanFormData) => {
     setIsPending(true);
-    try {
-      await superAdminApi.createScan({
+    createScan(
+      {
         name: data.name,
         type: parseInt(data.type),
         image: imageFile || undefined,
         comments: data.comments || undefined,
         patientId,
         clinicId,
-      });
-
-      toast.success(t('scanCreatedSuccess'));
-      form.reset();
-      setImageFile(null);
-      setImagePreview(null);
-      if (imageInputRef.current) imageInputRef.current.value = '';
-      onOpenChange(false);
-      await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create scan:', error);
-      toast.error(t('scanCreateError'));
-    } finally {
-      setIsPending(false);
-    }
+      },
+      {
+        onSuccess: async (result) => {
+          showOfflineAwareSuccess(result, { onlineMessage: t('scanCreatedSuccess') });
+          form.reset();
+          setImageFile(null);
+          setImagePreview(null);
+          if (imageInputRef.current) imageInputRef.current.value = '';
+          onOpenChange(false);
+          await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to create scan:', error);
+          toast.error(t('scanCreateError'));
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {

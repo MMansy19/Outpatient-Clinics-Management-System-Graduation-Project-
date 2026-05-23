@@ -14,7 +14,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useSuperAdminUpdateVisit } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
 
 interface EditVisitDialogProps {
@@ -34,6 +35,7 @@ export function EditVisitDialog({
   const tAdmin = useTranslations('admin');
   const [loading, setLoading] = useState(false);
   const [diagnoses, setDiagnoses] = useState('');
+  const { mutate: updateVisit } = useSuperAdminUpdateVisit();
 
   useEffect(() => {
     if (visit) {
@@ -46,18 +48,24 @@ export function EditVisitDialog({
 
     if (!visit) return;
 
-    try {
-      setLoading(true);
-      await superAdminApi.updateVisit(visit.id, { diagnoses });
-      toast.success(t('visitUpdated'));
-      onSuccess();
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to update visit:', error);
-      toast.error(tAdmin('visitUpdateFailed') ?? 'Failed to update visit');
-    } finally {
-      setLoading(false);
-    }
+    setLoading(true);
+    updateVisit(
+      { id: visit.id, data: { diagnoses }, patientId: visit.patientId },
+      {
+        onSuccess: (result) => {
+          showOfflineAwareSuccess(result, {
+            onlineMessage: t('visitUpdated'),
+          });
+          onSuccess();
+          onOpenChange(false);
+        },
+        onError: (error) => {
+          console.error('Failed to update visit:', error);
+          toast.error(tAdmin('visitUpdateFailed') ?? 'Failed to update visit');
+        },
+        onSettled: () => setLoading(false),
+      },
+    );
   };
 
   if (!visit) return null;

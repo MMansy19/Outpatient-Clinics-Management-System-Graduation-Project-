@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '../auth.service';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
 import type {
   LoginDto,
   CreateDoctorDto,
@@ -101,16 +102,19 @@ export function useLogout() {
  * });
  */
 export function useCreateDoctor() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateDoctorDto) => {
-      return await authApi.createDoctor(data);
+  // Offline-aware: queues to /auth/doctor/create when offline.
+  return useOfflineMutation<
+    Awaited<ReturnType<typeof authApi.createDoctor>>,
+    CreateDoctorDto
+  >({
+    mutationFn: (data) => authApi.createDoctor(data),
+    offlineConfig: {
+      type: 'createDoctor',
+      endpoint: '/auth/doctor/create',
+      method: 'POST',
+      getPayload: (data) => ({ ...data }),
     },
-    onSuccess: () => {
-      // Invalidate doctor list query
-      queryClient.invalidateQueries({ queryKey: ['doctors'] });
-    },
+    invalidateKeys: [['doctors'], ['doctors-all']],
   });
 }
 
@@ -128,16 +132,19 @@ export function useCreateDoctor() {
  * });
  */
 export function useCreatePatient() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreatePatientDto) => {
-      return await authApi.createPatient(data);
+  // Offline-aware: queues to /auth/patient/create when offline.
+  return useOfflineMutation<
+    Awaited<ReturnType<typeof authApi.createPatient>>,
+    CreatePatientDto
+  >({
+    mutationFn: (data) => authApi.createPatient(data),
+    offlineConfig: {
+      type: 'createPatient',
+      endpoint: '/auth/patient/create',
+      method: 'POST',
+      getPayload: (data) => ({ ...data }),
     },
-    onSuccess: (data) => {
-      console.log('Patient created:', data);
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-    },
+    invalidateKeys: [['patients'], ['patients-all']],
   });
 }
 
