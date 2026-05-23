@@ -65,7 +65,7 @@ interface OfflineMutationConfig<TData, TVariables> {
     getPatientName?: (variables: TVariables) => string | undefined;
   };
   /** Query keys to invalidate on success */
-  invalidateKeys?: unknown[][];
+  invalidateKeys?: ReadonlyArray<ReadonlyArray<unknown>>;
 }
 
 export function useOfflineMutation<TData = unknown, TVariables = unknown>(
@@ -120,7 +120,7 @@ export function useOfflineMutation<TData = unknown, TVariables = unknown>(
       // Invalidate cached queries so UI updates
       if (config.invalidateKeys) {
         for (const key of config.invalidateKeys) {
-          queryClient.invalidateQueries({ queryKey: key });
+          queryClient.invalidateQueries({ queryKey: key as readonly unknown[] });
         }
       }
     },

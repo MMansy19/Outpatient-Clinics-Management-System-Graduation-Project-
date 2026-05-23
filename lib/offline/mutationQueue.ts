@@ -76,9 +76,13 @@ export async function getSyncingMutations(): Promise<QueuedMutation[]> {
 }
 
 export async function getQueueSize(): Promise<number> {
+  // Counts only entries the user can act on. 'syncing' rows are mid-flight —
+  // either they succeed (and get deleted) or they fail (and flip back to
+  // 'pending'/'failed'). Counting them would cause a stuck banner whenever a
+  // row is orphaned in 'syncing' (sync loop crashed / tab refreshed).
   return offlineDb.mutationQueue
     .where('status')
-    .anyOf('pending', 'failed', 'syncing')
+    .anyOf('pending', 'failed')
     .count();
 }
 
@@ -87,6 +91,40 @@ export async function getFailedMutations(): Promise<QueuedMutation[]> {
     .where('status')
     .equals('failed')
     .sortBy('createdAt');
+}
+
+/**
+ * Find and reset 'syncing' rows that are stale (no recent `lastAttemptAt`).
+ * A row can be orphaned in 'syncing' if the sync loop is interrupted by a
+ * tab close, navigation, JS error, or `navigator.onLine` flap before the
+ * row's status transitions to 'pending'/'failed'/deleted.
+ *
+ * Should be called:
+ *  - at app boot, before the user sees any sync indicator
+ *  - at the top of each sync loop, before processing
+ *
+ * Returns the number of rows reconciled.
+ */
+export async function reconcileOrphanedSyncing(
+  staleThresholdMs: number = 60_000
+): Promise<number> {
+  const cutoff = Date.now() - staleThresholdMs;
+  const stuck = await offlineDb.mutationQueue
+    .where('status')
+    .equals('syncing')
+    .toArray();
+
+  let reconciled = 0;
+  for (const row of stuck) {
+    if (row.autoId === undefined) continue;
+    const lastAttempt = row.lastAttemptAt ?? 0;
+    if (lastAttempt && lastAttempt > cutoff) continue;
+    await offlineDb.mutationQueue.update(row.autoId, {
+      status: 'pending' as MutationStatus,
+    });
+    reconciled++;
+  }
+  return reconciled;
 }
 
 // ============================================================================

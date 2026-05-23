@@ -8,6 +8,8 @@ import {
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Lab } from '@/types/entities/Lab';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
 
 /**
  * Toggle between mock data and real backend API
@@ -128,44 +130,24 @@ export const useGetLab = (
  * );
  * ```
  */
-export const useCreateLab = (): UseMutationResult<
-  unknown,
-  Error,
-  { patientId: string; data: { name: string; comments: string } | FormData }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ patientId, data }) => {
-      return doctorApi.createLab(patientId, data);
+export const useCreateLab = () => {
+  return useOfflineMutation<
+    unknown,
+    { patientId: string; data: { name: string; comments: string } | FormData }
+  >({
+    mutationFn: ({ patientId, data }) => doctorApi.createLab(patientId, data),
+    offlineConfig: {
+      type: 'createLab',
+      endpoint: '/doctor/lab',
+      method: 'POST',
+      getPayload: ({ patientId, data }) => ({
+        ...toPayload(data),
+        patientId,
+      }),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ patientId }) => patientId,
     },
-    onSuccess: (response, variables) => {
-      // Invalidate patient labs list
-      queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.patientId),
-      });
-
-      // Invalidate all labs queries
-      queryClient.invalidateQueries({
-        queryKey: labsKeys.all,
-      });
-
-      // Invalidate patient details
-      queryClient.invalidateQueries({
-        queryKey: ['patients'],
-      });
-
-      // Optionally set the new lab in cache
-      if (response && typeof response === 'object' && 'id' in response) {
-        queryClient.setQueryData(
-          labsKeys.detail((response as { id: string }).id),
-          variables.data
-        );
-      }
-    },
-    onError: (error) => {
-      console.error('[useCreateLab] Error:', error);
-    },
+    invalidateKeys: [labsKeys.all, ['patients']],
   });
 };
 
@@ -196,35 +178,21 @@ export const useCreateLab = (): UseMutationResult<
  * };
  * ```
  */
-export const useUpdateLab = (): UseMutationResult<
-  unknown,
-  Error,
-  { labId: string; data: Partial<Lab>; patientId: string }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ labId, data }) =>
-      doctorApi.updateLab(labId, data),
-    onSuccess: (_updatedLab, variables) => {
-      // Invalidate the specific lab cache
-      queryClient.invalidateQueries({
-        queryKey: labsKeys.detail(variables.labId),
-      });
-
-      // Invalidate patient labs list
-      queryClient.invalidateQueries({
-        queryKey: labsKeys.patient(variables.patientId),
-      });
-
-      // Invalidate all labs queries
-      queryClient.invalidateQueries({
-        queryKey: labsKeys.all,
-      });
+export const useUpdateLab = () => {
+  return useOfflineMutation<
+    unknown,
+    { labId: string; data: Partial<Lab>; patientId: string }
+  >({
+    mutationFn: ({ labId, data }) => doctorApi.updateLab(labId, data),
+    offlineConfig: {
+      type: 'updateLab',
+      endpoint: ({ labId }) => `/doctor/lab/${labId}`,
+      method: 'PATCH',
+      getPayload: ({ data }) => toPayload(data),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ patientId }) => patientId,
     },
-    onError: (error) => {
-      console.error('[useUpdateLab] Error:', error);
-    },
+    invalidateKeys: [labsKeys.all],
   });
 };
 

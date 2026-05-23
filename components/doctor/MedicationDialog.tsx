@@ -68,7 +68,8 @@ export function MedicationDialog({
     onSuccess: (response) => {
       form.reset();
       setAudioFile(null);
-      onSuccess?.(response.id);
+      const id = response?.id ?? response?.clientTempId ?? '';
+      onSuccess?.(id);
     },
     successMessage: t('medicationCreated'),
   });

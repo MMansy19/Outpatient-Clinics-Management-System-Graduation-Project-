@@ -60,7 +60,8 @@ export function VisitDialog({
       form.reset();
       setAudioFile(null);
       setValidationError(null);
-      onSuccess?.(visit.id);
+      const id = visit?.id ?? visit?.clientTempId ?? '';
+      onSuccess?.(id);
     },
     successMessage: t('visitCreated'),
   });

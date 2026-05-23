@@ -8,6 +8,8 @@ import {
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Scan } from '@/types/entities/Scan';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
 
 /**
  * Toggle between mock data and real backend API
@@ -128,44 +130,24 @@ export const useGetScan = (
  * );
  * ```
  */
-export const useCreateScan = (): UseMutationResult<
-  unknown,
-  Error,
-  { patientId: string; data: { name: string; comments: string; type: string } | FormData }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ patientId, data }) => {
-      return doctorApi.createScan(patientId, data);
+export const useCreateScan = () => {
+  return useOfflineMutation<
+    unknown,
+    { patientId: string; data: { name: string; comments: string; type: string } | FormData }
+  >({
+    mutationFn: ({ patientId, data }) => doctorApi.createScan(patientId, data),
+    offlineConfig: {
+      type: 'createScan',
+      endpoint: '/doctor/scan',
+      method: 'POST',
+      getPayload: ({ patientId, data }) => ({
+        ...toPayload(data),
+        patientId,
+      }),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ patientId }) => patientId,
     },
-    onSuccess: (response, variables) => {
-      // Invalidate patient scans list
-      queryClient.invalidateQueries({
-        queryKey: scansKeys.patient(variables.patientId),
-      });
-
-      // Invalidate all scans queries
-      queryClient.invalidateQueries({
-        queryKey: scansKeys.all,
-      });
-
-      // Invalidate patient details
-      queryClient.invalidateQueries({
-        queryKey: ['patients'],
-      });
-
-      // Optionally set the new scan in cache
-      if (response && typeof response === 'object' && 'id' in response) {
-        queryClient.setQueryData(
-          scansKeys.detail((response as { id: string }).id),
-          variables.data
-        );
-      }
-    },
-    onError: (error) => {
-      console.error('[useCreateScan] Error:', error);
-    },
+    invalidateKeys: [scansKeys.all, ['patients']],
   });
 };
 
@@ -196,35 +178,21 @@ export const useCreateScan = (): UseMutationResult<
  * };
  * ```
  */
-export const useUpdateScan = (): UseMutationResult<
-  unknown,
-  Error,
-  { scanId: string; data: Partial<Scan>; patientId: string }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ scanId, data }) =>
-      doctorApi.updateScan(scanId, data),
-    onSuccess: (_updatedScan, variables) => {
-      // Invalidate the specific scan cache
-      queryClient.invalidateQueries({
-        queryKey: scansKeys.detail(variables.scanId),
-      });
-
-      // Invalidate patient scans list
-      queryClient.invalidateQueries({
-        queryKey: scansKeys.patient(variables.patientId),
-      });
-
-      // Invalidate all scans queries
-      queryClient.invalidateQueries({
-        queryKey: scansKeys.all,
-      });
+export const useUpdateScan = () => {
+  return useOfflineMutation<
+    unknown,
+    { scanId: string; data: Partial<Scan>; patientId: string }
+  >({
+    mutationFn: ({ scanId, data }) => doctorApi.updateScan(scanId, data),
+    offlineConfig: {
+      type: 'updateScan',
+      endpoint: ({ scanId }) => `/doctor/scan/${scanId}`,
+      method: 'PATCH',
+      getPayload: ({ data }) => toPayload(data),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ patientId }) => patientId,
     },
-    onError: (error) => {
-      console.error('[useUpdateScan] Error:', error);
-    },
+    invalidateKeys: [scansKeys.all],
   });
 };
 

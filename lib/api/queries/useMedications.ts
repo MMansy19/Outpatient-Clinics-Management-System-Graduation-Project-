@@ -11,6 +11,8 @@ import type {
   CreateMedicationResponse,
 } from '@/lib/api/types';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
 
 /**
  * Query Key Factory for Medications
@@ -131,39 +133,19 @@ export const useGetMedication = (
  * );
  * ```
  */
-export const useCreateMedication = (): UseMutationResult<
-  CreateMedicationResponse,
-  Error,
-  CreateMedicationDto | FormData
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateMedicationDto | FormData) => {
-      return doctorApi.createMedication(data);
+export const useCreateMedication = () => {
+  return useOfflineMutation<CreateMedicationResponse, CreateMedicationDto | FormData>({
+    mutationFn: (data) => doctorApi.createMedication(data),
+    offlineConfig: {
+      type: 'createMedication',
+      endpoint: '/doctor/medication',
+      method: 'POST',
+      getPayload: (data) => toPayload(data),
+      getBlobs: (data) => toBlobs(data),
+      getPatientId: (data) =>
+        data instanceof FormData ? (data.get('patientId') as string) : data.patientId,
     },
-    onSuccess: (response, variables) => {
-      // Invalidate patient medications list
-      // Note: medications are keyed by socialSecurityNumber, not patientId
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.all,
-      });
-
-      // Invalidate patient details (may include medication count)
-      queryClient.invalidateQueries({
-        queryKey: ['patients'],
-      });
-
-      // Optionally set the new medication in cache
-      queryClient.setQueryData(
-        medicationsKeys.detail(response.id),
-        variables
-      );
-    },
-    onError: (error) => {
-      console.error('[useCreateMedication] Error:', error);
-      // Could add global error handling here
-    },
+    invalidateKeys: [medicationsKeys.all, ['patients']],
   });
 };
 
@@ -194,30 +176,21 @@ export const useCreateMedication = (): UseMutationResult<
  * };
  * ```
  */
-export const useUpdateMedication = (): UseMutationResult<
-  unknown,
-  Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ medicationId, data }) =>
-      doctorApi.updateMedication(medicationId, data),
-    onSuccess: (_updatedMedication, variables) => {
-      // Invalidate the specific medication cache
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.detail(variables.medicationId),
-      });
-
-      // Invalidate all medications queries
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.all,
-      });
+export const useUpdateMedication = () => {
+  return useOfflineMutation<
+    unknown,
+    { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
+  >({
+    mutationFn: ({ medicationId, data }) => doctorApi.updateMedication(medicationId, data),
+    offlineConfig: {
+      type: 'updateMedication',
+      endpoint: ({ medicationId }) => `/doctor/medication/${medicationId}`,
+      method: 'PATCH',
+      getPayload: ({ data }) => toPayload(data),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ socialSecurityNumber }) => socialSecurityNumber,
     },
-    onError: (error) => {
-      console.error('[useUpdateMedication] Error:', error);
-    },
+    invalidateKeys: [medicationsKeys.all],
   });
 };
 

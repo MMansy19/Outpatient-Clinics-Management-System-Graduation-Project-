@@ -5,6 +5,7 @@ import {
   markSyncing,
   markSynced,
   markFailed,
+  reconcileOrphanedSyncing,
 } from './mutationQueue';
 
 type SyncListener = (event: SyncEvent) => void;
@@ -47,6 +48,12 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
   let failed = 0;
 
   try {
+    // Recover any rows orphaned in 'syncing' status from a previous run
+    // (tab closed mid-sync, navigator.onLine flipped before catch, etc.).
+    // Without this, those rows are invisible to getPendingMutations() but
+    // still counted by getQueueSize() → stuck banner.
+    await reconcileOrphanedSyncing();
+
     const pending = await getPendingMutations();
     if (pending.length === 0) {
       isSyncing = false;
@@ -134,6 +141,14 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
     console.error('[SyncEngine] Unexpected error:', error);
     emit({ type: 'error', total: 0, processed: 0, failed: 0 });
   } finally {
+    // Final safety net: any row still flagged 'syncing' here was orphaned
+    // by an exception path. Flip it back to 'pending' so the counter and
+    // drawer stay in sync.
+    try {
+      await reconcileOrphanedSyncing(0);
+    } catch {
+      /* swallow */
+    }
     isSyncing = false;
   }
 

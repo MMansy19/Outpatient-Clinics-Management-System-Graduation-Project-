@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { getQueueSize, getFailedMutations, getPendingMutations, retryMutation, deleteMutation, getMutationLabel } from '@/lib/offline/mutationQueue';
+import { getQueueSize, getFailedMutations, getPendingMutations, retryMutation, deleteMutation, getMutationLabel, reconcileOrphanedSyncing } from '@/lib/offline/mutationQueue';
 import { processSyncQueue, addSyncListener, type SyncEvent } from '@/lib/offline/syncEngine';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import type { QueuedMutation } from '@/lib/offline/db';
@@ -11,8 +11,18 @@ export function SyncStatusIndicator() {
   const [queueCount, setQueueCount] = useState(0);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
+  // Dismissal is sticky for the current quiet period only. It resets
+  // automatically as soon as the count climbs above its dismissed value
+  // (a new offline mutation was queued) or sync starts again.
+  const [dismissedAt, setDismissedAt] = useState<number | null>(null);
 
   const refreshCount = useCallback(async () => {
+    // Self-heal any orphan 'syncing' rows before reading the count.
+    try {
+      await reconcileOrphanedSyncing();
+    } catch {
+      /* swallow */
+    }
     const count = await getQueueSize();
     setQueueCount(count);
   }, []);
@@ -20,7 +30,10 @@ export function SyncStatusIndicator() {
   // Listen for sync events
   useEffect(() => {
     const unsub = addSyncListener((event: SyncEvent) => {
-      if (event.type === 'start') setIsSyncing(true);
+      if (event.type === 'start') {
+        setIsSyncing(true);
+        setDismissedAt(null); // re-show the indicator while syncing
+      }
       if (event.type === 'complete' || event.type === 'error') {
         setIsSyncing(false);
         refreshCount();
@@ -29,33 +42,60 @@ export function SyncStatusIndicator() {
     return unsub;
   }, [refreshCount]);
 
-  // Refresh count periodically
+  // Refresh count periodically. Tighter cadence while syncing so the
+  // banner clears promptly after replay finishes.
   useEffect(() => {
     refreshCount();
-    const interval = setInterval(refreshCount, 5000);
+    const interval = setInterval(refreshCount, isSyncing ? 1500 : 5000);
     return () => clearInterval(interval);
-  }, [refreshCount]);
+  }, [refreshCount, isSyncing]);
+
+  // Reset dismissal whenever a new mutation enters the queue.
+  useEffect(() => {
+    if (dismissedAt !== null && queueCount > dismissedAt) {
+      setDismissedAt(null);
+    }
+  }, [queueCount, dismissedAt]);
 
   if (queueCount === 0) return null;
+  if (dismissedAt !== null && !isSyncing) return null;
 
   return (
     <>
-      <button
-        onClick={() => setShowDrawer(true)}
-        className="relative inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 shadow-sm hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-      >
-        {isSyncing ? (
-          <svg className="h-3.5 w-3.5 animate-spin text-emerald-500" viewBox="0 0 24 24" fill="none">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-          </svg>
-        ) : (
-          <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+      <div className="relative inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white px-1 py-0.5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <button
+          onClick={() => setShowDrawer(true)}
+          className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700"
+        >
+          {isSyncing ? (
+            <svg className="h-3.5 w-3.5 animate-spin text-emerald-500" viewBox="0 0 24 24" fill="none">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+          ) : (
+            <svg className="h-3.5 w-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          )}
+          <span>
+            {isSyncing
+              ? `Syncing ${queueCount} pending change${queueCount === 1 ? '' : 's'}\u2026`
+              : `${queueCount} pending`}
+          </span>
+        </button>
+        {!isSyncing && (
+          <button
+            type="button"
+            aria-label="Dismiss"
+            onClick={() => setDismissedAt(queueCount)}
+            className="rounded-md p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700"
+          >
+            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         )}
-        <span>{queueCount} pending</span>
-      </button>
+      </div>
 
       {showDrawer && (
         <PendingMutationsDrawer
