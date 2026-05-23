@@ -11,7 +11,6 @@ import {
   TrendingUp,
   LogOut,
   UserCheck,
-  Clock,
   Stethoscope,
   UserRound,
   ClipboardList,
@@ -249,6 +248,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
     today.setHours(0, 0, 0, 0);
 
     const daily = patients.filter((p) => {
+      if (!p.createdAt) return false;
       const created = new Date(p.createdAt);
       created.setHours(0, 0, 0, 0);
       return created.getTime() === today.getTime();
@@ -261,7 +261,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
           visitDate.setHours(0, 0, 0, 0);
           return visitDate.getTime() === today.getTime();
         })
-        .map((v) => v.doctor?.id)
+        .map((v) => v.doctorId)
         .filter(Boolean)
     );
     const active = doctorsData?.items?.filter((d) => doctorIdsToday.has(d.id)).length ?? 0;

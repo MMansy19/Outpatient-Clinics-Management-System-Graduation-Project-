@@ -14,7 +14,6 @@ import {
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
-import { useAuthStore } from '@/stores/authStore';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -46,13 +45,10 @@ import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { AddPatientDialog } from '@/components/doctor/AddPatientDialog';
 import { PatientProfile } from '@/components/doctor/PatientProfile';
 import { VoiceRecorderDialog } from '@/components/doctor/VoiceRecorderDialog';
-import { CreateDoctorDialog } from '@/components/admin/CreateDoctorDialog';
 import {
   useGetAllVisits,
   useGetAllPatients,
 } from '@/lib/api/queries/useVisits';
-import { useGetClinicDoctors } from '@/lib/api/queries/useUsers';
-import { useAdminGetClinic } from '@/lib/api/queries/useAdmin';
 import { useLogout } from '@/lib/api/queries/useAuth';
 import { EnrichedScanData } from '@/types/ocr';
 import { toast } from 'sonner';
@@ -87,13 +83,8 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     'scan' | 'manual'
   >('manual');
 
-  // Get user role and clinicId from auth store
-  const { user } = useAuthStore();
-  const userRole = user?.role;
-  const isAdmin = userRole === Role.ADMIN;
-
-  // For ADMIN (clinic manager): fetch own clinic info
-  const { data: adminClinic } = useAdminGetClinic(isAdmin);
+  // ADMIN role has been removed; isAdmin is always false
+  const isAdmin = false;
 
   const { mutate: logout, isPending: loggingOut } = useLogout();
   const {
@@ -109,10 +100,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     error: patientsError,
     refetch: refetchPatients,
   } = useGetAllPatients();
-
-  // Admin-specific: Get doctors in admin's clinic (backend reads clinic from JWT)
-  const { data: clinicDoctors, isLoading: loadingClinicDoctors } =
-    useGetClinicDoctors(1, 50);
 
   // Calculate statistics
   const calculateStats = () => {
@@ -154,14 +141,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     }).length;
 
     // Admin-specific: Doctors in clinic
-    const doctorsInClinic = clinicDoctors?.items?.length || 0;
-
+  const doctorsInClinic = 0;
     // Admin-specific: Total patients and visits in clinic
     const clinicPatients = patientsList.length;
     const clinicVisits = visitsList.length;
 
-    // Admin-specific: Clinic name (from GET /admin/clinic)
-    const clinicName = adminClinic?.name || '';
+    const clinicName = '';
 
     return {
       todaysPatients,
@@ -265,7 +250,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
   return (
     <AuthGuard
-      allowedRoles={[Role.DOCTOR, Role.ADMIN, Role.SUPER_ADMIN]}
+      allowedRoles={[Role.DOCTOR, Role.SUPER_ADMIN]}
       locale={locale}
     >
       <div className="container mx-auto space-y-4 md:space-y-6 p-4 md:p-6">
@@ -284,21 +269,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
             </p>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
-            {/* Add Doctor button - only for ADMIN */}
-            {isAdmin && (
-              <CreateDoctorDialog
-                autoFetchClinic
-                trigger={
-                  <Button variant="outline" className="sm:flex-none">
-                    <Plus className="mr-2 h-5 w-5" />
-                    <span className="md:inline hidden">{t('addDoctor')}</span>
-                    <span className="inline md:hidden">
-                      {t('addDoctorMobile')}
-                    </span>
-                  </Button>
-                }
-              />
-            )}
+            {/* Add Doctor button - only for ADMIN (role removed) */}
             <Button
               onClick={() => {
                 setIsRegistrationSheetOpen(true);
@@ -355,7 +326,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {loadingClinicDoctors ? '...' : stats.doctorsInClinic}
+                    {stats.doctorsInClinic}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
                     {t('doctorsInClinicDescription', {
@@ -759,75 +730,7 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
           </div>
         )}
 
-        {/* Admin: Doctors View */}
-        {currentView === 'doctors' && isAdmin && (
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('doctors') || 'Doctors'}</CardTitle>
-              <CardDescription>
-                {t('doctorsInClinicDescription', {
-                  clinicName: stats.clinicName,
-                }) || 'Doctors in your clinic'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {loadingClinicDoctors ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : clinicDoctors &&
-                clinicDoctors.items &&
-                clinicDoctors.items.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>{tTable('name')}</TableHead>
-                        <TableHead>{tTable('email')}</TableHead>
-                        <TableHead>{tTable('phone')}</TableHead>
-                        <TableHead>{tTable('speciality')}</TableHead>
-                        <TableHead>{tTable('status')}</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {clinicDoctors.items.map((doctor: any) => (
-                        <TableRow key={doctor.id}>
-                          <TableCell className="font-medium">
-                            {doctor.name}
-                          </TableCell>
-                          <TableCell>{doctor.email}</TableCell>
-                          <TableCell>{doctor.phone}</TableCell>
-                          <TableCell>{doctor.speciality}</TableCell>
-                          <TableCell>
-                            <span
-                              className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                                doctor.isApproved
-                                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                  : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                              }`}
-                            >
-                              {doctor.isApproved
-                                ? tTable('approved')
-                                : tTable('pending')}
-                            </span>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-muted-foreground">
-                    {t('noDoctorsFound') || 'No doctors found in your clinic'}
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+        {/* Admin: Doctors View - removed (ADMIN role no longer exists) */}
 
         {/* Admin: Clinics View — no dedicated endpoint exists for ADMIN to fetch clinic info */}
 

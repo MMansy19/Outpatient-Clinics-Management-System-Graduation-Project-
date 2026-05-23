@@ -512,12 +512,15 @@ export const superAdminApi = {
     }>(`/super-admin/patient/${patientId}/medications`);
     const data = response.data as Record<string, unknown>;
     if (Array.isArray(data)) {
-      return { medications: data as unknown[] };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { medications: data as any[] };
     }
     if (Array.isArray(data['medications'])) {
-      return { medications: data['medications'] as unknown[] };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      return { medications: data['medications'] as any[] };
     }
-    return { medications: (data['items'] ?? []) as unknown[] };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { medications: (data['items'] ?? []) as any[] };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/labs */
@@ -547,13 +550,12 @@ export const superAdminApi = {
       totalPages?: number;
     }>(`/super-admin/patient/${patientId}/labs`);
     const data = response.data;
-    if (Array.isArray(data)) {
-      return { labs: data as typeof data extends (infer T)[] ? T : never };
-    }
-    if (Array.isArray(data.labs)) {
-      return { labs: data.labs as typeof data.labs };
-    }
-    return { labs: (data.items ?? []) as typeof data extends { items: infer I } ? I : never };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (Array.isArray(data)) { return { labs: data as any[] }; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (Array.isArray(data.labs)) { return { labs: data.labs as any[] }; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { labs: (data.items ?? []) as any[] };
   },
 
   /** GET /api/v1/super-admin/patient/{id}/scans */
@@ -585,13 +587,12 @@ export const superAdminApi = {
       totalPages?: number;
     }>(`/super-admin/patient/${patientId}/scans`);
     const data = response.data;
-    if (Array.isArray(data)) {
-      return { scans: data as typeof data extends (infer T)[] ? T : never };
-    }
-    if (Array.isArray(data.scans)) {
-      return { scans: data.scans as typeof data.scans };
-    }
-    return { scans: (data.items ?? []) as typeof data extends { items: infer I } ? I : never };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (Array.isArray(data)) { return { scans: data as any[] }; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (Array.isArray(data.scans)) { return { scans: data.scans as any[] }; }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return { scans: (data.items ?? []) as any[] };
   },
 
   // ────────────────────────────────────────────────────────────────���─��───────

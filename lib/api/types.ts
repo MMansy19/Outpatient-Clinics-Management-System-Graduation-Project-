@@ -213,6 +213,7 @@ export interface PatientResponse {
   id: string;
   address: string;
   job: string;
+  createdAt?: string; // ISO date string
   user: {
     id: string;
     socialSecurityNumber: string;
