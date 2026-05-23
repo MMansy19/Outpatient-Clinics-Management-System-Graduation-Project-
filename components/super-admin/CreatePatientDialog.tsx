@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Loader2, UserPlus } from 'lucide-react';
+import { Loader2, UserPlus, ScanLine } from 'lucide-react';
 
 import {
   Dialog,
@@ -35,6 +35,8 @@ import {
 } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { Gender } from '@/lib/api/types';
+import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
+import { EnrichedScanData } from '@/types/ocr';
 
 interface CreatePatientDialogProps {
   trigger?: React.ReactNode;
@@ -44,6 +46,7 @@ interface CreatePatientDialogProps {
 export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { mutate: createPatient, isPending } = useCreatePatient();
 
   const form = useForm({
@@ -60,6 +63,21 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
   });
 
   const nationalId = form.watch('socialSecurityNumber');
+
+  const handleScanComplete = (data: EnrichedScanData) => {
+    const ssn = data.nationalId || data.socialSecurityNumber || '';
+    form.setValue('socialSecurityNumber', ssn, { shouldValidate: true });
+    if (data.firstName) form.setValue('firstName', data.firstName, { shouldValidate: true });
+    if (data.lastName) form.setValue('lastName', data.lastName, { shouldValidate: true });
+    if (data.address || data.location) form.setValue('address', data.address || data.location || '', { shouldValidate: false });
+    // Populate gender/birthdate from scanned data so they auto-extract from the national ID
+    if (ssn.length === 14) {
+      const gender = extractGenderFromNationalId(ssn);
+      const birthdate = extractBirthdateFromNationalId(ssn);
+      console.log('📋 Scanned National ID:', ssn, 'Extracted gender:', gender, 'birthdate:', birthdate);
+    }
+    setIsScannerOpen(false);
+  };
 
   const extractedInfo = nationalId && nationalId.length === 14 ? {
     gender: extractGenderFromNationalId(nationalId),
@@ -134,7 +152,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormLabel required>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -152,7 +170,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormLabel required>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -172,15 +190,28 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="30202041234567"
-                      maxLength={14}
-                      {...field}
+                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
+                  <div className="flex gap-2">
+                    <FormControl className="flex-1">
+                      <Input
+                        placeholder="30202041234567"
+                        maxLength={14}
+                        {...field}
+                        disabled={isPending}
+                      />
+                    </FormControl>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setIsScannerOpen(true)}
                       disabled={isPending}
-                    />
-                  </FormControl>
+                      className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
+                      title="Scan National ID"
+                    >
+                      <ScanLine className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <FormMessage />
                   {extractedInfo && (
                     <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-1">
@@ -300,6 +331,12 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
           </form>
         </Form>
       </DialogContent>
+
+      <NationalIdScanner
+        open={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanComplete={handleScanComplete}
+      />
     </Dialog>
   );
 }

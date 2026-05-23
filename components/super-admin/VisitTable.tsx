@@ -20,6 +20,7 @@ import {
   FileText,
   Calendar,
   Volume2,
+  Building2,
 } from 'lucide-react';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
@@ -28,61 +29,21 @@ import { toast } from 'sonner';
 
 export function VisitTable() {
   const t = useTranslations('admin');
-  const tCommon = useTranslations('common');
   const [visits, setVisits] = useState<SuperAdminVisitItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
-  const [doctorNames, setDoctorNames] = useState<Map<string, string>>(new Map());
-  const [patientNames, setPatientNames] = useState<Map<string, string>>(new Map());
   const limit = 10;
 
   useEffect(() => {
     const loadVisits = async () => {
       try {
         setLoading(true);
-        const [visitsData, doctorsData, patientsData] = await Promise.all([
-          superAdminApi.getVisits({ page, limit }),
-          superAdminApi.getDoctors({ page: 1, limit: 10000 }),
-          superAdminApi.getPatients({ page: 1, limit: 10000 }),
-        ]);
-
+        const visitsData = await superAdminApi.getVisits({ page, limit });
         setVisits(visitsData.items);
         setTotalPages(visitsData.totalPages);
         setTotalItems(visitsData.totalItems);
-
-        // Build patient name lookup from the patients list
-        const patNameMap = new Map<string, string>();
-        for (const p of patientsData.items || []) {
-          patNameMap.set(p.id, `${p.user.firstName} ${p.user.lastName}`);
-        }
-        setPatientNames(patNameMap);
-
-        // Build doctor name lookup: first try doctors list, then fallback to per-ID fetch
-        const docNameMap = new Map<string, string>();
-
-        // Pre-fill from doctors list (fast, single request)
-        for (const d of doctorsData.items || []) {
-          docNameMap.set(d.id, `Dr. ${d.user.firstName} ${d.user.lastName}`);
-        }
-
-        // For any doctorId we don't have yet, fetch individual doctor
-        const missingIds = [...new Set(visitsData.items.map((v) => v.doctorId))].filter(
-          (id) => !docNameMap.has(id)
-        );
-        await Promise.all(
-          missingIds.map(async (id) => {
-            try {
-              const doc = await superAdminApi.getDoctorById(id);
-              docNameMap.set(id, `Dr. ${doc.firstName} ${doc.lastName}`);
-            } catch {
-              // leave as-is (will show ID fallback)
-            }
-          })
-        );
-
-        setDoctorNames(docNameMap);
       } catch (error) {
         console.error('Failed to load visits:', error);
         toast.error('Failed to load visits');
@@ -187,7 +148,7 @@ export function VisitTable() {
                       {t('patientName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
+                      {visit.patient.name}
                     </p>
                   </div>
                 </div>
@@ -201,7 +162,21 @@ export function VisitTable() {
                       {t('doctorName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {doctorNames.get(visit.doctorId) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
+                      {visit.doctor.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('clinic')}
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {visit.clinic.name}
                     </p>
                   </div>
                 </div>
@@ -251,6 +226,9 @@ export function VisitTable() {
                   {t('doctorName')}
                 </TableHead>
                 <TableHead className="font-semibold">
+                  {t('clinic')}
+                </TableHead>
+                <TableHead className="font-semibold">
                   {t('diagnoses')}
                 </TableHead>
                 <TableHead className="font-semibold">
@@ -261,7 +239,7 @@ export function VisitTable() {
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12">
+                  <TableCell colSpan={5} className="text-center py-12">
                     <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {t('noVisitsFound')}
@@ -275,10 +253,13 @@ export function VisitTable() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <TableCell className="font-medium">
-                      {patientNames.get(visit.patientId) || visit.patientId?.slice(0, 8) || tCommon('loading')}
+                      {visit.patient.name}
                     </TableCell>
                     <TableCell className="font-medium">
-                      Dr. {(visit.doctorId ? doctorNames.get(visit.doctorId) : undefined) || doctorNames.get(visit.diagnoses) || visit.doctorId?.slice(0, 8) || tCommon('loading')}
+                      {visit.doctor.name}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {visit.clinic.name}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>
