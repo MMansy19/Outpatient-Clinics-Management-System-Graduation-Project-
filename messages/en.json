@@ -18,6 +18,7 @@
     "viewImage": "View Image",
     "unknown": "Unknown",
     "other": "Other",
+    "pending": "Pending",
     "totalPatients": "Total Patients",
     "scanTypes": {
       "mri": "MRI",
@@ -42,7 +43,7 @@
       "title": "Transform Healthcare with Smart Clinical Solutions",
       "subtitle": "Empowering Kasr Al Ainy Hospital with AI-driven patient management, seamless medical records, and instant clinical decisions",
       "ctaDoctor": "Register as Doctor",
-      "cta": "Register",
+      "cta": "Login to Continue",
       "ctaPatient": "Register as Patient"
     },
     "stats": {
@@ -130,7 +131,7 @@
     "cta": {
       "title": "Ready to Transform Healthcare?",
       "subtitle": "Join thousands of healthcare professionals and patients using Outpatient Clinic",
-      "button": "Get Started Now"
+      "button": "Login Now"
     }
   },
   "footer": {
@@ -148,7 +149,7 @@
     },
     "team": {
       "title": "Development Team",
-      "subtitle": "Built by Computer Engineering students at Cairo University"
+      "subtitle": "Built by Biomedical Data Engineering students at Cairo University, Class of 2026, for Outpatient Clinics at Kasr Al Ainy Hospital"
     },
     "privacy": "Privacy Policy",
     "terms": "Terms of Service",
@@ -722,6 +723,13 @@
     "phonePlaceholder": "+201012345678",
     "phoneFormat": "Format: +201XXXXXXXXX",
     "loadingClinics": "Loading clinics...",
+    "loadingDoctors": "Loading doctors...",
+    "loadingPatients": "Loading patients...",
+    "savedOffline": "Saved offline",
+    "savedOfflineDescription": "{name} will be created when you reconnect.",
+    "failedToLoadClinicsTitle": "Failed to load clinics",
+    "failedToLoadClinicsDescription": "Unable to fetch clinic list",
+    "scanNationalIdTitle": "Scan National ID",
     "selectClinicRequired": "Select clinic",
     "noClinicsAvailable": "No clinics available",
     "passwordPlaceholder": "StrongPassword123!",
@@ -1050,7 +1058,10 @@
     "clinic": "Clinic",
     "enterNationalId": "Enter national ID",
     "from": "From",
-    "to": "To"
+    "to": "To",
+    "showingOfflineResults": "Showing offline results from cached data",
+    "noCachedPatients": "No cached patients available offline",
+    "pendingSync": "Pending sync"
   },
   "scanTypes": {
     "mri": "MRI",

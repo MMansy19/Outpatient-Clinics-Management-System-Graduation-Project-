@@ -5,10 +5,13 @@ import Dexie, { type EntityTable } from 'dexie';
 // ============================================================================
 
 export interface OfflinePatient {
-  id: number;
+  /** Primary key. Stored as string so we can normalize both number (doctor API) and string (super-admin API) ids. */
+  id: string;
   global_id?: string;
   socialSecurityNumber?: string;
   name: string;
+  /** Lowercased + diacritic-stripped copy of `name` for offline searching. */
+  _searchName?: string;
   gender?: string;
   dateOfBirth?: string;
   address?: string;
@@ -18,6 +21,24 @@ export interface OfflinePatient {
   created_at?: string;
   updated_at?: string;
   _cachedAt: number; // timestamp when cached
+}
+
+export interface OfflineDoctor {
+  /** Primary key. Stored as string for the same reason as OfflinePatient. */
+  id: string;
+  global_id?: string;
+  socialSecurityNumber?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
+  /** Lowercased + diacritic-stripped copy of `name` for offline searching. */
+  _searchName?: string;
+  phone?: string;
+  speciality?: string;
+  clinicId?: string;
+  created_at?: string;
+  _cachedAt: number;
 }
 
 export interface OfflineVisit {
@@ -159,6 +180,7 @@ export interface SyncMeta {
 
 class MediStreamOfflineDB extends Dexie {
   patients!: EntityTable<OfflinePatient, 'id'>;
+  doctors!: EntityTable<OfflineDoctor, 'id'>;
   visits!: EntityTable<OfflineVisit, 'id'>;
   medications!: EntityTable<OfflineMedication, 'id'>;
   labs!: EntityTable<OfflineLab, 'id'>;
@@ -170,6 +192,7 @@ class MediStreamOfflineDB extends Dexie {
   constructor() {
     super('medistream-offline');
 
+    // v1 — initial schema.
     this.version(1).stores({
       patients: 'id, global_id, socialSecurityNumber, name, _cachedAt',
       visits: 'id, global_id, patient_id, doctor_id, created_at, _cachedAt',
@@ -179,6 +202,13 @@ class MediStreamOfflineDB extends Dexie {
       mutationQueue: '++autoId, clientTempId, type, status, createdAt, patientId',
       blobStore: 'key, createdAt',
       syncMeta: 'key',
+    });
+
+    // v2 — adds the `doctors` table for offline doctor list / dedup checks
+    // and adds `_searchName` index on patients for tokenized offline search.
+    this.version(2).stores({
+      patients: 'id, global_id, socialSecurityNumber, name, _searchName, _cachedAt',
+      doctors: 'id, global_id, socialSecurityNumber, email, _searchName, _cachedAt',
     });
   }
 }
@@ -193,6 +223,7 @@ export const offlineDb = new MediStreamOfflineDB();
 export async function clearAllOfflineData(): Promise<void> {
   await Promise.all([
     offlineDb.patients.clear(),
+    offlineDb.doctors.clear(),
     offlineDb.visits.clear(),
     offlineDb.medications.clear(),
     offlineDb.labs.clear(),
@@ -208,6 +239,7 @@ export async function evictStaleData(maxAge = 7 * 24 * 60 * 60 * 1000): Promise<
   const cutoff = Date.now() - maxAge;
   await Promise.all([
     offlineDb.patients.where('_cachedAt').below(cutoff).delete(),
+    offlineDb.doctors.where('_cachedAt').below(cutoff).delete(),
     offlineDb.visits.where('_cachedAt').below(cutoff).delete(),
     offlineDb.medications.where('_cachedAt').below(cutoff).delete(),
     offlineDb.labs.where('_cachedAt').below(cutoff).delete(),

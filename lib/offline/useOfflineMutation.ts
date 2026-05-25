@@ -64,6 +64,14 @@ interface OfflineMutationConfig<TData, TVariables> {
     /** Extract patient name for UI display */
     getPatientName?: (variables: TVariables) => string | undefined;
   };
+  /**
+   * Optional async hook called right before a mutation is enqueued for
+   * offline replay. Use this to enforce client-side invariants (e.g. SSN
+   * uniqueness checks against the Dexie cache). Throw to abort: the error
+   * is surfaced via React Query's onError exactly as if it came from the
+   * online mutationFn, and the mutation is NOT queued.
+   */
+  beforeQueue?: (payload: Record<string, unknown>, variables: TVariables) => Promise<void>;
   /** Query keys to invalidate on success */
   invalidateKeys?: ReadonlyArray<ReadonlyArray<unknown>>;
 }
@@ -95,7 +103,15 @@ export function useOfflineMutation<TData = unknown, TVariables = unknown>(
       };
 
       const enqueueAndReturn = async () => {
-        const clientTempId = await queueMutation(buildQueueParams());
+        const params = buildQueueParams();
+        if (config.beforeQueue) {
+          // Any throw here propagates to React Query's onError. Critically,
+          // we do NOT route this through the network-error fallback below
+          // — a thrown DuplicateError must surface to the dialog, not be
+          // silently re-queued.
+          await config.beforeQueue(params.payload, variables);
+        }
+        const clientTempId = await queueMutation(params);
         return { offline: true as const, clientTempId } as unknown as TData;
       };
 

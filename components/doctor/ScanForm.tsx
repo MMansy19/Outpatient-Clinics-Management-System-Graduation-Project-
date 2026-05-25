@@ -36,10 +36,12 @@ const scanTypes = [
 ];
 
 const scanSchema = z.object({
-  name: z.string().min(1, 'Scan name is required'),
+  name: z.string().min(1, 'Scan name is required').trim(),
   type: z.string().min(1, 'Scan type is required'),
   comments: z.string().optional(),
-  image: z.instanceof(File).optional(),
+  image: z
+    .instanceof(File, { message: 'Scan image is required' })
+    .refine((f) => f.size > 0, { message: 'Scan image is required' }),
 });
 
 type ScanFormData = z.infer<typeof scanSchema>;
@@ -79,7 +81,6 @@ export function ScanForm({
     successMessage: 'Scan created successfully',
   });
 
-  const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: ScanFormData) => {
@@ -89,9 +90,7 @@ export function ScanForm({
     if (data.comments) {
       formData.append('comments', data.comments);
     }
-    if (selectedImage) {
-      formData.append('image', selectedImage);
-    }
+    formData.append('image', data.image);
     if (audioFile) {
       formData.append('audio', audioFile);
     }
@@ -188,7 +187,15 @@ export function ScanForm({
 
         <ImageUploadField
           label={t('uploadScanImage')}
-          onImageSelect={setSelectedImage}
+          required
+          value={form.watch('image') ?? null}
+          onChange={(file) =>
+            form.setValue('image', file as File, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
+          error={form.formState.errors.image?.message as string | undefined}
           maxSizeMB={5}
         />
       </div>

@@ -10,7 +10,7 @@
 ![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
 
 Outpatient Clinics Management System for Kasr Al Ainy Hospital
-*A Spring 2025 Graduation Project by Cairo University - Faculty of Engineering, BDE Department*
+*A Spring 2026 Graduation Project by Cairo University - Faculty of Engineering, BDE Department*
 
 [🌐 Live Demo](https://medistream-ocms.vercel.app) • [📖 SOW](link-to-sow.pdf) • [🐛 Issues](https://github.com/your-org/medistream-ocms/issues)
 
@@ -187,7 +187,7 @@ medistream-ocms/
 | Seif Allah Alaa Mohamed El Shaer | 1200324 |
 
 **Advisor**: Cairo University BDE Department  
-**Spring 2025 Graduation Project**
+**Spring 2026 Graduation Project**
 
 ---
 

@@ -3,20 +3,43 @@ import axios from 'axios';
 import { apiClient } from '@/lib/api/client';
 import type { Patient } from '@/types/entities/Patient';
 import type { SearchFilters } from '@/types/entities/Visit';
-import type { CreatePatientRequest } from '@/types/api';
 import { calculateDateRange, formatDateForAPI } from '@/lib/utils/dateRange';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { upsertPatients } from '@/lib/offline/patientCache';
+import { searchPatientsByQuery, searchPatientByNationalId } from '@/lib/offline/offlineSearch';
 
 const PATIENTS_KEY = ['patients'];
 
 interface PatientsResponse {
   patients: Patient[];
   total: number;
+  /** Set to 'offline' when results were served from IndexedDB. */
+  source?: 'offline' | 'online';
+  /** Number of pending-create rows merged into the result (offline only). */
+  pendingCount?: number;
 }
 
 export const useSearchPatients = (filters: SearchFilters): UseQueryResult<PatientsResponse, Error> => {
+  const { isOnline } = useNetworkStatus();
+
   return useQuery({
-    queryKey: [...PATIENTS_KEY, 'search', filters],
+    queryKey: [...PATIENTS_KEY, 'search', filters, isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      // ── Offline branch ────────────────────────────────────────────────
+      // When offline, serve results from Dexie (cached patients + pending
+      // createPatient rows) instead of hitting the network.
+      if (!isOnline) {
+        const result = await searchPatientsByQuery(filters.query ?? filters.nationalId ?? '', {
+          limit: 200,
+        });
+        return {
+          patients: result.patients as unknown as Patient[],
+          total: result.total,
+          source: 'offline' as const,
+          pendingCount: result.pendingCount,
+        };
+      }
+
       // Build query parameters for backend API
       const params = new URLSearchParams();
 
@@ -42,10 +65,18 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
       if (filters.nationalId) params.append('national_id', filters.nationalId);
 
       const response = await apiClient.get<PatientsResponse>(`/doctor/patients?${params.toString()}`);
-      return response.data;
+      // Write-through: persist every fetched patient so offline reads stay fresh.
+      try {
+        await upsertPatients(response.data?.patients ?? []);
+      } catch (e) {
+        console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+      }
+      return { ...response.data, source: 'online' as const };
     },
     staleTime: 2 * 60 * 1000, // 2 minutes
-    // Only execute query when at least one meaningful filter is active
+    // Only execute query when at least one meaningful filter is active.
+    // Offline branch still runs because we want to surface cached results
+    // for any active filter the user has set.
     enabled: !!filters.query || !!filters.period || !!filters.nationalId || !!filters.gender || filters.minAge !== undefined,
   });
 };
@@ -55,6 +86,11 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
     queryKey: [...PATIENTS_KEY, id],
     queryFn: async () => {
       const response = await apiClient.get<Patient>(`/doctor/patients/${id}`);
+      try {
+        await upsertPatients(response.data);
+      } catch (e) {
+        console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+      }
       return response.data;
     },
     enabled: !!id,
@@ -63,11 +99,24 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
 };
 
 export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQueryResult<Patient | null, Error> => {
+  const { isOnline } = useNetworkStatus();
+
   return useQuery({
-    queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber],
+    queryKey: [...PATIENTS_KEY, 'nationalId', socialSecurityNumber, isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      // Offline branch: serve from Dexie + pending queue.
+      if (!isOnline) {
+        const hit = await searchPatientByNationalId(socialSecurityNumber);
+        return (hit as unknown as Patient) ?? null;
+      }
+
       try {
         const response = await apiClient.get<Patient>(`/doctor/patient/${socialSecurityNumber}`);
+        try {
+          await upsertPatients(response.data);
+        } catch (e) {
+          console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+        }
         return response.data;
       } catch (error) {
         if (axios.isAxiosError(error)) {
@@ -83,28 +132,6 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
     staleTime: 0,
     refetchOnWindowFocus: true,
     gcTime: 0,
-  });
-};
-
-export const useCreatePatient = (): UseMutationResult<Patient, Error, CreatePatientRequest> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreatePatientRequest) => {
-      const response = await apiClient.post<Patient>('/doctor/patients', data);
-      return response.data;
-    },
-    onSuccess: (data) => {
-      // Invalidate all patients queries to ensure fresh data
-      queryClient.invalidateQueries({ queryKey: PATIENTS_KEY });
-
-      // Also invalidate the specific nationalId query so the new patient can be fetched
-      if (data.socialSecurityNumber) {
-        queryClient.invalidateQueries({
-          queryKey: [...PATIENTS_KEY, 'nationalId', data.socialSecurityNumber],
-        });
-      }
-    },
   });
 };
 

@@ -138,8 +138,8 @@ export function Footer({ locale }: FooterProps) {
             <ul className="space-y-2 text-sm text-gray-400">
               <li>• Cairo University</li>
               <li>• Faculty of Engineering</li>
-              <li>• Computer Engineering Dept.</li>
-              <li>• Graduation Project 2025</li>
+              <li>• Biomedical Data Engineering Dept.</li>
+              <li>• Graduation Project 2026</li>
             </ul>
           </div>
         </div>

@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
+import { isDuplicateError } from '@/lib/offline/errors';
 import {
   createPatientSchema,
   extractGenderFromNationalId,
@@ -108,8 +109,8 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
           typeof response === 'object' &&
           (response as { offline?: boolean }).offline === true
         ) {
-          toast.success('Saved offline', {
-            description: `${fullName} will be created when you reconnect.`,
+          toast.success(t('savedOffline'), {
+            description: t('savedOfflineDescription', { name: fullName }),
           });
         } else {
           toast.success(t('patientCreated') || 'Patient created successfully', {
@@ -124,6 +125,14 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
         // Re-open dialog with the user's values so they can correct & retry.
         form.reset(submittedValues);
         setOpen(true);
+
+        // Offline duplicate detected by preflightUniqueness before queuing.
+        if (isDuplicateError(error)) {
+          toast.error(t('patientAlreadyExists') || 'Patient already exists', {
+            description: t('patientAlreadyExistsDescription') || 'A patient with this national ID is already registered',
+          });
+          return;
+        }
 
         const err = error as { response?: { data?: unknown; status?: number } };
         if (err.response?.status === 400) {
@@ -149,7 +158,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {trigger || (
-          <Button className="gap-2">
+          <Button className="gap-2" variant="outline">
             <UserPlus className="h-4 w-4" />
             {t('registerPatient')}
           </Button>
@@ -226,7 +235,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
                       onClick={() => setIsScannerOpen(true)}
                       disabled={isPending}
                       className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
-                      title="Scan National ID"
+                      title={t('scanNationalIdTitle')}
                     >
                       <ScanLine className="h-4 w-4" />
                     </Button>

@@ -1,9 +1,7 @@
 import { useMutation, useQuery, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
-import { authApi } from '@/lib/api/auth.service';
 import type { Doctor, DoctorWithClinic } from '@/types/entities/Doctor';
 import type { Patient } from '@/types/entities/Patient';
-import type { CreateDoctorDto } from '@/lib/api/types';
 
 const DOCTORS_KEY = ['doctors'];
 const PATIENTS_KEY = ['patients'];
@@ -21,36 +19,9 @@ export const useGetDoctors = (clinicId?: number): UseQueryResult<DoctorWithClini
   });
 };
 
-export const useCreateDoctor = (): UseMutationResult<
-  { message: string; id: string },
-  Error,
-  {
-    firstName: string;
-    lastName: string;
-    language: number;
-    socialSecurityNumber: string;
-    email: string;
-    phone: string;
-    password: string;
-    speciality: string;
-    clinicId: string;
-  }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data) => {
-      const response = await authApi.createDoctor(data as CreateDoctorDto);
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: DOCTORS_KEY });
-    },
-    onError: (error) => {
-      console.error('[useCreateDoctor] Error:', error);
-    },
-  });
-};
+// NOTE: useCreateDoctor was removed — the offline-aware version in
+// `@/lib/api/hooks/useAuth` is the single source of truth and includes
+// preflight uniqueness checks.
 
 export const useUpdateDoctor = (): UseMutationResult<Doctor, Error, { id: number; data: Partial<Doctor> }> => {
   const queryClient = useQueryClient();

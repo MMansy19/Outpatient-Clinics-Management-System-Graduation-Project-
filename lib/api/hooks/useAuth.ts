@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '../auth.service';
 import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { assertPatientUnique, assertDoctorUnique } from '@/lib/offline/preflightUniqueness';
 import type {
   LoginDto,
   CreateDoctorDto,
@@ -114,6 +115,12 @@ export function useCreateDoctor() {
       method: 'POST',
       getPayload: (data) => ({ ...data }),
     },
+    beforeQueue: async (payload) => {
+      await assertDoctorUnique({
+        socialSecurityNumber: payload.socialSecurityNumber as string | undefined,
+        email: payload.email as string | undefined,
+      });
+    },
     invalidateKeys: [['doctors'], ['doctors-all']],
   });
 }
@@ -143,6 +150,11 @@ export function useCreatePatient() {
       endpoint: '/auth/patient/create',
       method: 'POST',
       getPayload: (data) => ({ ...data }),
+    },
+    beforeQueue: async (payload) => {
+      await assertPatientUnique({
+        socialSecurityNumber: payload.socialSecurityNumber as string | undefined,
+      });
     },
     invalidateKeys: [['patients'], ['patients-all']],
   });

@@ -57,7 +57,7 @@ export function ClinicTable() {
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-medical-primary mx-auto mb-2"></div>
-          <p className="text-sm text-muted-foreground">Loading clinics...</p>
+          <p className="text-sm text-muted-foreground">{t('loadingClinics')}</p>
         </div>
       </div>
     );

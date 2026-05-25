@@ -7,6 +7,8 @@ import {
   markFailed,
   reconcileOrphanedSyncing,
 } from './mutationQueue';
+import { assertPatientUnique, assertDoctorUnique } from './preflightUniqueness';
+import { isDuplicateError } from './errors';
 
 type SyncListener = (event: SyncEvent) => void;
 
@@ -76,6 +78,49 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
           failed,
           currentItem: mutation.type,
         });
+
+        // ── Replay-time uniqueness guard ─────────────────────────────────
+        // Between the time the user queued the create and the moment we
+        // replay it, the same SSN/email may have been created elsewhere
+        // (another tab, another device that synced first, or a still-
+        // pending queued create). Catching this here avoids surfacing the
+        // backend's 400 as a generic failed-sync row in the drawer.
+        if (mutation.type === 'createPatient') {
+          try {
+            await assertPatientUnique({
+              socialSecurityNumber: mutation.payload?.socialSecurityNumber as string | undefined,
+              excludeAutoId: mutation.autoId,
+            });
+          } catch (err) {
+            if (isDuplicateError(err)) {
+              await markFailed(
+                mutation.autoId!,
+                `DUPLICATE_${err.source === 'cache' ? 'REMOTE' : 'LOCAL'}: ${err.message}`,
+              );
+              failed++;
+              continue;
+            }
+            throw err;
+          }
+        } else if (mutation.type === 'createDoctor') {
+          try {
+            await assertDoctorUnique({
+              socialSecurityNumber: mutation.payload?.socialSecurityNumber as string | undefined,
+              email: mutation.payload?.email as string | undefined,
+              excludeAutoId: mutation.autoId,
+            });
+          } catch (err) {
+            if (isDuplicateError(err)) {
+              await markFailed(
+                mutation.autoId!,
+                `DUPLICATE_${err.source === 'cache' ? 'REMOTE' : 'LOCAL'}: ${err.message}`,
+              );
+              failed++;
+              continue;
+            }
+            throw err;
+          }
+        }
 
         // Reconstruct the request
         let data: Record<string, unknown> | FormData = { ...mutation.payload };

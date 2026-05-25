@@ -20,9 +20,11 @@ import { useCreateLab } from '@/lib/api/queries/useLabs';
 import { useFormState } from '@/src/hooks/useFormState';
 
 const labSchema = z.object({
-  name: z.string().min(1, 'Lab name is required'),
+  name: z.string().min(1, 'Lab name is required').trim(),
   comments: z.string().optional(),
-  image: z.instanceof(File).optional(),
+  image: z
+    .instanceof(File, { message: 'Lab image is required' })
+    .refine((f) => f.size > 0, { message: 'Lab image is required' }),
 });
 
 type LabFormData = z.infer<typeof labSchema>;
@@ -56,7 +58,6 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
     successMessage: 'Lab created successfully',
   });
 
-  const [selectedImage, setSelectedImage] = React.useState<File | null>(null);
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   const handleSubmit = (data: LabFormData) => {
@@ -65,9 +66,7 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
     if (data.comments) {
       formData.append('comments', data.comments);
     }
-    if (selectedImage) {
-      formData.append('image', selectedImage);
-    }
+    formData.append('image', data.image);
     if (audioFile) {
       formData.append('audio', audioFile);
     }
@@ -138,8 +137,16 @@ export function LabForm({ open, onOpenChange, patientId, onSuccess }: LabFormPro
         />
 
         <ImageUploadField
-          label="Lab Image"
-          onImageSelect={setSelectedImage}
+          label={t('uploadLabImage')}
+          required
+          value={form.watch('image') ?? null}
+          onChange={(file) =>
+            form.setValue('image', file as File, {
+              shouldValidate: true,
+              shouldDirty: true,
+            })
+          }
+          error={form.formState.errors.image?.message as string | undefined}
           maxSizeMB={5}
         />
       </div>

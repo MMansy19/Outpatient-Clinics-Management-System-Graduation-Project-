@@ -274,6 +274,17 @@ export function PatientSearch({ onSelectPatient, onAddNew }: PatientSearchProps)
 
       {/* Results */}
       <div className="space-y-3">
+        {searchResults?.source === 'offline' && !isLoading && (
+          <div className="flex items-center justify-between rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
+            <span>{tSearch('showingOfflineResults')}</span>
+            {(searchResults.pendingCount ?? 0) > 0 && (
+              <Badge variant="outline" className="border-amber-400 text-amber-900 dark:text-amber-100">
+                {searchResults.pendingCount} {tCommon('pending')}
+              </Badge>
+            )}
+          </div>
+        )}
+
         {isLoading && (
           <div className="space-y-2">
             <div className="skeleton h-20 w-full" />

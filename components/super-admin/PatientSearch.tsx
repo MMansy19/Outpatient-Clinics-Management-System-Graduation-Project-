@@ -16,6 +16,9 @@ import {
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { Gender } from '@/lib/api/types';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { searchPatientByNationalId } from '@/lib/offline/offlineSearch';
+import { upsertPatients } from '@/lib/offline/patientCache';
 
 interface SuperAdminPatientSearchProps {
   onSelectPatient: (patient: {
@@ -32,12 +35,15 @@ interface SuperAdminPatientSearchProps {
 export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSearchProps) {
   const t = useTranslations('superAdmin');
   const tValidation = useTranslations('validation');
+  const tSearch = useTranslations('search');
+  const { isOnline } = useNetworkStatus();
 
   const [nationalId, setNationalId] = useState('');
   const [nationalIdError, setNationalIdError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resultSource, setResultSource] = useState<'online' | 'offline' | null>(null);
 
   const isValidNationalId = (id: string): boolean => {
     const trimmedId = id.trim();
@@ -69,9 +75,44 @@ export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSe
     setIsLoading(true);
     setError(null);
     setHasSearched(true);
+    setResultSource(null);
+
+    // ── Offline branch: hit Dexie cache + pending mutations directly ─────
+    if (!isOnline) {
+      try {
+        const cached = await searchPatientByNationalId(nationalId);
+        if (!cached) {
+          setError(t('patientNotFound'));
+        } else {
+          setResultSource('offline');
+          onSelectPatient({
+            id: String(cached.id),
+            name: cached.name,
+            gender: cached.gender as Gender | undefined,
+            dateOfBirth: cached.dateOfBirth,
+            socialSecurityNumber: cached.socialSecurityNumber ?? nationalId,
+            address: cached.address ?? null,
+            job: cached.job ?? null,
+          });
+        }
+      } catch (err) {
+        console.error('Offline patient search error:', err);
+        setError(t('searchError'));
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
 
     try {
       const patient = await superAdminApi.searchPatientBySSN(nationalId);
+      // Write-through so subsequent offline lookups hit the cache.
+      try {
+        await upsertPatients(patient);
+      } catch (e) {
+        console.warn('[SuperAdminPatientSearch] upsertPatients failed:', e);
+      }
+      setResultSource('online');
       onSelectPatient({
         id: patient.id,
         name: patient.name,
@@ -146,6 +187,12 @@ export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSe
         {hasSearched && !isLoading && !error && (
           <div className="text-sm text-muted-foreground">
             {t('enterNationalIdPrompt')}
+          </div>
+        )}
+
+        {resultSource === 'offline' && !isLoading && !error && (
+          <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
+            {tSearch('showingOfflineResults')}
           </div>
         )}
 

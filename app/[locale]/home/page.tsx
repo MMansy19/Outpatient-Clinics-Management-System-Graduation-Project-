@@ -334,7 +334,7 @@ export default function HomePage({ params }: HomePageProps) {
               {t('hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href={`/${locale}/register`}>
+              <Link href={`/${locale}/login`}>
                 <Button 
                   size="lg" 
                   className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-6 text-lg group"
@@ -483,7 +483,8 @@ export default function HomePage({ params }: HomePageProps) {
         </div>
       </section>
 
-      {/* Register Cards Section */}
+      {/* Register Cards Section - hidden: registrations disabled, use login only */}
+      {false && (
       <section className="py-20">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
@@ -570,6 +571,7 @@ export default function HomePage({ params }: HomePageProps) {
           </div>
         </div>
       </section>
+      )}
 
       {/* Clinics Section */}
       <section id='clinics' ref={clinicsRef} className="py-20 bg-gray-50 dark:bg-gray-800/50">
@@ -707,7 +709,7 @@ export default function HomePage({ params }: HomePageProps) {
           <p className="text-xl text-emerald-100 mb-8 max-w-2xl mx-auto">
             {t('cta.subtitle')}
           </p>
-          <Link href={`/${locale}/register`}>
+          <Link href={`/${locale}/login`}>
             <Button size="lg" className="bg-white text-emerald-600 hover:bg-emerald-50 px-8 py-6 text-lg group">
               {t('cta.button')}
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />

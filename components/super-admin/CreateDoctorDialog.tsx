@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateDoctor } from '@/lib/api/hooks/useAuth';
+import { isDuplicateError } from '@/lib/offline/errors';
 import {
   createDoctorSchema,
   type CreateDoctorFormData,
@@ -111,7 +112,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       setClinics(data);
     } catch (error) {
       console.error('Failed to load clinics:', error);
-      toast.error('Failed to load clinics', 'Unable to fetch clinic list');
+      toast.error(t('failedToLoadClinicsTitle'), t('failedToLoadClinicsDescription'));
     } finally {
       setLoadingClinics(false);
     }
@@ -130,7 +131,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
           typeof response === 'object' &&
           (response as { offline?: boolean }).offline === true
         ) {
-          toast.success('Saved offline', `${fullName} will be created when you reconnect.`);
+          toast.success(t('savedOffline'), t('savedOfflineDescription', { name: fullName }));
         } else {
           toast.success(
             toastMessages.doctor.createSuccess,
@@ -146,6 +147,15 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         // dialog optimistically below.
         form.reset(submittedValues);
         setOpen(true);
+
+        // Offline duplicate detected by preflightUniqueness before queuing.
+        if (isDuplicateError(error)) {
+          toast.error(
+            toastMessages.doctor.alreadyExists,
+            toastMessages.doctor.alreadyExistsDescription,
+          );
+          return;
+        }
 
         // Handle different error cases
         if (

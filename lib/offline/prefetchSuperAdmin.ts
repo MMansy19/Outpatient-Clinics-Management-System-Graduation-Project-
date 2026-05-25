@@ -1,6 +1,8 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { offlineDb } from './db';
+import { upsertPatients } from './patientCache';
+import { upsertDoctors } from './doctorCache';
 
 // ============================================================================
 // Super-Admin Eager Prefetch
@@ -132,9 +134,24 @@ export async function prefetchSuperAdminData(
   await Promise.allSettled(listJobs);
   emit({ stage: 'lists', processed: 5, total: 5 });
 
+  // Write-through into Dexie so the offline patient/doctor search hooks
+  // can serve results without depending on the React Query persister.
+  try {
+    const patientsResp = queryClient.getQueryData<{ items?: unknown[] }>(['patients-all']);
+    if (patientsResp?.items?.length) {
+      await upsertPatients(patientsResp.items);
+    }
+    const doctorsResp = queryClient.getQueryData<{ items?: unknown[] }>(['doctors-all']);
+    if (doctorsResp?.items?.length) {
+      await upsertDoctors(doctorsResp.items);
+    }
+  } catch (e) {
+    console.warn('[prefetchSuperAdmin] Dexie write-through failed (non-fatal):', e);
+  }
+
   // ── Per-patient nested data (top N by createdAt desc) ────────────────────
-  const patientsResp = queryClient.getQueryData<{ items?: PatientLite[] }>(['patients-all']);
-  const patients = (patientsResp?.items ?? []).slice();
+  const recentPatientsResp = queryClient.getQueryData<{ items?: PatientLite[] }>(['patients-all']);
+  const patients = (recentPatientsResp?.items ?? []).slice();
 
   patients.sort((a, b) => {
     const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
