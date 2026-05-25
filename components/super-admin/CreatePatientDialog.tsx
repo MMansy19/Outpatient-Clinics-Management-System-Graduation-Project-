@@ -13,7 +13,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +44,9 @@ interface CreatePatientDialogProps {
 
 export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogProps) {
   const t = useTranslations('admin');
+  const tScan = useTranslations('scan');
   const [open, setOpen] = useState(false);
+  const [showRegistrationOptions, setShowRegistrationOptions] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const { mutate: createPatient, isPending } = useCreatePatient();
 
@@ -64,19 +65,37 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
 
   const nationalId = form.watch('socialSecurityNumber');
 
+  const handleScanOption = () => {
+    setShowRegistrationOptions(false);
+    setIsScannerOpen(true);
+  };
+
+  const handleManualOption = () => {
+    setShowRegistrationOptions(false);
+    setOpen(true);
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      setIsScannerOpen(false);
+      setShowRegistrationOptions(false);
+    }
+    setOpen(isOpen);
+  };
+
   const handleScanComplete = (data: EnrichedScanData) => {
     const ssn = data.nationalId || data.socialSecurityNumber || '';
     form.setValue('socialSecurityNumber', ssn, { shouldValidate: true });
     if (data.firstName) form.setValue('firstName', data.firstName, { shouldValidate: true });
     if (data.lastName) form.setValue('lastName', data.lastName, { shouldValidate: true });
     if (data.address || data.location) form.setValue('address', data.address || data.location || '', { shouldValidate: false });
-    // Populate gender/birthdate from scanned data so they auto-extract from the national ID
     if (ssn.length === 14) {
       const gender = extractGenderFromNationalId(ssn);
       const birthdate = extractBirthdateFromNationalId(ssn);
       console.log('📋 Scanned National ID:', ssn, 'Extracted gender:', gender, 'birthdate:', birthdate);
     }
     setIsScannerOpen(false);
+    setOpen(true);
   };
 
   const extractedInfo = nationalId && nationalId.length === 14 ? {
@@ -155,216 +174,234 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {trigger || (
-          <Button className="gap-2" variant="outline">
-            <UserPlus className="h-4 w-4" />
-            {t('registerPatient')}
-          </Button>
-        )}
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{t('registerPatient')}</DialogTitle>
-          <DialogDescription>
-            {t('registerPatientDescription') || 'Register a new patient in the system. All required fields must be filled.'}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {trigger || (
+        <Button className="gap-2" variant="outline" onClick={() => setShowRegistrationOptions(true)}>
+          <UserPlus className="h-4 w-4" />
+          {t('registerPatient')}
+        </Button>
+      )}
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="firstName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel required>{t('firstName')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="John"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      {/* Registration Options Sheet */}
+      <Dialog open={showRegistrationOptions} onOpenChange={(isOpen) => {
+        if (!isOpen) setShowRegistrationOptions(false);
+      }}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="text-center text-2xl">
+              {t('registerPatient')}
+            </DialogTitle>
+            <DialogDescription className="text-center">
+              {tScan('selectRegistrationMethod')}
+            </DialogDescription>
+          </DialogHeader>
 
-              <FormField
-                control={form.control}
-                name="lastName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel required>{t('lastName')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Doe"
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            {/* National ID */}
-            <FormField
-              control={form.control}
-              name="socialSecurityNumber"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
-                  <div className="flex gap-2">
-                    <FormControl className="flex-1">
-                      <Input
-                        placeholder="30202041234567"
-                        maxLength={14}
-                        {...field}
-                        disabled={isPending}
-                      />
-                    </FormControl>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      onClick={() => setIsScannerOpen(true)}
-                      disabled={isPending}
-                      className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
-                      title={t('scanNationalIdTitle')}
-                    >
-                      <ScanLine className="h-4 w-4" />
-                    </Button>
+          <div className="grid gap-4 py-4">
+            {/* Primary Option: Scan National ID */}
+            <button
+              onClick={handleScanOption}
+              className="group relative overflow-hidden rounded-lg border-2 border-medical-primary bg-medical-primary/5 p-6 text-left transition-all hover:bg-medical-primary/10 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="rounded-full bg-medical-primary p-3">
+                    <ScanLine className="h-8 w-8 text-white" />
                   </div>
-                  <FormMessage />
-                  {extractedInfo && (
-                    <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-1">
-                      <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                        <span className="font-medium text-gray-700 dark:text-gray-300">
-                          {t('nationalId')}:
-                        </span>
-                        <span className="font-mono">{nationalId}</span>
-                      </div>
-                      {extractedInfo.birthdate && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {t('dateOfBirth')}:
-                          </span>
-                          <span>
-                            {extractedInfo.birthdate.toLocaleDateString('en-US', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                            {extractedInfo.age && ` (${extractedInfo.age} ${t('years')})`}
-                          </span>
-                        </div>
-                      )}
-                      {extractedInfo.gender && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            {t('gender')}:
-                          </span>
-                          <span>
-                            {extractedInfo.gender === 'MALE'
-                              ? t('male')
-                              : t('female')}
-                          </span>
-                        </div>
-                      )}
-                      {extractedInfo.governorate && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-                          <span className="font-medium text-gray-700 dark:text-gray-300">
-                            Governorate:
-                          </span>
-                          <span>{extractedInfo.governorate.nameEn}</span>
-                        </div>
-                      )}
-                    </div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h3 className="text-lg font-semibold text-medical-primary">
+                    {tScan('scanNationalId')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {tScan('scanDescription')}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs font-medium text-medical-primary">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-medical-primary animate-pulse" />
+                    {tScan('recommended')}
+                  </div>
+                </div>
+              </div>
+            </button>
+
+            {/* Secondary Option: Manual Entry */}
+            <button
+              onClick={handleManualOption}
+              className="group relative overflow-hidden rounded-lg border-2 border-border bg-background p-6 text-left transition-all hover:bg-accent hover:scale-[1.02] active:scale-[0.98]"
+            >
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="rounded-full bg-muted p-3">
+                    <UserPlus className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                </div>
+                <div className="flex-1 space-y-1">
+                  <h3 className="text-lg font-semibold">
+                    {tScan('manualEntry')}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {tScan('manualDescription')}
+                  </p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          <Button type="button" variant="ghost" onClick={() => setShowRegistrationOptions(false)} className="w-full">
+            {t('cancel')}
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      {/* Manual Entry Form Dialog */}
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{t('registerPatient')}</DialogTitle>
+            <DialogDescription>
+              {t('registerPatientDescription') || 'Register a new patient in the system. All required fields must be filled.'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="firstName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>{t('firstName')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John" {...field} disabled={isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </FormItem>
-              )}
-            />
+                />
 
-            {/* Address */}
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('address')} ({t('optional') || 'Optional'})
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('addressPlaceholder') || '123 Main St, Cairo'}
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name="lastName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel required>{t('lastName')}</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Doe" {...field} disabled={isPending} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
-            {/* Job */}
-            <FormField
-              control={form.control}
-              name="job"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>
-                    {t('job')} ({t('optional') || 'Optional'})
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder={t('jobPlaceholder') || 'Engineer, Teacher, etc.'}
-                      {...field}
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {/* Actions */}
-            <div className="flex justify-end gap-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setOpen(false)}
-                disabled={isPending}
-              >
-                {t('cancel')}
-              </Button>
-              <Button
-                type="submit"
-                disabled={isPending || !form.formState.isValid}
-              >
-                {isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    {t('creatingPatient') || 'Creating...'}
-                  </>
-                ) : (
-                  t('registerPatient')
+              {/* National ID */}
+              <FormField
+                control={form.control}
+                name="socialSecurityNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel required>{t('nationalIdRequired')}</FormLabel>
+                    <div className="flex gap-2">
+                      <FormControl className="flex-1">
+                        <Input placeholder="30202041234567" maxLength={14} {...field} disabled={isPending} />
+                      </FormControl>
+                      <Button type="button" variant="outline" size="icon" onClick={() => {
+                        setOpen(false);
+                        setShowRegistrationOptions(true);
+                      }} disabled={isPending} className="border-medical-primary text-medical-primary hover:bg-medical-primary/10" title={t('scanNationalIdTitle')}>
+                        <ScanLine className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <FormMessage />
+                    {extractedInfo && (
+                      <div className="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-1">
+                        <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                          <span className="font-medium text-gray-700 dark:text-gray-300">{t('nationalId')}:</span>
+                          <span className="font-mono">{nationalId}</span>
+                        </div>
+                        {extractedInfo.birthdate && (
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('dateOfBirth')}:</span>
+                            <span>
+                              {extractedInfo.birthdate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                              {extractedInfo.age && ` (${extractedInfo.age} ${t('years')})`}
+                            </span>
+                          </div>
+                        )}
+                        {extractedInfo.gender && (
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">{t('gender')}:</span>
+                            <span>{extractedInfo.gender === 'MALE' ? t('male') : t('female')}</span>
+                          </div>
+                        )}
+                        {extractedInfo.governorate && (
+                          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">Governorate:</span>
+                            <span>{extractedInfo.governorate.nameEn}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </FormItem>
                 )}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
+              />
 
+              {/* Address */}
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('address')} ({t('optional') || 'Optional'})</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('addressPlaceholder') || '123 Main St, Cairo'} {...field} disabled={isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Job */}
+              <FormField
+                control={form.control}
+                name="job"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t('job')} ({t('optional') || 'Optional'})</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t('jobPlaceholder') || 'Engineer, Teacher, etc.'} {...field} disabled={isPending} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className="flex justify-end gap-4 pt-4">
+                <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isPending}>
+                  {t('cancel')}
+                </Button>
+                <Button type="submit" disabled={isPending || !form.formState.isValid}>
+                  {isPending ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {t('creatingPatient') || 'Creating...'}
+                    </>
+                  ) : (
+                    t('registerPatient')
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Scanner Dialog */}
       <NationalIdScanner
         open={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onScanComplete={handleScanComplete}
       />
-    </Dialog>
+    </>
   );
 }

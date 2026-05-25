@@ -302,21 +302,21 @@ export function SuperAdminPatientProfile({
           </TabsTrigger>
           <TabsTrigger value="medications" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <span className="hidden sm:inline"><Pill className="h-4 w-4" /></span>
-            Med.
+            {t('medShort')}
             <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {medications.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="labs" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <span className="hidden sm:inline"><TestTube2 className="h-4 w-4" /></span>
-            Labs
+            {t('labsShort')}
             <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {labs.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="scans" className="gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-3">
             <span className="hidden sm:inline"><ScanLine className="h-4 w-4" /></span>
-            Scans
+            {t('scansShort')}
             <Badge variant="secondary" className="ml-1 text-[10px] px-1 py-0 h-4">
               {scans.length}
             </Badge>

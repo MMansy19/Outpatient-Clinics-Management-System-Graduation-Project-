@@ -24,7 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -36,6 +35,7 @@ import { useSuperAdminCreateMedication } from '@/lib/api/queries/useSuperAdminMu
 import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
 
 interface SuperAdminMedicationDialogProps {
   open: boolean;
@@ -65,6 +65,7 @@ export function SuperAdminMedicationDialog({
   const tCommon = useTranslations('common');
 
   const [isPending, setIsPending] = useState(false);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const form = useForm<MedicationFormData>({
     mode: 'onChange',
@@ -88,6 +89,7 @@ export function SuperAdminMedicationDialog({
         dosage: data.dosage,
         period: data.period,
         comments: data.comments || undefined,
+        audio: audioFile || undefined,
         patientId,
         clinicId,
       },
@@ -96,6 +98,7 @@ export function SuperAdminMedicationDialog({
           showOfflineAwareSuccess(result, { onlineMessage: t('medicationCreatedSuccess') });
           await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-medications', patientId] });
           form.reset();
+          setAudioFile(null);
           onOpenChange(false);
           onSuccess?.();
         },
@@ -123,7 +126,7 @@ export function SuperAdminMedicationDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('medicationName')}</FormLabel>
+                  <FormLabel required>{t('medicationName')}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -141,7 +144,7 @@ export function SuperAdminMedicationDialog({
               name="dosage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('dosage')}</FormLabel>
+                  <FormLabel required>{t('dosage')}</FormLabel>
                   <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString() ?? ''} disabled={isPending}>
                     <FormControl>
                       <SelectTrigger>
@@ -167,7 +170,7 @@ export function SuperAdminMedicationDialog({
               name="period"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('period')}</FormLabel>
+                  <FormLabel required>{t('period')}</FormLabel>
                   <Select onValueChange={(v) => field.onChange(Number(v))} value={field.value?.toString() ?? ''} disabled={isPending}>
                     <FormControl>
                       <SelectTrigger>
@@ -234,13 +237,15 @@ export function SuperAdminMedicationDialog({
               name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('comments')}</FormLabel>
+                  <FormLabel>{t('comments')} ({tCommon('optional')})</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
+                    <VoiceFormField
+                      field={field}
                       placeholder={t('commentsPlaceholder')}
+                      className="min-h-[100px]"
+                      rows={4}
                       disabled={isPending}
-                      rows={3}
+                      onAudioCaptured={setAudioFile}
                     />
                   </FormControl>
                   <FormMessage />

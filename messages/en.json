@@ -289,6 +289,10 @@
     "uploadScanImageRequired": "Scan image is required",
     "uploadLabImage": "Upload Lab Image",
     "uploadLabImageRequired": "Lab image is required",
+    "takePhoto": "Take Photo",
+    "selectFile": "Select File",
+    "fileTooLarge": "File too large. Maximum size is 10MB.",
+    "invalidFileType": "Invalid file type. Please upload JPEG or PNG image.",
     "addDoctor": "Add Doctor",
     "addDoctorMobile": "Doctor",
     "doctorsInClinic": "Doctors in {clinicName}",
@@ -769,8 +773,11 @@
     "noLabsFound": "No labs found",
     "noScansFound": "No scans found",
     "medications": "Medications",
+    "medShort": "Med.",
     "labs": "Labs",
+    "labsShort": "Labs",
     "scans": "Scans",
+    "scansShort": "Scans",
     "dosage": "Dosage",
     "day": "day",
     "period": "Period",
@@ -804,6 +811,8 @@
     "loggingOut": "Logging out..."
   },
   "superAdmin": {
+    "selectFile": "Select File",
+    "takePhoto": "Take Photo",
     "name": "Name",
     "phone": "Phone",
     "speciality": "Speciality",
@@ -1047,8 +1056,11 @@
     "searchByNationalId": "Search by national ID...",
     "noVisitsFound": "No visits found",
     "medications": "Medications",
+    "medShort": "Med.",
     "labs": "Labs",
-    "scans": "Scans"
+    "labsShort": "Labs",
+    "scans": "Scans",
+    "scansShort": "Scans"
   },
   "search": {
     "advancedFilters": "Advanced Filters",
@@ -1142,6 +1154,7 @@
     "mockData": "Mock Data",
     "autoFilled": "Auto-filled",
     "opening": "Opening camera...",
+    "cameraAccessDenied": "Camera access denied. Please allow camera permissions.",
     "pleaseWait": "Please wait..."
   },
   "voiceRecorder": {

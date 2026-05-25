@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
 import { z } from 'zod';
-import { Loader2, Upload } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import {
   Dialog,
@@ -24,7 +24,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -36,6 +35,8 @@ import { useSuperAdminCreateScan } from '@/lib/api/queries/useSuperAdminMutation
 import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { VoiceFormField } from '@/components/shared/VoiceFormField';
+import { SuperAdminImageUploadField } from './SuperAdminImageUploadField';
 
 interface SuperAdminScanDialogProps {
   open: boolean;
@@ -49,6 +50,7 @@ const scanSchema = z.object({
   name: z.string().min(1, 'Scan name is required'),
   type: z.string().min(1, 'Scan type is required'),
   comments: z.string().optional(),
+  image: z.instanceof(File, { message: 'Scan image is required' }).refine((f) => f.size > 0, { message: 'Scan image is required' }),
 });
 
 type ScanFormData = z.infer<typeof scanSchema>;
@@ -73,9 +75,7 @@ export function SuperAdminScanDialog({
   const tCommon = useTranslations('common');
 
   const [isPending, setIsPending] = useState(false);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
 
   const form = useForm<ScanFormData>({
     mode: 'onChange',
@@ -84,8 +84,11 @@ export function SuperAdminScanDialog({
       name: '',
       type: '',
       comments: '',
+      image: undefined as unknown as File,
     },
   });
+
+  const [imageFile, setImageFile] = useState<File | undefined>();
 
   const queryClient = useQueryClient();
   const { mutate: createScan } = useSuperAdminCreateScan();
@@ -96,7 +99,8 @@ export function SuperAdminScanDialog({
       {
         name: data.name,
         type: parseInt(data.type),
-        image: imageFile || undefined,
+        image: data.image,
+        audio: audioFile || undefined,
         comments: data.comments || undefined,
         patientId,
         clinicId,
@@ -105,9 +109,8 @@ export function SuperAdminScanDialog({
         onSuccess: async (result) => {
           showOfflineAwareSuccess(result, { onlineMessage: t('scanCreatedSuccess') });
           form.reset();
-          setImageFile(null);
-          setImagePreview(null);
-          if (imageInputRef.current) imageInputRef.current.value = '';
+          setImageFile(undefined);
+          setAudioFile(null);
           onOpenChange(false);
           await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
           onSuccess?.();
@@ -119,18 +122,6 @@ export function SuperAdminScanDialog({
         onSettled: () => setIsPending(false),
       },
     );
-  };
-
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImageFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
   };
 
   return (
@@ -148,7 +139,7 @@ export function SuperAdminScanDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('scanName')}</FormLabel>
+                  <FormLabel required>{t('scanName')}</FormLabel>
                   <FormControl>
                     <Input
                       {...field}
@@ -166,7 +157,7 @@ export function SuperAdminScanDialog({
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('scanType')}</FormLabel>
+                  <FormLabel required>{t('scanType')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -190,47 +181,32 @@ export function SuperAdminScanDialog({
               )}
             />
 
-            <FormItem>
-              <FormLabel>{t('scanPhoto')}</FormLabel>
-              <FormControl>
-                <div className="space-y-2">
-                  <label className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border rounded-md bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-sm font-medium text-gray-700 dark:text-gray-200 transition-colors">
-                    <Upload className="h-4 w-4" />
-                    <span>{t('chooseFile')}</span>
-                    <input
-                      ref={imageInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      disabled={isPending}
-                      className="hidden"
-                    />
-                  </label>
-                  {imagePreview && (
-                    <div className="relative w-full h-32 border rounded-lg overflow-hidden">
-                      <img
-                        src={imagePreview}
-                        alt="Scan preview"
-                        className="w-full h-full object-contain"
-                      />
-                    </div>
-                  )}
-                </div>
-              </FormControl>
-            </FormItem>
+            <SuperAdminImageUploadField
+              label={t('scanPhoto')}
+              required
+              value={imageFile ?? null}
+              onChange={(file) => setImageFile(file ?? undefined)}
+              error={form.formState.errors.image?.message as string | undefined}
+              maxSizeMB={5}
+              setValue={form.setValue}
+              trigger={form.trigger}
+              fieldName="image"
+            />
 
             <FormField
               control={form.control}
               name="comments"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('comments')}</FormLabel>
+                  <FormLabel>{t('comments')} ({tCommon('optional')})</FormLabel>
                   <FormControl>
-                    <Textarea
-                      {...field}
+                    <VoiceFormField
+                      field={field}
                       placeholder={t('commentsPlaceholder')}
+                      className="min-h-[100px]"
+                      rows={4}
                       disabled={isPending}
-                      rows={3}
+                      onAudioCaptured={setAudioFile}
                     />
                   </FormControl>
                   <FormMessage />

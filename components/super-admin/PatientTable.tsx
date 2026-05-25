@@ -30,7 +30,7 @@ import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { EditPatientDialog } from './EditPatientDialog';
 import { CreatePatientDialog } from './CreatePatientDialog';
 import { OfflineEmptyState } from './OfflineEmptyState';
-import { Plus, ExternalLink } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
 
 const LIST_PAGE_LIMIT = 10000;
 
@@ -146,12 +146,6 @@ export function PatientTable({ onRefresh, onSelectPatient }: PatientTableProps) 
       <div className="flex justify-end">
         <CreatePatientDialog
           onSuccess={refreshList}
-          trigger={
-            <Button className="bg-medical-primary hover:bg-medical-primary/90">
-              <Plus className="mr-2 h-4 w-4" />
-              {t('registerPatient')}
-            </Button>
-          }
         />
       </div>
 
