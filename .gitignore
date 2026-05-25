@@ -9,6 +9,8 @@ build/
 dist/
 docs/
 # Environment
+.env
+.env.local
 .env.*.local
 
 # Debug
@@ -35,4 +37,7 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 .worktrees/
-config.bat
+
+# Serwist (generated service worker)
+public/sw*
+public/swe-worker*

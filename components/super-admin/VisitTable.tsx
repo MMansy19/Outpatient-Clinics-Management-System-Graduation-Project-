@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslations } from 'next-intl';
 import {
   Table,
@@ -20,41 +21,42 @@ import {
   FileText,
   Calendar,
   Volume2,
+  Building2,
 } from 'lucide-react';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { SuperAdminVisitItem } from '@/lib/api/types';
-import { toast } from 'sonner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import { OfflineEmptyState } from './OfflineEmptyState';
+
+const LIST_PAGE_LIMIT = 10000;
 
 export function VisitTable() {
   const t = useTranslations('admin');
-  const tCommon = useTranslations('common');
-  const [visits, setVisits] = useState<SuperAdminVisitItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
   const limit = 10;
 
-  useEffect(() => {
-    const loadVisits = async () => {
-      try {
-        setLoading(true);
-        const data = await superAdminApi.getVisits({ page, limit });
+  const { data, isLoading } = useQuery({
+    queryKey: ['visits-all'],
+    queryFn: () => superAdminApi.getVisits({ page: 1, limit: LIST_PAGE_LIMIT }),
+    networkMode: 'offlineFirst',
+    staleTime: Infinity,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: 'always',
+  });
 
-        setVisits(data.items);
-        setTotalPages(data.totalPages);
-        setTotalItems(data.totalItems);
-      } catch (error) {
-        console.error('Failed to load visits:', error);
-        toast.error('Failed to load visits');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadVisits();
-  }, [page]);
+  const allVisits = useMemo<SuperAdminVisitItem[]>(
+    () => data?.items ?? [],
+    [data]
+  );
+  const totalItems = allVisits.length;
+  const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+  const visits = useMemo(
+    () => allVisits.slice((page - 1) * limit, page * limit),
+    [allVisits, page]
+  );
 
   const handlePreviousPage = () => {
     if (page > 1) {
@@ -68,7 +70,7 @@ export function VisitTable() {
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -78,7 +80,10 @@ export function VisitTable() {
     });
   };
 
-  if (loading) {
+  if (isLoading && !data) {
+    if (!isOnline) {
+      return <OfflineEmptyState label={t('visits') ?? 'visits'} />;
+    }
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
@@ -132,7 +137,7 @@ export function VisitTable() {
                     {formatDate(visit.createdAt)}
                   </div>
                   <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
-                    {t('visitNumber')}
+                    {t('visitId')}
                     {visit.id.slice(0, 8)}
                   </h3>
                 </div>
@@ -149,7 +154,7 @@ export function VisitTable() {
                       {t('patientName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.patient?.name || tCommon('loading')}
+                      {visit.patient.name}
                     </p>
                   </div>
                 </div>
@@ -163,7 +168,21 @@ export function VisitTable() {
                       {t('doctorName')}
                     </p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                      {visit.doctor?.name || tCommon('loading')}
+                      {visit.doctor.name}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                    <Building2 className="h-4 w-4 text-teal-600 dark:text-teal-400" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {t('clinic')}
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {visit.clinic.name}
                     </p>
                   </div>
                 </div>
@@ -213,6 +232,9 @@ export function VisitTable() {
                   {t('doctorName')}
                 </TableHead>
                 <TableHead className="font-semibold">
+                  {t('clinic')}
+                </TableHead>
+                <TableHead className="font-semibold">
                   {t('diagnoses')}
                 </TableHead>
                 <TableHead className="font-semibold">
@@ -223,7 +245,7 @@ export function VisitTable() {
             <TableBody>
               {visits.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-12">
+                  <TableCell colSpan={5} className="text-center py-12">
                     <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                     <p className="text-muted-foreground">
                       {t('noVisitsFound')}
@@ -237,10 +259,13 @@ export function VisitTable() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-900/30"
                   >
                     <TableCell className="font-medium">
-                      {visit.patient?.name || tCommon('loading')}
+                      {visit.patient.name}
                     </TableCell>
                     <TableCell className="font-medium">
-                      {visit.doctor?.name || tCommon('loading')}
+                      {visit.doctor.name}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {visit.clinic.name}
                     </TableCell>
                     <TableCell className="max-w-md">
                       <div className="truncate" title={visit.diagnoses}>

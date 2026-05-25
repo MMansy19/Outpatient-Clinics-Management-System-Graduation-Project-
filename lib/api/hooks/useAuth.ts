@@ -1,11 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/authStore';
 import { authApi } from '../auth.service';
-import type { 
-  LoginDto, 
-  CreateAdminDto, 
-  CreateDoctorDto, 
-  CreatePatientDto 
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { assertPatientUnique, assertDoctorUnique } from '@/lib/offline/preflightUniqueness';
+import type {
+  LoginDto,
+  CreateDoctorDto,
+  CreatePatientDto
 } from '../types';
 
 /**
@@ -89,37 +90,10 @@ export function useLogout() {
 }
 
 /**
- * Create Admin Hook
- * 
- * Requires SUPER_ADMIN role.
- * 
- * Usage:
- * const { mutate: createAdmin, isPending } = useCreateAdmin();
- * createAdmin(adminData, {
- *   onSuccess: (response) => {
- *     toast.success(`Admin created with ID: ${response.id}`);
- *   }
- * });
- */
-export function useCreateAdmin() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateAdminDto) => {
-      return await authApi.createAdmin(data);
-    },
-    onSuccess: () => {
-      // Invalidate admin list query
-      queryClient.invalidateQueries({ queryKey: ['admins'] });
-    },
-  });
-}
-
-/**
  * Create Doctor Hook
- * 
- * Requires SUPER_ADMIN or ADMIN role.
- * 
+ *
+ * Requires SUPER_ADMIN role.
+ *
  * Usage:
  * const { mutate: createDoctor, isPending } = useCreateDoctor();
  * createDoctor(doctorData, {
@@ -129,24 +103,33 @@ export function useCreateAdmin() {
  * });
  */
 export function useCreateDoctor() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreateDoctorDto) => {
-      return await authApi.createDoctor(data);
+  // Offline-aware: queues to /auth/doctor/create when offline.
+  return useOfflineMutation<
+    Awaited<ReturnType<typeof authApi.createDoctor>>,
+    CreateDoctorDto
+  >({
+    mutationFn: (data) => authApi.createDoctor(data),
+    offlineConfig: {
+      type: 'createDoctor',
+      endpoint: '/auth/doctor/create',
+      method: 'POST',
+      getPayload: (data) => ({ ...data }),
     },
-    onSuccess: () => {
-      // Invalidate doctor list query
-      queryClient.invalidateQueries({ queryKey: ['doctors'] });
+    beforeQueue: async (payload) => {
+      await assertDoctorUnique({
+        socialSecurityNumber: payload.socialSecurityNumber as string | undefined,
+        email: payload.email as string | undefined,
+      });
     },
+    invalidateKeys: [['doctors'], ['doctors-all']],
   });
 }
 
 /**
  * Create Patient Hook
- * 
- * Requires SUPER_ADMIN, ADMIN, or DOCTOR role.
- * 
+ *
+ * Requires SUPER_ADMIN or DOCTOR role.
+ *
  * Usage:
  * const { mutate: createPatient, isPending } = useCreatePatient();
  * createPatient(patientData, {
@@ -156,25 +139,24 @@ export function useCreateDoctor() {
  * });
  */
 export function useCreatePatient() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: CreatePatientDto) => {
-      return await authApi.createPatient(data);
+  // Offline-aware: queues to /auth/patient/create when offline.
+  return useOfflineMutation<
+    Awaited<ReturnType<typeof authApi.createPatient>>,
+    CreatePatientDto
+  >({
+    mutationFn: (data) => authApi.createPatient(data),
+    offlineConfig: {
+      type: 'createPatient',
+      endpoint: '/auth/patient/create',
+      method: 'POST',
+      getPayload: (data) => ({ ...data }),
     },
-    onSuccess: (data) => {
-      // Invalidate all patient queries to ensure fresh data
-      console.log('🔄 Invalidating patient queries after creation...');
-      queryClient.invalidateQueries({ queryKey: ['patients'] });
-
-      // Also invalidate the specific nationalId query using the socialSecurityNumber from the response
-      if (data.socialSecurityNumber) {
-        queryClient.invalidateQueries({
-          queryKey: ['patients', 'nationalId', data.socialSecurityNumber],
-        });
-        console.log(`🔄 Invalidated query for nationalId: ${data.socialSecurityNumber}`);
-      }
+    beforeQueue: async (payload) => {
+      await assertPatientUnique({
+        socialSecurityNumber: payload.socialSecurityNumber as string | undefined,
+      });
     },
+    invalidateKeys: [['patients'], ['patients-all']],
   });
 }
 

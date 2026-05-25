@@ -37,6 +37,7 @@ import { VoiceFormField } from '@/components/shared/VoiceFormField';
 import { useCreateMedication } from '@/lib/api/queries/useMedications';
 import { medicationSchema, getLocalizedPeriodOptions, getLocalizedDosageOptions } from '@/lib/schemas/medicationSchema';
 import type { CreateMedicationDto } from '@/lib/api/types';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 interface MedicationFormProps {
   patientId: string; // UUID format
@@ -51,7 +52,10 @@ export function MedicationForm({
 }: MedicationFormProps) {
   const t = useTranslations('medication');
   const tCommon = useTranslations('common');
-  const { mutate: createMedication, isPending } = useCreateMedication();
+  const { mutate: createMedication, isPending: mutationPending } = useCreateMedication();
+  const { isOnline } = useNetworkStatus();
+  // Offline: never show a spinner. The mutation enqueues synchronously.
+  const isPending = isOnline ? mutationPending : false;
   const [audioFile, setAudioFile] = React.useState<File | null>(null);
 
   // Helper function to create translation function for medication namespace
@@ -92,13 +96,24 @@ export function MedicationForm({
     createMedication(submitData, {
       onSuccess: (response) => {
         console.log('✅ Medication created:', response);
+        const isOfflineQueued =
+          response && typeof response === 'object' && (response as { offline?: boolean }).offline === true;
         const dosageUnit = data.dosage === '1' ? 'tablet' : 'tablets';
-        toast.success(t('medicationCreated'), {
-          description: `${data.name} - ${data.dosage} ${dosageUnit} for ${data.period} days`,
-        });
+        if (isOfflineQueued) {
+          toast.success('Saved offline — will sync when online', {
+            description: `${data.name} - ${data.dosage} ${dosageUnit} for ${data.period} days`,
+          });
+        } else {
+          toast.success(t('medicationCreated'), {
+            description: `${data.name} - ${data.dosage} ${dosageUnit} for ${data.period} days`,
+          });
+        }
         form.reset();
         setAudioFile(null);
-        onSuccess?.(response.id);
+        const newId = (response as { id?: string; clientTempId?: string })?.id
+          ?? (response as { clientTempId?: string })?.clientTempId
+          ?? '';
+        onSuccess?.(newId);
       },
       onError: (error) => {
         console.error('❌ Medication creation failed:', error);

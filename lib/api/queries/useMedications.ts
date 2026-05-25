@@ -6,18 +6,17 @@ import {
   UseMutationResult,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
 import type {
   CreateMedicationDto,
   CreateMedicationResponse,
 } from '@/lib/api/types';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
-import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
 
 /**
  * Query Key Factory for Medications
- * 
+ *
  * Centralized query key management for better cache control.
  */
 const medicationsKeys = {
@@ -58,17 +57,11 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 export const useGetPatientMedications = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: medicationsKeys.patient(patientId),
     queryFn: async () => {
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientMedications(patientId);
-      }
-      if (isAdmin) {
-        return await adminApi.getPatientMedications(patientId);
       }
       return await doctorApi.getPatientMedications(patientId);
     },
@@ -80,12 +73,12 @@ export const useGetPatientMedications = (
 
 /**
  * Get Medication Details
- * 
+ *
  * Retrieves detailed information for a specific medication.
- * 
+ *
  * @param {string} medicationId - Medication UUID
  * @returns {UseQueryResult} Query result with medication details
- * 
+ *
  * @example
  * ```typescript
  * const { data: medication, isLoading } = useGetMedication(medicationId);
@@ -108,16 +101,16 @@ export const useGetMedication = (
 
 /**
  * Create Medication
- * 
+ *
  * Mutation hook for creating a new medication record.
  * Automatically invalidates related queries on success.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const createMedicationMutation = useCreateMedication();
- * 
+ *
  * const handleSubmit = (data: CreateMedicationDto) => {
  *   createMedicationMutation.mutate(data, {
  *     onSuccess: (response) => {
@@ -130,7 +123,7 @@ export const useGetMedication = (
  *     },
  *   });
  * };
- * 
+ *
  * return (
  *   <Form onSubmit={handleSubmit}>
  *     <Button disabled={createMedicationMutation.isPending}>
@@ -140,60 +133,34 @@ export const useGetMedication = (
  * );
  * ```
  */
-export const useCreateMedication = (): UseMutationResult<
-  CreateMedicationResponse,
-  Error,
-  CreateMedicationDto | FormData
-> => {
-  const queryClient = useQueryClient();
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
-  return useMutation({
-    mutationFn: (data: CreateMedicationDto | FormData) => {
-      // ADMIN uses adminApi, DOCTOR uses doctorApi
-      if (isAdmin) {
-        return adminApi.createMedication(data);
-      }
-      return doctorApi.createMedication(data);
+export const useCreateMedication = () => {
+  return useOfflineMutation<CreateMedicationResponse, CreateMedicationDto | FormData>({
+    mutationFn: (data) => doctorApi.createMedication(data),
+    offlineConfig: {
+      type: 'createMedication',
+      endpoint: '/doctor/medication',
+      method: 'POST',
+      getPayload: (data) => toPayload(data),
+      getBlobs: (data) => toBlobs(data),
+      getPatientId: (data) =>
+        data instanceof FormData ? (data.get('patientId') as string) : data.patientId,
     },
-    onSuccess: (response, variables) => {
-      // Invalidate patient medications list
-      // Note: medications are keyed by socialSecurityNumber, not patientId
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.all,
-      });
-
-      // Invalidate patient details (may include medication count)
-      queryClient.invalidateQueries({
-        queryKey: ['patients'],
-      });
-
-      // Optionally set the new medication in cache
-      queryClient.setQueryData(
-        medicationsKeys.detail(response.id),
-        variables
-      );
-    },
-    onError: (error) => {
-      console.error('[useCreateMedication] Error:', error);
-      // Could add global error handling here
-    },
+    invalidateKeys: [medicationsKeys.all, ['patients']],
   });
 };
 
 /**
  * Update Medication
- * 
+ *
  * Mutation hook for updating an existing medication record.
  * Supports partial updates.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const updateMedicationMutation = useUpdateMedication();
- * 
+ *
  * const handleUpdate = () => {
  *   updateMedicationMutation.mutate(
  *     {
@@ -209,44 +176,35 @@ export const useCreateMedication = (): UseMutationResult<
  * };
  * ```
  */
-export const useUpdateMedication = (): UseMutationResult<
-  unknown,
-  Error,
-  { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
-> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ medicationId, data }) =>
-      doctorApi.updateMedication(medicationId, data),
-    onSuccess: (_updatedMedication, variables) => {
-      // Invalidate the specific medication cache
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.detail(variables.medicationId),
-      });
-
-      // Invalidate all medications queries
-      queryClient.invalidateQueries({
-        queryKey: medicationsKeys.all,
-      });
+export const useUpdateMedication = () => {
+  return useOfflineMutation<
+    unknown,
+    { medicationId: string; data: Partial<CreateMedicationDto>; socialSecurityNumber: string }
+  >({
+    mutationFn: ({ medicationId, data }) => doctorApi.updateMedication(medicationId, data),
+    offlineConfig: {
+      type: 'updateMedication',
+      endpoint: ({ medicationId }) => `/doctor/medication/${medicationId}`,
+      method: 'PATCH',
+      getPayload: ({ data }) => toPayload(data),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ socialSecurityNumber }) => socialSecurityNumber,
     },
-    onError: (error) => {
-      console.error('[useUpdateMedication] Error:', error);
-    },
+    invalidateKeys: [medicationsKeys.all],
   });
 };
 
 /**
  * Delete Medication
- * 
+ *
  * Mutation hook for soft-deleting a medication record.
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const deleteMedicationMutation = useDeleteMedication();
- * 
+ *
  * const handleDelete = (medicationId: string, patientId: string) => {
  *   if (confirm('Are you sure you want to delete this medication?')) {
  *     deleteMedicationMutation.mutate(
@@ -298,14 +256,14 @@ export const useDeleteMedication = (): UseMutationResult<
 
 /**
  * Create Medication with Optimistic Update
- * 
+ *
  * This is an advanced pattern that updates the UI immediately
  * before the server responds, improving perceived performance.
- * 
+ *
  * @example
  * ```typescript
  * const { mutate } = useCreateMedicationOptimistic();
- * 
+ *
  * mutate(medicationData, {
  *   onSuccess: () => toast.success('Medication created'),
  *   onError: () => toast.error('Failed - changes reverted'),

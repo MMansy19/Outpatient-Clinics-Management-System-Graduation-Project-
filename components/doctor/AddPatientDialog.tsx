@@ -28,6 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
 import { useCreatePatient } from '@/lib/api/hooks/useAuth';
+import { isDuplicateError } from '@/lib/offline/errors';
 import {
   createPatientSchema,
   type CreatePatientFormData,
@@ -162,14 +163,24 @@ export function AddPatientDialog({
           toastMessages.patient.createSuccess,
           toastMessages.patient.createSuccessDescription(fullName)
         );
-        console.log('🔍 Patient created - ID:', response.id, 'National ID:', socialSecurityNumber);
+        const patientId = 'id' in response ? response.id : undefined;
+        console.log('🔍 Patient created - ID:', patientId, 'National ID:', socialSecurityNumber);
         console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
-        const numericId = parseInt(response.id) || 0;
+        const numericId = patientId ? parseInt(patientId) || 0 : 0;
         onSuccess?.({ id: numericId, socialSecurityNumber });
       },
       onError: (error: unknown) => {
+        // Offline duplicate detected by preflightUniqueness before queuing.
+        if (isDuplicateError(error)) {
+          toast.error(
+            toastMessages.patient.alreadyExists,
+            toastMessages.patient.alreadyExistsDescription,
+          );
+          return;
+        }
+
         if (
           error &&
           typeof error === 'object' &&

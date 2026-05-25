@@ -1,7 +1,14 @@
 import type { NextConfig } from 'next';
 import createNextIntlPlugin from 'next-intl/plugin';
+import withSerwistInit from '@serwist/next';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
+
+const withSerwist = withSerwistInit({
+  swSrc: 'app/sw.ts',
+  swDest: 'public/sw.js',
+  disable: process.env.NODE_ENV === 'development',
+});
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -57,6 +64,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // Redirect api-test page to home in production
+  async redirects() {
+    if (process.env.NODE_ENV !== 'production') return [];
+    return [
+      {
+        source: '/:locale/api-test',
+        destination: '/:locale',
+        permanent: false,
+      },
+    ];
+  },
 };
 
-export default withNextIntl(nextConfig);
+export default withSerwist(withNextIntl(nextConfig));

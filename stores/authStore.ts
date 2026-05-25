@@ -2,6 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { Role, Language } from '@/lib/api/types';
+import { cleanupOnLogout } from '@/lib/offline/dataCleanup';
 
 /**
  * Authentication Store
@@ -54,6 +55,9 @@ export const useAuthStore = create<AuthState>()(
           user: null,
           isAuthenticated: false,
         });
+        
+        // Clear all offline cached data (IndexedDB + React Query persist)
+        cleanupOnLogout().catch(console.error);
         
         // Note: The HTTP-only cookie will be cleared by:
         // 1. Browser on expiration

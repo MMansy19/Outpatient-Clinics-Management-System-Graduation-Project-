@@ -45,14 +45,14 @@ export function Footer({ locale }: FooterProps) {
             <Link href={`/${locale}`} className="flex items-center space-x-3">
               <div className="relative w-20 h-20">
                 <Image
-                  src="/logo-chatgpt.png"
-                  alt="CodeBlue Logo"
+                  src="/logo.png"
+                  alt="Outpatient Clinic Logo"
                   fill
                   className="object-contain"
                 />
               </div>
               <span className="text-xl font-bold text-white">
-                CodeBlue
+                Outpatient Clinic
               </span>
             </Link>
             <p className="text-sm text-gray-400 leading-relaxed">
@@ -138,8 +138,8 @@ export function Footer({ locale }: FooterProps) {
             <ul className="space-y-2 text-sm text-gray-400">
               <li>• Cairo University</li>
               <li>• Faculty of Engineering</li>
-              <li>• Computer Engineering Dept.</li>
-              <li>• Graduation Project 2025</li>
+              <li>• Biomedical Data Engineering Dept.</li>
+              <li>• Graduation Project 2026</li>
             </ul>
           </div>
         </div>

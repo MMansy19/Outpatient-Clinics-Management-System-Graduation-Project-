@@ -2,20 +2,28 @@
 
 import { useState, useCallback } from 'react';
 import { toast } from 'sonner';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 interface FormStateOptions {
   onSuccess?: (data?: any) => void;
   onError?: (error: any) => void;
   successMessage?: string;
   errorMessage?: string;
+  /** Toast text when the operation was queued for offline sync. */
+  offlineMessage?: string;
+}
+
+function isOfflineResult(value: unknown): boolean {
+  return !!value && typeof value === 'object' && (value as { offline?: unknown }).offline === true;
 }
 
 export function useFormState(options: FormStateOptions = {}) {
   const [open, setOpen] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { isOnline } = useNetworkStatus();
 
-  const { onSuccess, onError, successMessage, errorMessage } = options;
+  const { onSuccess, onError, successMessage, errorMessage, offlineMessage } = options;
 
   const handleOpenChange = useCallback((newOpen: boolean) => {
     setOpen(newOpen);
@@ -26,13 +34,19 @@ export function useFormState(options: FormStateOptions = {}) {
 
   const execute = useCallback(
     async <T>(fn: () => Promise<T>, customSuccessMessage?: string): Promise<T | undefined> => {
-      setIsPending(true);
+      // When offline we skip the pending spinner entirely. The offline-aware
+      // mutation resolves nearly synchronously (it just enqueues to IndexedDB)
+      // so the dialog should close immediately with no loading flicker.
+      const skipSpinner = !isOnline;
+      if (!skipSpinner) setIsPending(true);
       setError(null);
 
       try {
         const result = await fn();
 
-        if (successMessage || customSuccessMessage) {
+        if (isOfflineResult(result)) {
+          toast.success(offlineMessage || 'Saved offline — will sync when online');
+        } else if (successMessage || customSuccessMessage) {
           toast.success(customSuccessMessage || successMessage || 'Operation completed successfully');
         }
 
@@ -50,10 +64,10 @@ export function useFormState(options: FormStateOptions = {}) {
         onError?.(err);
         throw err;
       } finally {
-        setIsPending(false);
+        if (!skipSpinner) setIsPending(false);
       }
     },
-    [onSuccess, onError, successMessage, errorMessage]
+    [onSuccess, onError, successMessage, errorMessage, offlineMessage, isOnline]
   );
 
   const reset = useCallback(() => {

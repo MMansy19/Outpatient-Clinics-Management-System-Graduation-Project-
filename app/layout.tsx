@@ -56,17 +56,17 @@ export const metadata: Metadata = {
   manifest: '/manifest.json',
   icons: {
     icon: [
-      { url: '/logo-chatgpt.png', sizes: 'any' },
-      { url: '/logo-chatgpt.png', sizes: '192x192', type: 'image/png' },
+      { url: '/logo.png', sizes: 'any' },
+      { url: '/logo.png', sizes: '192x192', type: 'image/png' },
     ],
-    apple: '/logo-chatgpt.png',
-    shortcut: '/logo-chatgpt.png',
+    apple: '/logo.png',
+    shortcut: '/logo.png',
   },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'CodeBlue',
-    startupImage: '/logo-chatgpt.png',
+    title: 'Outpatient Clinic',
+    startupImage: '/logo.png',
   },
   openGraph: {
     type: 'website',
@@ -149,7 +149,7 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
     name: 'MediStream OCMS',
     alternateName: 'MediStream Outpatient Clinic Management System',
     url: siteUrl,
-    logo: `${siteUrl}/logo-chatgpt.png`,
+    logo: `${siteUrl}/logo.png`,
     image: `${siteUrl}/og-image.png`,
     description: 'Smart Outpatient Clinic Management System for Kasr Al Ainy Hospital. AI-powered patient management, seamless medical records, and instant clinical decisions.',
     address: {

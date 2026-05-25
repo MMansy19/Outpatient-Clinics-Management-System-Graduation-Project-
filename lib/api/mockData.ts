@@ -114,7 +114,7 @@ export const initUsers = () => [
     username: 'admin',
     email: 'admin@kasralainy.edu.eg',
     password: 'admin123',
-    role: UserRole.ADMIN,
+    role: UserRole.DOCTOR,
   },
   {
     id: 3,

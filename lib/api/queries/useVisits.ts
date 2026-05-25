@@ -1,17 +1,16 @@
-import { useQuery, useMutation, useQueryClient, UseQueryResult, UseMutationResult } from '@tanstack/react-query';
+import { useQuery, UseQueryResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
-import { adminApi } from '@/lib/api/admin.service';
 import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse } from '@/lib/api/types';
 import type { Visit, VisitWithRelations, VisitFormData } from '@/types/entities/Visit';
-// import type { User } from '@/types/entities/User';
 import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/api/mockData';
 import { useAuthStore } from '@/stores/authStore';
-import { Role } from '@/lib/api/types';
+import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
+import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
 
 /**
  * Toggle between mock data and real backend API
- * 
+ *
  * Set to false when ready to integrate with real backend.
  * Can be controlled via environment variable.
  * See docs/integration/PROFESSIONAL_BE_INTEGRATION_GUIDE.md for migration steps.
@@ -22,18 +21,11 @@ const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
 export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWithRelations[], Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery({
     queryKey: [...VISITS_KEY, 'patient', patientId],
     queryFn: async () => {
       if (USE_MOCK_DATA) {
         return await mockVisitsAPI.getPatientVisits(patientId);
-      }
-      if (isAdmin) {
-        const response = await adminApi.getPatientVisits(patientId);
-        return response as unknown as VisitWithRelations[];
       }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
       return response.data;
@@ -56,18 +48,18 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
 
 /**
  * Create Visit Hook
- * 
+ *
  * Professional implementation with backend integration support.
- * 
+ *
  * **Backend API:** POST /api/v1/doctor/visit/create
  * **Required Role:** DOCTOR
- * 
+ *
  * @returns {UseMutationResult} Mutation object with loading states
- * 
+ *
  * @example
  * ```typescript
  * const { mutate: createVisit, isPending } = useCreateVisit();
- * 
+ *
  * createVisit({
  *   diagnoses: "Common cold, 3 Days rest, Panadol 500 mg",
  *   patientId: "patient-uuid"
@@ -82,91 +74,64 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
  * });
  * ```
  */
-export const useCreateVisit = (): UseMutationResult<CreateVisitResponse, Error, CreateVisitDto | FormData> => {
-  const queryClient = useQueryClient();
+export const useCreateVisit = () => {
   const user = useAuthStore((state) => state.user);
-  const isAdmin = user?.role === Role.ADMIN;
 
-  return useMutation({
-    mutationFn: async (data: CreateVisitDto | FormData) => {
+  return useOfflineMutation<CreateVisitResponse, CreateVisitDto | FormData>({
+    mutationFn: async (data) => {
       if (data instanceof FormData) {
-        // FormData path - for audio uploads
-        if (isAdmin) {
-          return await adminApi.createVisit(data);
-        }
         return await doctorApi.createVisit(data as unknown as CreateVisitDto);
       }
 
       if (USE_MOCK_DATA) {
-        // Mock implementation - transform to match mock API signature
         const visitData = {
           ...data,
-          // Mock data expects different field names
-          patient_id: 1, // In mock, we use numeric ID
+          patient_id: 1,
           doctor_id: 1,
           clinic_id: (user as { clinic_id?: number })?.clinic_id || 0,
-          chief_complaint: '', // Mock requires this
-          diagnosis: data.diagnoses, // Map to mock field name
-          vitals: { weight: 0 }, // Mock requires this
+          chief_complaint: '',
+          diagnosis: data.diagnoses,
+          vitals: { weight: 0 },
         };
-        const mockResult = await mockVisitsAPI.createVisit(visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } });
-
-        // Transform mock response to match backend API response
-        return {
-          message: 'Visit Created Successfully',
-          id: mockResult.global_id,
-        };
+        const mockResult = await mockVisitsAPI.createVisit(
+          visitData as typeof visitData & { chief_complaint: string; diagnosis: string; vitals: { weight: number } }
+        );
+        return { message: 'Visit Created Successfully', id: mockResult.global_id };
       }
 
-      // Real backend implementation - ADMIN uses adminApi, DOCTOR uses doctorApi
-      // Only include clinicId if available — sending undefined fails backend validation
       const clinicId = data.clinicId || user?.clinicId;
       const payload: CreateVisitDto = { diagnoses: data.diagnoses, patientId: data.patientId };
       if (clinicId) payload.clinicId = clinicId;
-      if (isAdmin) {
-        return await adminApi.createVisit(payload);
-      }
       return await doctorApi.createVisit(payload);
     },
-    onSuccess: (_response, variables) => {
-      // Invalidate all visits queries
-      queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-
-      const patientId =
-        variables instanceof FormData
-          ? (variables.get('patientId') as string)
-          : variables.patientId;
-
-      // Invalidate patient-specific visits
-      queryClient.invalidateQueries({
-        queryKey: [...VISITS_KEY, 'patient', patientId]
-      });
-
-      // Invalidate patient details (may include visit count)
-      queryClient.invalidateQueries({
-        queryKey: ['patients', patientId]
-      });
+    offlineConfig: {
+      type: 'createVisit',
+      endpoint: '/doctor/visit',
+      method: 'POST',
+      getPayload: (data) => toPayload(data),
+      getBlobs: (data) => toBlobs(data),
+      getPatientId: (data) =>
+        data instanceof FormData ? (data.get('patientId') as string) : data.patientId,
     },
-    onError: (error) => {
-      console.error('[useCreateVisit] Error:', error);
-      // Centralized error handling could go here
-    },
+    invalidateKeys: [VISITS_KEY, [...VISITS_KEY, 'recent'], ['patients']],
   });
 };
 
-export const useUpdateVisit = (): UseMutationResult<Visit, Error, { id: number; data: Partial<VisitFormData> }> => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<VisitFormData> }) => {
+export const useUpdateVisit = () => {
+  return useOfflineMutation<Visit, { id: number; data: Partial<VisitFormData>; patientId?: string }>({
+    mutationFn: async ({ id, data }) => {
       const response = await apiClient.patch<Visit>(`/doctor/visits/${id}`, data);
       return response.data;
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: VISITS_KEY });
-      queryClient.invalidateQueries({ queryKey: [...VISITS_KEY, data.id] });
-      queryClient.invalidateQueries({ queryKey: ['patients', data.patient_id] });
+    offlineConfig: {
+      type: 'updateVisit',
+      endpoint: ({ id }) => `/doctor/visits/${id}`,
+      method: 'PATCH',
+      getPayload: ({ data }) => toPayload(data),
+      getBlobs: ({ data }) => toBlobs(data),
+      getPatientId: ({ patientId }) => patientId,
     },
+    invalidateKeys: [VISITS_KEY, ['patients']],
   });
 };
 
@@ -212,35 +177,9 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
  * ```
  */
 export const useGetAllVisits = (params?: { page?: number; limit?: number }): UseQueryResult<PaginatedVisitsResponse, Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery<PaginatedVisitsResponse>({
     queryKey: [...VISITS_KEY, 'all', params?.page || 1, params?.limit || 10],
     queryFn: async (): Promise<PaginatedVisitsResponse> => {
-      // if (USE_MOCK_DATA) {
-      //   // For mock data, return recent visits
-      //   const visits = await mockVisitsAPI.getRecentVisits(params?.limit || 10);
-      //   // Transform VisitWithRelations[] to VisitResponse[]
-      //   const items: VisitResponse[] = visits.map((visit) => ({
-      //     id: visit.global_id,
-      //     diagnoses: visit.diagnosis,
-      //     doctorId: visit.doctor.id.toString(),
-      //     patientId: visit.patient.id.toString(),
-      //     createdAt: visit.created_at.toISOString(),
-      //   }));
-      //   return {
-      //     items,
-      //     page: 1,
-      //     totalPages: 1,
-      //     totalItems: 10,
-      //   };
-      // }
-      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
-      if (isAdmin) {
-        const response = await adminApi.getClinicVisits({ page: params?.page || 1, limit: params?.limit || 10 });
-        return response as unknown as PaginatedVisitsResponse;
-      }
       const response = await doctorApi.getAllVisits(params);
       return response as PaginatedVisitsResponse;
     },
@@ -249,9 +188,6 @@ export const useGetAllVisits = (params?: { page?: number; limit?: number }): Use
 };
 
 export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
-  const { user } = useAuthStore();
-  const isAdmin = user?.role === Role.ADMIN;
-
   return useQuery<unknown[]>({
     queryKey: [...PATIENTS_KEY, 'all'],
     queryFn: async (): Promise<unknown[]> => {
@@ -259,11 +195,6 @@ export const useGetAllPatients = (): UseQueryResult<unknown[], Error> => {
         // For mock data, get patients from mock API
         const users = getStorageData(STORAGE_KEYS.USERS, initUsers());
         return users.filter((user: any) => user.role === 'patient');
-      }
-      // ADMIN uses clinic-scoped endpoints, DOCTOR uses doctorApi
-      if (isAdmin) {
-        const response = await adminApi.getClinicPatients({ page: 1, limit: 10000 });
-        return response.items;
       }
       const response = await doctorApi.getAllPatients();
       return response;

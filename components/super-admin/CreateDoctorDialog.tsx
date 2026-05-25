@@ -34,6 +34,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useCreateDoctor } from '@/lib/api/hooks/useAuth';
+import { isDuplicateError } from '@/lib/offline/errors';
 import {
   createDoctorSchema,
   type CreateDoctorFormData,
@@ -111,28 +112,50 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
       setClinics(data);
     } catch (error) {
       console.error('Failed to load clinics:', error);
-      toast.error('Failed to load clinics', 'Unable to fetch clinic list');
+      toast.error(t('failedToLoadClinicsTitle'), t('failedToLoadClinicsDescription'));
     } finally {
       setLoadingClinics(false);
     }
   };
 
   const onSubmit = (data: CreateDoctorFormData) => {
-    console.log('🔍 Creating doctor with data:', data);
+    const fullName = `${data.firstName} ${data.lastName}`;
+    // Snapshot values so we can restore the form if the backend rejects
+    // the submission after we've optimistically closed the dialog.
+    const submittedValues = { ...data };
 
     createDoctor(data, {
       onSuccess: (response) => {
-        console.log('✅ Doctor created successfully:', response);
-        const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
-        toast.success(
-          toastMessages.doctor.createSuccess,
-          toastMessages.doctor.createSuccessDescription(fullName)
-        );
-        form.reset();
-        setOpen(false);
+        if (
+          response &&
+          typeof response === 'object' &&
+          (response as { offline?: boolean }).offline === true
+        ) {
+          toast.success(t('savedOffline'), t('savedOfflineDescription', { name: fullName }));
+        } else {
+          toast.success(
+            toastMessages.doctor.createSuccess,
+            toastMessages.doctor.createSuccessDescription(fullName)
+          );
+        }
       },
       onError: (error: unknown) => {
         console.error('❌ Create doctor error:', error);
+
+        // Restore the dialog with the values the user submitted so they
+        // can correct the error and retry. We've already closed the
+        // dialog optimistically below.
+        form.reset(submittedValues);
+        setOpen(true);
+
+        // Offline duplicate detected by preflightUniqueness before queuing.
+        if (isDuplicateError(error)) {
+          toast.error(
+            toastMessages.doctor.alreadyExists,
+            toastMessages.doctor.alreadyExistsDescription,
+          );
+          return;
+        }
 
         // Handle different error cases
         if (
@@ -146,8 +169,6 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             data?: unknown;
             status?: number;
           };
-          console.error('Response data:', response.data);
-          console.error('Response status:', response.status);
 
           // Check if it's a "User already exists" error
           if (
@@ -181,6 +202,12 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
         }
       },
     });
+
+    // Close optimistically — don't make the user wait for the network.
+    // For the offline / network-failure case the mutation has already been
+    // queued by useOfflineMutation, so onSuccess will fire with offline=true.
+    form.reset();
+    setOpen(false);
   };
 
   return (
@@ -208,7 +235,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('firstName')}</FormLabel>
+                    <FormLabel required>{t('firstName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="John"
@@ -226,7 +253,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
                 name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('lastName')}</FormLabel>
+                    <FormLabel required>{t('lastName')}</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="Doe"
@@ -246,7 +273,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="socialSecurityNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('nationalIdRequired')}</FormLabel>
+                  <FormLabel required>{t('nationalIdRequired')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="30202041234567"
@@ -269,7 +296,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('email')}</FormLabel>
+                  <FormLabel required>{t('email')}</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
@@ -288,7 +315,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="phone"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('phoneNumber')}</FormLabel>
+                  <FormLabel required>{t('phoneNumber')}</FormLabel>
                   <FormControl>
                     <Input
                       placeholder={t('phonePlaceholder')}
@@ -310,7 +337,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="clinicId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('clinic')}</FormLabel>
+                  <FormLabel required>{t('clinic')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -352,7 +379,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="speciality"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('medicalSpeciality')}</FormLabel>
+                  <FormLabel required>{t('medicalSpeciality')}</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -382,7 +409,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t('password')}</FormLabel>
+                  <FormLabel required>{t('password')}</FormLabel>
                   <FormControl>
                     <Input
                       type="password"

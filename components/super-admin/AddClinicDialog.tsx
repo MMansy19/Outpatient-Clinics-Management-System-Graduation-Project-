@@ -26,7 +26,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 
-import { superAdminApi } from '@/lib/api/superAdmin.service';
+import { useCreateClinic } from '@/lib/api/queries/useSuperAdminMutations';
+import { showOfflineAwareSuccess } from '@/lib/utils/offlineToast';
 import { z } from 'zod';
 
 const clinicSchema = z.object({
@@ -49,6 +50,7 @@ export function AddClinicDialog({
 }: AddClinicDialogProps) {
   const t = useTranslations('admin');
   const [isPending, setIsPending] = useState(false);
+  const { mutate: createClinic } = useCreateClinic();
 
   const form = useForm<ClinicFormData>({
     mode: 'onChange',
@@ -60,28 +62,30 @@ export function AddClinicDialog({
   });
 
   const onSubmit = async (data: ClinicFormData) => {
-    try {
-      setIsPending(true);
-      await superAdminApi.createClinic({
-        name: data.name,
-        speciality: data.speciality,
-      });
-
-      toast.success(t('clinicCreated') || 'Clinic created successfully');
-      form.reset();
-      onOpenChange(false);
-      onSuccess?.();
-    } catch (error) {
-      console.error('Failed to create clinic:', error);
-      const err = error as { response?: { data?: { message?: string } } };
-      toast.error(
-        err?.response?.data?.message ||
-          t('clinicCreateError') ||
-          'Failed to create clinic'
-      );
-    } finally {
-      setIsPending(false);
-    }
+    setIsPending(true);
+    createClinic(
+      { name: data.name, speciality: data.speciality },
+      {
+        onSuccess: (result) => {
+          showOfflineAwareSuccess(result, {
+            onlineMessage: t('clinicCreated') || 'Clinic created successfully',
+          });
+          form.reset();
+          onOpenChange(false);
+          onSuccess?.();
+        },
+        onError: (error) => {
+          console.error('Failed to create clinic:', error);
+          const err = error as { response?: { data?: { message?: string } } };
+          toast.error(
+            err?.response?.data?.message ||
+              t('clinicCreateError') ||
+              'Failed to create clinic',
+          );
+        },
+        onSettled: () => setIsPending(false),
+      },
+    );
   };
 
   return (
