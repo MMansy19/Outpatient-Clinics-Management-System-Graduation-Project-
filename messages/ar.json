@@ -968,6 +968,8 @@
   },
   "superAdmin": {
     "name": "الاسم",
+    "scanNationalIdTitle": "مسح البطاقة الوطنية",
+    "scanNationalId": "مسح البطاقة الوطنية",
     "phone": "الهاتف",
     "speciality": "التخصص",
     "status": "الحالة",

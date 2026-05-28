@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { useTranslations } from 'next-intl';
 import { Search, Loader2, User, Calendar } from 'lucide-react';
 
@@ -32,7 +33,9 @@ interface SuperAdminPatientSearchProps {
   }) => void;
 }
 
-export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSearchProps) {
+export function SuperAdminPatientSearch({
+  onSelectPatient,
+}: SuperAdminPatientSearchProps) {
   const t = useTranslations('superAdmin');
   const tValidation = useTranslations('validation');
   const tSearch = useTranslations('search');
@@ -43,7 +46,10 @@ export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSe
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resultSource, setResultSource] = useState<'online' | 'offline' | null>(null);
+  const [resultSource, setResultSource] = useState<'online' | 'offline' | null>(
+    null
+  );
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
   const isValidNationalId = (id: string): boolean => {
     const trimmedId = id.trim();
@@ -135,86 +141,119 @@ export function SuperAdminPatientSearch({ onSelectPatient }: SuperAdminPatientSe
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && nationalId && isValidNationalId(nationalId) && !isLoading) {
+    if (
+      e.key === 'Enter' &&
+      nationalId &&
+      isValidNationalId(nationalId) &&
+      !isLoading
+    ) {
       handleSearch();
     }
   };
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg flex items-center gap-2">
-          <Search className="h-5 w-5 text-medical-primary" />
-          {t('searchPatients')}
-        </CardTitle>
-        <CardDescription>
-          {t('searchPatientsDescription')}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex gap-2">
-          <div className="flex-1">
-            <Input
-              type="text"
-              placeholder={t('nationalIdPlaceholder')}
-              value={nationalId}
-              onChange={(e) => handleNationalIdChange(e.target.value)}
-              onKeyDown={handleKeyPress}
-              maxLength={14}
-              className="font-mono text-lg tracking-widest"
-            />
-            {nationalIdError && (
-              <p className="text-sm text-destructive mt-1">{nationalIdError}</p>
-            )}
-            {error && (
-              <p className="text-sm text-destructive mt-1">{error}</p>
-            )}
-          </div>
-          <Button
-            onClick={handleSearch}
-            disabled={!nationalId || !isValidNationalId(nationalId) || isLoading}
-            className="bg-medical-primary hover:bg-medical-primary/90"
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Search className="h-4 w-4 mr-2" />
-            )}
-            {t('search')}
-          </Button>
-        </div>
-
-        {hasSearched && !isLoading && !error && (
-          <div className="text-sm text-muted-foreground">
-            {t('enterNationalIdPrompt')}
-          </div>
-        )}
-
-        {resultSource === 'offline' && !isLoading && !error && (
-          <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
-            {tSearch('showingOfflineResults')}
-          </div>
-        )}
-
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-medium mb-3">{t('searchTips')}</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-medical-primary" />
-              <span>{t('tip1')}</span>
+    <>
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Search className="h-5 w-5 text-medical-primary" />
+            {t('searchPatients')}
+          </CardTitle>
+          <CardDescription>{t('searchPatientsDescription')}</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-2">
+            <div className="flex-1">
+              <Input
+                type="text"
+                placeholder={t('nationalIdPlaceholder')}
+                value={nationalId}
+                onChange={(e) => handleNationalIdChange(e.target.value)}
+                onKeyDown={handleKeyPress}
+                maxLength={14}
+                className="font-mono text-lg tracking-widest"
+              />
+              {nationalIdError && (
+                <p className="text-sm text-destructive mt-1">
+                  {nationalIdError}
+                </p>
+              )}
+              {error && (
+                <p className="text-sm text-destructive mt-1">{error}</p>
+              )}
             </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-medical-secondary" />
-              <span>{t('tip2')}</span>
+            <Button
+              onClick={handleSearch}
+              disabled={
+                !nationalId || !isValidNationalId(nationalId) || isLoading
+              }
+              className="bg-medical-primary hover:bg-medical-primary/90"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Search className="h-4 w-4 mr-2" />
+              )}
+              {t('search')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
+              title={t('scanNationalIdTitle') || 'Scan National ID'}
+              onClick={() => setIsScannerOpen(true)}
+            >
+              {/* You can use a scan icon like ScanLine or Camera */}
+              <span role="img" aria-label="scan" className="mr-1">
+                📷
+              </span>
+              {t('scanNationalId') || 'Scan ID'}
+            </Button>
+          </div>
+
+          {hasSearched && !isLoading && !error && (
+            <div className="text-sm text-muted-foreground">
+              {t('enterNationalIdPrompt')}
             </div>
-            <div className="flex items-center gap-2">
-              <Search className="h-4 w-4 text-medical-info" />
-              <span>{t('tip3')}</span>
+          )}
+
+          {resultSource === 'offline' && !isLoading && !error && (
+            <div className="rounded-md border border-amber-300/60 bg-amber-50 dark:bg-amber-950/30 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
+              {tSearch('showingOfflineResults')}
+            </div>
+          )}
+
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium mb-3">{t('searchTips')}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-medical-primary" />
+                <span>{t('tip1')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-medical-secondary" />
+                <span>{t('tip2')}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Search className="h-4 w-4 text-medical-info" />
+                <span>{t('tip3')}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+      <NationalIdScanner
+        open={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanComplete={(data) => {
+          if (data && (data.nationalId || data.socialSecurityNumber)) {
+            const id = data.nationalId || data.socialSecurityNumber;
+            setNationalId(id);
+            setIsScannerOpen(false);
+          }
+        }}
+      />
+    </>
   );
 }
 
@@ -230,7 +269,9 @@ interface SuperAdminQuickSearchProps {
   }) => void;
 }
 
-export function SuperAdminQuickSearch({ onSelectPatient }: SuperAdminQuickSearchProps) {
+export function SuperAdminQuickSearch({
+  onSelectPatient,
+}: SuperAdminQuickSearchProps) {
   const t = useTranslations('superAdmin');
 
   const [nationalId, setNationalId] = useState('');
@@ -294,7 +335,9 @@ export function SuperAdminQuickSearch({ onSelectPatient }: SuperAdminQuickSearch
       >
         <Search className="h-4 w-4" />
       </Button>
-      {error && <p className="text-xs text-destructive absolute -bottom-5">{error}</p>}
+      {error && (
+        <p className="text-xs text-destructive absolute -bottom-5">{error}</p>
+      )}
     </div>
   );
 }

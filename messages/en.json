@@ -733,7 +733,7 @@
     "savedOfflineDescription": "{name} will be created when you reconnect.",
     "failedToLoadClinicsTitle": "Failed to load clinics",
     "failedToLoadClinicsDescription": "Unable to fetch clinic list",
-    "scanNationalIdTitle": "Scan National ID",
+
     "selectClinicRequired": "Select clinic",
     "noClinicsAvailable": "No clinics available",
     "passwordPlaceholder": "StrongPassword123!",
@@ -812,6 +812,8 @@
   },
   "superAdmin": {
     "selectFile": "Select File",
+    "scanNationalIdTitle": "Scan National ID",
+    "scanNationalId": "Scan National ID",
     "takePhoto": "Take Photo",
     "name": "Name",
     "phone": "Phone",
