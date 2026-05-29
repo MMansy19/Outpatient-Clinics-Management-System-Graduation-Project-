@@ -117,7 +117,7 @@ export function SuperAdminVisitDialog({
               name="diagnoses"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{tVisit('diagnosesTreatmentPlan')} ({tCommon('optional')})</FormLabel>
+                  <FormLabel required>{tVisit('diagnosesTreatmentPlan')}</FormLabel>
                   <FormControl>
                     <VoiceFormField
                       field={field}

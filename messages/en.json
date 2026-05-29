@@ -524,7 +524,7 @@
     "labNameRequired": "Lab name is required",
     "scanNameRequired": "Scan name is required",
     "scanTypeRequired": "Scan type is required",
-    "diagnosesRequired": "Please provide a text diagnosis or record audio",
+    "diagnosesRequired": "At least one of text diagnosis or audio diagnosis is required",
     "diagnosisRequired": "Diagnosis is required",
     "unknownError": "Unknown error",
     "clinicNameRequired": "Clinic name is required",
