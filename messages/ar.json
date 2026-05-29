@@ -952,6 +952,7 @@
     "offlineBanner": "أنت غير متصل بالإنترنت — سيتم حفظ التغييرات محلياً ومزامنتها عند إعادة الاتصال",
     "offlineBannerShort": "أنت غير متصل بالإنترنت",
     "registerPatient": "تسجيل مريض",
+    "registerPatientWithScannedId": "تسجيل مريض بهذا الرقم القومي",
     "registerPatientDescription": "تسجيل مريض جديد في النظام. يجب ملء جميع الحقول المطلوبة.",
     "creatingPatient": "جاري الإنشاء...",
     "patientCreated": "تم إنشاء المريض بنجاح",
@@ -970,6 +971,7 @@
     "name": "الاسم",
     "scanNationalIdTitle": "مسح البطاقة الوطنية",
     "scanNationalId": "مسح البطاقة الوطنية",
+    "registerPatientWithScannedId": "تسجيل بهذا الرقم القومي",
     "phone": "الهاتف",
     "speciality": "التخصص",
     "status": "الحالة",
@@ -1322,7 +1324,8 @@
     "deleteError": "فشل حذف العيادة",
     "enterName": "أدخل اسم العيادة",
     "enterSpeciality": "أدخل التخصص (مثل: الجلدية)",
-    "creating": "جاري الإنشاء..."
+    "creating": "جاري الإنشاء...",
+    "creatingVisit": "جاري إنشاء زيارة جديدة..."
   },
   "qr": {
     "code": "رمز الاستجابة السريعة"

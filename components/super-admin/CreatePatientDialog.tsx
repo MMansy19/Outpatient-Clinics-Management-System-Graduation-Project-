@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useTranslations } from 'next-intl';
@@ -40,9 +40,30 @@ import { EnrichedScanData } from '@/types/ocr';
 interface CreatePatientDialogProps {
   trigger?: React.ReactNode;
   onSuccess?: () => void;
+  prefillData?: {
+    socialSecurityNumber?: string;
+    firstName?: string;
+    lastName?: string;
+    address?: string;
+  };
 }
 
-export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogProps) {
+export function CreatePatientDialog({ trigger, onSuccess, prefillData }: CreatePatientDialogProps) {
+  // Ensure form is always prefilled on open
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    if (prefillData) {
+      form.reset({
+        firstName: prefillData.firstName || '',
+        lastName: prefillData.lastName || '',
+        socialSecurityNumber: prefillData.socialSecurityNumber || '',
+        address: prefillData.address || '',
+        language: Language.ENGLISH,
+        job: '',
+      });
+    }
+  }, [prefillData]);
   const t = useTranslations('admin');
   const tSuperAdmin = useTranslations('superAdmin');
   const tScan = useTranslations('scan');
@@ -55,16 +76,14 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
     mode: 'onChange',
     resolver: zodResolver(createPatientSchema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
+      firstName: prefillData?.firstName || '',
+      lastName: prefillData?.lastName || '',
       language: Language.ENGLISH,
-      socialSecurityNumber: '',
-      address: '',
+      socialSecurityNumber: prefillData?.socialSecurityNumber || '',
+      address: prefillData?.address || '',
       job: '',
     },
   });
-
-  const nationalId = form.watch('socialSecurityNumber');
 
   const handleScanOption = () => {
     setShowRegistrationOptions(false);
@@ -98,6 +117,8 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
     setIsScannerOpen(false);
     setOpen(true);
   };
+
+  const nationalId = form.watch('socialSecurityNumber');
 
   const extractedInfo = nationalId && nationalId.length === 14 ? {
     gender: extractGenderFromNationalId(nationalId),
