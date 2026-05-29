@@ -25,9 +25,9 @@ import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { Gender } from '@/lib/api/types';
 
 // Converts 'MALE'/'FEMALE'/null/undefined to Gender enum
-function toGenderEnum(genderString: 'MALE' | 'FEMALE' | null | undefined): Gender | undefined {
-  if (genderString === 'MALE') return Gender.MALE;
-  if (genderString === 'FEMALE') return Gender.FEMALE;
+function toGenderEnum(gender: 'MALE' | 'FEMALE' | Gender | null | undefined): Gender | undefined {
+  if (gender === 'MALE' || gender === Gender.MALE) return Gender.MALE;
+  if (gender === 'FEMALE' || gender === Gender.FEMALE) return Gender.FEMALE;
   return undefined;
 }
 
@@ -490,7 +490,11 @@ function RegisterPatientDialog({ open, onOpenChange, prefillData, onRegistered }
                       {extractedInfo.gender && (
                         <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
                           <span className="font-medium">{t('gender')}:</span>
-                          <span>{extractedInfo.gender === 'MALE' ? t('male') : t('female')}</span>
+                          {(() => {
+  const g: Gender | undefined = extractedInfo.gender;
+  return Number(g) === 0 ? t('male') : Number(g) === 1 ? t('female') : '';
+})()}
+
                         </div>
                       )}
                     </div>
