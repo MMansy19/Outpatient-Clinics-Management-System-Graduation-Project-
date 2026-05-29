@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { NationalIdScanner } from '@/components/doctor/NationalIdScanner';
 import { useTranslations } from 'next-intl';
-import { Search, Loader2, User, Calendar } from 'lucide-react';
+import { Search, Loader2, User, Calendar, ScanLine } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -162,8 +162,8 @@ export function SuperAdminPatientSearch({
           <CardDescription>{t('searchPatientsDescription')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <div className="flex-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:gap-2">
+            <div className="w-full">
               <Input
                 type="text"
                 placeholder={t('nationalIdPlaceholder')}
@@ -182,33 +182,32 @@ export function SuperAdminPatientSearch({
                 <p className="text-sm text-destructive mt-1">{error}</p>
               )}
             </div>
-            <Button
-              onClick={handleSearch}
-              disabled={
-                !nationalId || !isValidNationalId(nationalId) || isLoading
-              }
-              className="bg-medical-primary hover:bg-medical-primary/90"
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Search className="h-4 w-4 mr-2" />
-              )}
-              {t('search')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              className="border-medical-primary text-medical-primary hover:bg-medical-primary/10"
-              title={t('scanNationalIdTitle') || 'Scan National ID'}
-              onClick={() => setIsScannerOpen(true)}
-            >
-              {/* You can use a scan icon like ScanLine or Camera */}
-              <span role="img" aria-label="scan" className="mr-1">
-                📷
-              </span>
-              {t('scanNationalId') || 'Scan ID'}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                onClick={handleSearch}
+                disabled={
+                  !nationalId || !isValidNationalId(nationalId) || isLoading
+                }
+                className="flex-1 sm:flex-initial bg-medical-primary hover:bg-medical-primary/90"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Search className="h-4 w-4 mr-2" />
+                )}
+                {t('search')}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1 sm:flex-initial border-medical-primary text-medical-primary hover:bg-medical-primary/10"
+                title={t('scanNationalIdTitle') || 'Scan National ID'}
+                onClick={() => setIsScannerOpen(true)}
+              >
+                <ScanLine className="mr-1 h-5 w-5" />
+                {t('scanNationalId') || 'Scan ID'}
+              </Button>
+            </div>
           </div>
 
           {hasSearched && !isLoading && !error && (

@@ -40,7 +40,7 @@ interface SuperAdminVisitDialogProps {
 }
 
 const visitSchema = z.object({
-  diagnoses: z.string().min(1, 'Diagnoses is required'),
+  diagnoses: z.string().optional(),
 });
 
 type VisitFormData = z.infer<typeof visitSchema>;
@@ -55,6 +55,7 @@ export function SuperAdminVisitDialog({
 }: SuperAdminVisitDialogProps) {
   const tVisit = useTranslations('visit');
   const tCommon = useTranslations('common');
+  const tValidation = useTranslations('validation');
 
   const [isPending, setIsPending] = useState(false);
   const [audioFile, setAudioFile] = useState<File | null>(null);
@@ -70,6 +71,10 @@ export function SuperAdminVisitDialog({
   });
 
   const onSubmit = async (data: VisitFormData) => {
+    if (!data.diagnoses && !audioFile) {
+      toast.error(tValidation('diagnosesRequired'));
+      return;
+    }
     setIsPending(true);
     createVisit(
       {
@@ -112,7 +117,7 @@ export function SuperAdminVisitDialog({
               name="diagnoses"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel required>{tVisit('diagnosesTreatmentPlan')}</FormLabel>
+                  <FormLabel>{tVisit('diagnosesTreatmentPlan')} ({tCommon('optional')})</FormLabel>
                   <FormControl>
                     <VoiceFormField
                       field={field}
@@ -141,7 +146,7 @@ export function SuperAdminVisitDialog({
               </Button>
               <Button
                 type="submit"
-                disabled={isPending || !form.formState.isValid}
+                disabled={isPending || (!form.watch('diagnoses') && !audioFile)}
                 className="bg-medical-primary hover:bg-medical-primary/90"
               >
                 {isPending ? (

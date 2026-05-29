@@ -36,6 +36,29 @@ export function NationalIdScanner({
   onClose,
   onScanComplete,
 }: NationalIdScannerProps) {
+  // Utility to reset all internal state
+  const resetState = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+    setError(null);
+    setIsWebCameraActive(false);
+    setActiveTab('camera');
+    setIsCapturing(false);
+    if (videoStream) {
+      videoStream.getTracks().forEach((track) => track.stop());
+      setVideoStream(null);
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  // Always clear state when the dialog is (re)opened
+  useEffect(() => {
+    if (open) {
+      resetState();
+    }
+    // eslint-disable-next-line
+  }, [open]);
+
   const t = useTranslations('scan');
   const tCommon = useTranslations('common');
   
@@ -231,23 +254,7 @@ export function NationalIdScanner({
   };
 
   const handleClose = (forceClose = false) => {
-    // Always clean up resources, regardless of processing state
-    // Stop video stream if active
-    if (videoStream) {
-      videoStream.getTracks().forEach(track => track.stop());
-      setVideoStream(null);
-      setIsWebCameraActive(false);
-    }
-    // Clean up file preview
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl);
-    }
-    setSelectedFile(null);
-    setPreviewUrl(null);
-    setError(null);
-    setActiveTab('camera');
-    setIsCapturing(false);
-
+    resetState();
     // Only close if not processing or if forced
     if (!isScanning && !isCapturing || forceClose) {
       onClose();

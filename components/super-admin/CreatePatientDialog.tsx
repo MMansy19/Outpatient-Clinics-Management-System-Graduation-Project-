@@ -44,6 +44,7 @@ interface CreatePatientDialogProps {
 
 export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogProps) {
   const t = useTranslations('admin');
+  const tSuperAdmin = useTranslations('superAdmin');
   const tScan = useTranslations('scan');
   const [open, setOpen] = useState(false);
   const [showRegistrationOptions, setShowRegistrationOptions] = useState(false);
@@ -308,7 +309,7 @@ export function CreatePatientDialog({ trigger, onSuccess }: CreatePatientDialogP
                       <Button type="button" variant="outline" size="icon" onClick={() => {
                         setOpen(false);
                         setShowRegistrationOptions(true);
-                      }} disabled={isPending} className="border-medical-primary text-medical-primary hover:bg-medical-primary/10" title={t('scanNationalIdTitle')}>
+                      }} disabled={isPending} className="border-medical-primary text-medical-primary hover:bg-medical-primary/10" title={tSuperAdmin('scanNationalIdTitle')}>
                         <ScanLine className="h-4 w-4" />
                       </Button>
                     </div>

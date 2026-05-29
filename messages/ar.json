@@ -527,7 +527,7 @@
     "labNameRequired": "اسم التحليل مطلوب",
     "scanNameRequired": "اسم الأشعة مطلوب",
     "scanTypeRequired": "نوع الأشعة مطلوب",
-    "diagnosesRequired": "التشخيصات مطلوبة",
+    "diagnosesRequired": "يرجى إدخال تشخيص نصي أو تسجيل صوتي",
     "diagnosisRequired": "التشخيص مطلوب",
     "unknownError": "خطأ غير معروف",
     "clinicNameRequired": "اسم العيادة مطلوب",
