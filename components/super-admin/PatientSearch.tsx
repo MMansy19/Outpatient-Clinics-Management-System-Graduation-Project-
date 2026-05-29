@@ -23,6 +23,14 @@ import {
 
 import { superAdminApi } from '@/lib/api/superAdmin.service';
 import { Gender } from '@/lib/api/types';
+
+// Converts 'MALE'/'FEMALE'/null/undefined to Gender enum
+function toGenderEnum(genderString: 'MALE' | 'FEMALE' | null | undefined): Gender | undefined {
+  if (genderString === 'MALE') return Gender.MALE;
+  if (genderString === 'FEMALE') return Gender.FEMALE;
+  return undefined;
+}
+
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { searchPatientByNationalId } from '@/lib/offline/offlineSearch';
 import { upsertPatients } from '@/lib/offline/patientCache';
@@ -369,7 +377,7 @@ function RegisterPatientDialog({ open, onOpenChange, prefillData, onRegistered }
 
   const nationalId = form.watch('socialSecurityNumber');
   const extractedInfo = nationalId && nationalId.length === 14 ? {
-    gender: extractGenderFromNationalId(nationalId),
+    gender: toGenderEnum(extractGenderFromNationalId(nationalId)),
     birthdate: extractBirthdateFromNationalId(nationalId),
     age: calculateAgeFromNationalId(nationalId),
     governorate: extractGovernorateFromNationalId(nationalId),
@@ -398,7 +406,7 @@ function RegisterPatientDialog({ open, onOpenChange, prefillData, onRegistered }
         onRegistered({
           id: 'new',
           name: fullName,
-          gender: extractedInfo?.gender ?? undefined,
+          gender: toGenderEnum(extractedInfo?.gender),
           dateOfBirth: extractedInfo?.birthdate?.toISOString(),
           socialSecurityNumber: data.socialSecurityNumber,
           address: data.address ?? null,
