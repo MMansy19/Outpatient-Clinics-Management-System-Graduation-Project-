@@ -4,6 +4,7 @@ import {
   useQueryClient,
   UseQueryResult,
   UseMutationResult,
+  keepPreviousData,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type {
@@ -13,6 +14,13 @@ import type {
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
 import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import {
+  upsertMedications,
+  getMedicationsByPatient,
+  getMedicationById,
+  getPendingMedicationCreates,
+} from '@/lib/offline/medicationCache';
 
 /**
  * Query Key Factory for Medications
@@ -57,17 +65,39 @@ const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 export const useGetPatientMedications = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: medicationsKeys.patient(patientId),
+    queryKey: [...medicationsKeys.patient(patientId), isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      if (!isOnline) {
+        const [cached, pending] = await Promise.all([
+          getMedicationsByPatient(patientId),
+          getPendingMedicationCreates(patientId),
+        ]);
+        const seen = new Set<string>();
+        const merged = [...pending, ...cached].filter((v) => {
+          const key = v.global_id ?? String(v.id);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return { medications: merged } as unknown;
+      }
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientMedications(patientId);
       }
-      return await doctorApi.getPatientMedications(patientId);
+      const data = await doctorApi.getPatientMedications(patientId);
+      try {
+        await upsertMedications(data, patientId);
+      } catch (e) {
+        console.warn('[useMedications] upsertMedications failed (non-fatal):', e);
+      }
+      return data;
     },
-    enabled: !!patientId, // Only run when patientId is provided
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
+    enabled: !!patientId,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -87,11 +117,26 @@ export const useGetPatientMedications = (
 export const useGetMedication = (
   medicationId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: medicationsKeys.detail(medicationId),
-    queryFn: () => doctorApi.getMedication(medicationId),
+    queryKey: [...medicationsKeys.detail(medicationId), isOnline ? 'online' : 'offline'],
+    queryFn: async () => {
+      if (!isOnline) {
+        const cached = await getMedicationById(medicationId);
+        if (!cached) throw new Error('Medication not available offline');
+        return cached;
+      }
+      const data = await doctorApi.getMedication(medicationId);
+      try {
+        await upsertMedications(data);
+      } catch (e) {
+        console.warn('[useMedications] upsertMedications failed (non-fatal):', e);
+      }
+      return data;
+    },
     enabled: !!medicationId,
     staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 

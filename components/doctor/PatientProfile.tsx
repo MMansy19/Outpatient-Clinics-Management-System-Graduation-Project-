@@ -46,6 +46,9 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { MobileTabNavigation } from '@/components/shared/MobileTabNavigation';
 import { QuickActionCard } from '@/components/shared/QuickActionCard';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
+import { InlineProgressBar } from '@/components/shared/InlineProgressBar';
+import { OfflinePill } from '@/components/shared/OfflinePill';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 
 import { calculateAge, formatDate } from '@/lib/utils/formatDate';
 
@@ -68,6 +71,7 @@ export function PatientProfile({
   const tCommon = useTranslations('common');
   const tTable = useTranslations('table');
   const tVitals = useTranslations('vitals');
+  const { isOnline } = useNetworkStatus();
 
   const getScanTypeLabel = (
     typeValue: string | number | undefined | null
@@ -191,18 +195,20 @@ export function PatientProfile({
   const labsList = (labs as any)?.labs || [];
   const scansList = (scans as any)?.scans || [];
 
-  // Show loading skeleton while fetching patient data
-  if (showLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="skeleton h-32 w-full" />
-        <div className="skeleton h-48 w-full" />
-      </div>
-    );
-  }
+  // Background loading: we no longer block the whole page on a spinner.
+  // The header / tabs render immediately; an inline progress bar communicates
+  // that data is still being fetched. Hard error / not-found states still
+  // short-circuit below, but only after the initial load has settled.
+  const isBackgroundLoading =
+    loadingPatient ||
+    isRefetchingPatient ||
+    loadingVisits ||
+    loadingMedications ||
+    loadingLabs ||
+    loadingScans;
 
-  // If patient not found (API returned null) and not a new scanned patient
-  if (patientError && !isScannedNewPatient) {
+  // Hard error path: only when the request actually failed.
+  if (patientError && !isScannedNewPatient && !patient) {
     const errorMessage =
       (patientError as any)?.response?.data?.message || patientError.message;
     return (
@@ -218,7 +224,10 @@ export function PatientProfile({
     );
   }
 
-  if (!patient && !isScannedNewPatient) {
+  // True "no data" path: nothing in cache, nothing from network, not a new
+  // scanned patient, and we are no longer loading. This avoids flashing the
+  // empty state on initial mount.
+  if (!patient && !isScannedNewPatient && !showLoading) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
@@ -356,7 +365,17 @@ export function PatientProfile({
   ];
 
   return (
-    <div className="space-y-6 pb-20 md:pb-6">
+    <div className="relative space-y-6 pb-20 md:pb-6">
+      {/* Background-fetch indicator. Sits above all content but never blocks
+          interaction. Hidden when nothing is in flight. */}
+      <InlineProgressBar active={isBackgroundLoading} />
+
+      {/* Offline source pill: shown when we are offline and the user is
+          looking at cached data. */}
+      {!isOnline && patient && (
+        <OfflinePill source="offline" className="mt-1" />
+      )}
+
       {/* Scanned Patient Notification */}
       {scannedData && (
         <Card className="border border-green-500 bg-green-50 dark:bg-green-900/20">

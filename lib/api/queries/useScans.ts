@@ -4,12 +4,20 @@ import {
   useQueryClient,
   UseQueryResult,
   UseMutationResult,
+  keepPreviousData,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Scan } from '@/types/entities/Scan';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
 import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import {
+  upsertScans,
+  getScansByPatient,
+  getScanById,
+  getPendingScanCreates,
+} from '@/lib/offline/scanCache';
 
 /**
  * Toggle between mock data and real backend API
@@ -54,17 +62,39 @@ const scansKeys = {
 export const useGetPatientScans = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: scansKeys.patient(patientId),
+    queryKey: [...scansKeys.patient(patientId), isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      if (!isOnline) {
+        const [cached, pending] = await Promise.all([
+          getScansByPatient(patientId),
+          getPendingScanCreates(patientId),
+        ]);
+        const seen = new Set<string>();
+        const merged = [...pending, ...cached].filter((v) => {
+          const key = v.global_id ?? String(v.id);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return { scans: merged } as unknown;
+      }
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientScans(patientId);
       }
-      return await doctorApi.getPatientScans(patientId);
+      const data = await doctorApi.getPatientScans(patientId);
+      try {
+        await upsertScans(data, patientId);
+      } catch (e) {
+        console.warn('[useScans] upsertScans failed (non-fatal):', e);
+      }
+      return data;
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -84,11 +114,26 @@ export const useGetPatientScans = (
 export const useGetScan = (
   scanId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: scansKeys.detail(scanId),
-    queryFn: () => doctorApi.getScan(scanId),
+    queryKey: [...scansKeys.detail(scanId), isOnline ? 'online' : 'offline'],
+    queryFn: async () => {
+      if (!isOnline) {
+        const cached = await getScanById(scanId);
+        if (!cached) throw new Error('Scan not available offline');
+        return cached;
+      }
+      const data = await doctorApi.getScan(scanId);
+      try {
+        await upsertScans(data);
+      } catch (e) {
+        console.warn('[useScans] upsertScans failed (non-fatal):', e);
+      }
+      return data;
+    },
     enabled: !!scanId,
     staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 

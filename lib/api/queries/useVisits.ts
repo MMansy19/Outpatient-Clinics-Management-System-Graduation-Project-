@@ -1,4 +1,4 @@
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery, UseQueryResult, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { CreateVisitDto, CreateVisitResponse, PaginatedVisitsResponse } from '@/lib/api/types';
@@ -7,6 +7,13 @@ import { mockVisitsAPI, getStorageData, STORAGE_KEYS, initUsers } from '@/lib/ap
 import { useAuthStore } from '@/stores/authStore';
 import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
 import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import {
+  upsertVisits,
+  getVisitsByPatient,
+  getVisitById,
+  getPendingVisitCreates,
+} from '@/lib/offline/visitCache';
 
 /**
  * Toggle between mock data and real backend API
@@ -21,28 +28,64 @@ const VISITS_KEY = ['visits'];
 const PATIENTS_KEY = ['patients'];
 
 export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWithRelations[], Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: [...VISITS_KEY, 'patient', patientId],
+    queryKey: [...VISITS_KEY, 'patient', patientId, isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      // Offline: serve cached + pending merged.
+      if (!isOnline) {
+        const [cached, pending] = await Promise.all([
+          getVisitsByPatient(patientId),
+          getPendingVisitCreates(patientId),
+        ]);
+        // Merge pending first; dedupe by global_id.
+        const seen = new Set<string>();
+        const merged = [...pending, ...cached].filter((v) => {
+          const key = v.global_id ?? String(v.id);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return merged as unknown as VisitWithRelations[];
+      }
+
       if (USE_MOCK_DATA) {
         return await mockVisitsAPI.getPatientVisits(patientId);
       }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/patient/${patientId}/visits`);
+      try {
+        await upsertVisits(response.data, patientId);
+      } catch (e) {
+        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+      }
       return response.data;
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 
 export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: [...VISITS_KEY, id],
+    queryKey: [...VISITS_KEY, id, isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      if (!isOnline) {
+        const cached = await getVisitById(id);
+        if (!cached) throw new Error('Visit not available offline');
+        return cached as unknown as VisitWithRelations;
+      }
       const response = await apiClient.get<VisitWithRelations>(`/doctor/visits/${id}`);
+      try {
+        await upsertVisits(response.data);
+      } catch (e) {
+        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+      }
       return response.data;
     },
     enabled: !!id,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -136,16 +179,30 @@ export const useUpdateVisit = () => {
 };
 
 export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWithRelations[], Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: [...VISITS_KEY, 'recent', limit],
+    queryKey: [...VISITS_KEY, 'recent', limit, isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      if (!isOnline) {
+        // Best-effort offline: read every cached visit, sort by created_at desc, slice.
+        const all = await import('@/lib/offline/db').then((m) =>
+          m.offlineDb.visits.orderBy('_cachedAt').reverse().limit(limit).toArray(),
+        );
+        return all as unknown as VisitWithRelations[];
+      }
       if (USE_MOCK_DATA) {
         return await mockVisitsAPI.getRecentVisits(limit);
       }
       const response = await apiClient.get<VisitWithRelations[]>(`/doctor/visits/recent?limit=${limit}`);
+      try {
+        await upsertVisits(response.data);
+      } catch (e) {
+        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+      }
       return response.data;
     },
     staleTime: 2 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 

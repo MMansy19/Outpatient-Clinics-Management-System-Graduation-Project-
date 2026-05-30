@@ -31,14 +31,13 @@ import { CreateDoctorDialog } from './CreateDoctorDialog';
 
 const LIST_PAGE_LIMIT = 10000;
 
-export function DoctorTable(_props: { onRefresh?: () => void } = {}) {
-  void _props;
+export function DoctorTable({ onRefresh }: { onRefresh?: () => void } = {}) {
   const t = useTranslations('admin');
   const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
   const limit = 10;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['doctors-all'],
     queryFn: () => superAdminApi.getDoctors({ page: 1, limit: LIST_PAGE_LIMIT }),
     networkMode: 'offlineFirst',
@@ -47,6 +46,11 @@ export function DoctorTable(_props: { onRefresh?: () => void } = {}) {
     refetchOnWindowFocus: false,
     refetchOnReconnect: 'always',
   });
+
+  const refreshList = () => {
+    refetch();
+    onRefresh?.();
+  };
 
   const allDoctors = useMemo<DoctorResponse[]>(() => data?.items ?? [], [data]);
   const totalItems = allDoctors.length;
@@ -132,7 +136,7 @@ export function DoctorTable(_props: { onRefresh?: () => void } = {}) {
     <div className="space-y-4">
       {/* Register Doctor Button (Desktop and Mobile) */}
       <div className="flex justify-end">
-        <CreateDoctorDialog />
+        <CreateDoctorDialog onSuccess={refreshList} />
       </div>
       {/* Mobile Card View (< md) */}
       <div className="md:hidden space-y-3">

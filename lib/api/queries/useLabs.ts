@@ -4,12 +4,20 @@ import {
   useQueryClient,
   UseQueryResult,
   UseMutationResult,
+  keepPreviousData,
 } from '@tanstack/react-query';
 import { doctorApi } from '@/lib/api/doctor.service';
 import type { Lab } from '@/types/entities/Lab';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 import { useOfflineMutation } from '@/lib/offline/useOfflineMutation';
 import { toPayload, toBlobs } from '@/lib/offline/formDataHelpers';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+import {
+  upsertLabs,
+  getLabsByPatient,
+  getLabById,
+  getPendingLabCreates,
+} from '@/lib/offline/labCache';
 
 /**
  * Toggle between mock data and real backend API
@@ -54,17 +62,39 @@ const labsKeys = {
 export const useGetPatientLabs = (
   patientId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: labsKeys.patient(patientId),
+    queryKey: [...labsKeys.patient(patientId), isOnline ? 'online' : 'offline'],
     queryFn: async () => {
+      if (!isOnline) {
+        const [cached, pending] = await Promise.all([
+          getLabsByPatient(patientId),
+          getPendingLabCreates(patientId),
+        ]);
+        const seen = new Set<string>();
+        const merged = [...pending, ...cached].filter((v) => {
+          const key = v.global_id ?? String(v.id);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+        return { labs: merged } as unknown;
+      }
       if (USE_MOCK_DATA) {
         return await mockMedicalHistoryAPI.getPatientLabs(patientId);
       }
-      return await doctorApi.getPatientLabs(patientId);
+      const data = await doctorApi.getPatientLabs(patientId);
+      try {
+        await upsertLabs(data, patientId);
+      } catch (e) {
+        console.warn('[useLabs] upsertLabs failed (non-fatal):', e);
+      }
+      return data;
     },
     enabled: !!patientId,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 
@@ -84,11 +114,26 @@ export const useGetPatientLabs = (
 export const useGetLab = (
   labId: string
 ): UseQueryResult<unknown, Error> => {
+  const { isOnline } = useNetworkStatus();
   return useQuery({
-    queryKey: labsKeys.detail(labId),
-    queryFn: () => doctorApi.getLab(labId),
+    queryKey: [...labsKeys.detail(labId), isOnline ? 'online' : 'offline'],
+    queryFn: async () => {
+      if (!isOnline) {
+        const cached = await getLabById(labId);
+        if (!cached) throw new Error('Lab not available offline');
+        return cached;
+      }
+      const data = await doctorApi.getLab(labId);
+      try {
+        await upsertLabs(data);
+      } catch (e) {
+        console.warn('[useLabs] upsertLabs failed (non-fatal):', e);
+      }
+      return data;
+    },
     enabled: !!labId,
     staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 

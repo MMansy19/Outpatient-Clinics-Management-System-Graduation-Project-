@@ -204,8 +204,19 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
 // Auto-sync on reconnect + periodic fallback (Safari lacks Background Sync)
 // ============================================================================
 
+/** Debounce window for the `online` event. Network flapping (e.g. weak wifi
+ * cycling on/off) can fire `online` multiple times in quick succession; we
+ * coalesce those into a single drain. The `isSyncing` mutex inside
+ * processSyncQueue is the secondary guard. */
+const ONLINE_DEBOUNCE_MS = 300;
+let onlineDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
 function handleOnline() {
-  processSyncQueue();
+  if (onlineDebounceTimer) clearTimeout(onlineDebounceTimer);
+  onlineDebounceTimer = setTimeout(() => {
+    onlineDebounceTimer = null;
+    processSyncQueue();
+  }, ONLINE_DEBOUNCE_MS);
 }
 
 export function startAutoSync(intervalMs = 30_000): void {
@@ -223,6 +234,10 @@ export function startAutoSync(intervalMs = 30_000): void {
 
 export function stopAutoSync(): void {
   window.removeEventListener('online', handleOnline);
+  if (onlineDebounceTimer) {
+    clearTimeout(onlineDebounceTimer);
+    onlineDebounceTimer = null;
+  }
   if (syncInterval) {
     clearInterval(syncInterval);
     syncInterval = null;

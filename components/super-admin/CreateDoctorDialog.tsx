@@ -70,9 +70,10 @@ const MEDICAL_SPECIALITIES = [
 
 interface CreateDoctorDialogProps {
   trigger?: React.ReactNode;
+  onSuccess?: () => void;
 }
 
-export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
+export function CreateDoctorDialog({ trigger, onSuccess }: CreateDoctorDialogProps) {
   const t = useTranslations('admin');
   const [open, setOpen] = useState(false);
   const [clinics, setClinics] = useState<ClinicResponse[]>([]);
@@ -138,6 +139,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
             toastMessages.doctor.createSuccessDescription(fullName)
           );
         }
+        onSuccess?.();
       },
       onError: (error: unknown) => {
         console.error('❌ Create doctor error:', error);

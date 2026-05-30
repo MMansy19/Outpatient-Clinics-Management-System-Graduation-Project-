@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
+import { InlineProgressBar } from '@/components/shared/InlineProgressBar';
+import { OfflinePill } from '@/components/shared/OfflinePill';
+import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { useGetMedicalHistoryTimeline } from '@/lib/api/queries/useMedicalHistory';
 import { formatDate } from '@/lib/utils/formatDate';
 import type { VisitWithRelations } from '@/types/entities/Visit';
@@ -24,8 +27,9 @@ type FilterType = 'all' | 'visits' | 'labs' | 'scans' | 'medications';
 export function HistoryTimeline({ patientId }: HistoryTimelineProps) {
   const t = useTranslations('patient');
   const [filterType, setFilterType] = useState<FilterType>('all');
+  const { isOnline } = useNetworkStatus();
 
-  const { data: timeline, isLoading } = useGetMedicalHistoryTimeline(patientId);
+  const { data: timeline, isLoading, isFetching } = useGetMedicalHistoryTimeline(patientId);
 
   // Prepare weight trend data for chart
   const weightTrendData = useMemo(() => {
@@ -126,7 +130,8 @@ export function HistoryTimeline({ patientId }: HistoryTimelineProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="relative space-y-4">
+        <InlineProgressBar active={true} />
         <div className="skeleton h-64 w-full" />
         <div className="skeleton h-32 w-full" />
       </div>
@@ -135,11 +140,15 @@ export function HistoryTimeline({ patientId }: HistoryTimelineProps) {
 
   if (!timeline || allRecords.length === 0) {
     return (
-      <Card>
-        <CardContent className="py-8 text-center">
-          <p className="text-muted-foreground">{t('noHistory')}</p>
-        </CardContent>
-      </Card>
+      <div className="relative space-y-4">
+        <InlineProgressBar active={isFetching} />
+        {!isOnline && <OfflinePill source="offline" />}
+        <Card>
+          <CardContent className="py-8 text-center">
+            <p className="text-muted-foreground">{t('noHistory')}</p>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -147,7 +156,9 @@ export function HistoryTimeline({ patientId }: HistoryTimelineProps) {
   const hasBPData = bpTrendData[0]?.data.length > 0 || bpTrendData[1]?.data.length > 0;
 
   return (
-    <div className="space-y-6">
+    <div className="relative space-y-6">
+      <InlineProgressBar active={isFetching && !isLoading} />
+      {!isOnline && <OfflinePill source="offline" />}
       {/* Filter Buttons */}
       <div className="flex flex-wrap gap-2">
         <Button

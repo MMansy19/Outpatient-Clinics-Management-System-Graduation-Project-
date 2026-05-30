@@ -19,6 +19,8 @@
     "unknown": "Unknown",
     "other": "Other",
     "pending": "Pending",
+    "cachedData": "Cached data — may be out of date",
+    "fetchingFresh": "Loading fresh data…",
     "totalPatients": "Total Patients",
     "scanTypes": {
       "mri": "MRI",
