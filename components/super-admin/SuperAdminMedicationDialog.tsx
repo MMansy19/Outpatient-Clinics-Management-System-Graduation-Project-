@@ -246,6 +246,7 @@ export function SuperAdminMedicationDialog({
                       rows={4}
                       disabled={isPending}
                       onAudioCaptured={setAudioFile}
+                      isSuperAdminVoiceEnabled
                     />
                   </FormControl>
                   <FormMessage />

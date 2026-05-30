@@ -159,6 +159,7 @@ export function SuperAdminLabDialog({
                       rows={4}
                       disabled={isPending}
                       onAudioCaptured={setAudioFile}
+                      isSuperAdminVoiceEnabled
                     />
                   </FormControl>
                   <FormMessage />

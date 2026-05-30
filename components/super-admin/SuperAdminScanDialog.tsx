@@ -207,6 +207,7 @@ export function SuperAdminScanDialog({
                       rows={4}
                       disabled={isPending}
                       onAudioCaptured={setAudioFile}
+                      isSuperAdminVoiceEnabled
                     />
                   </FormControl>
                   <FormMessage />

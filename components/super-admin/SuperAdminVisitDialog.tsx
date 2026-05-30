@@ -128,6 +128,7 @@ export function SuperAdminVisitDialog({
                       multiline
                       rows={6}
                       onAudioCaptured={(file) => setAudioFile(file)}
+                      isSuperAdminVoiceEnabled
                     />
                   </FormControl>
                   <FormMessage />
