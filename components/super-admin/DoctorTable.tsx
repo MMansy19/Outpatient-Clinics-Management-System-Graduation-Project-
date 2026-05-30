@@ -31,7 +31,8 @@ import { CreateDoctorDialog } from './CreateDoctorDialog';
 
 const LIST_PAGE_LIMIT = 10000;
 
-export function DoctorTable({ onRefresh }: { onRefresh?: () => void } = {}) {
+export function DoctorTable(_props: { onRefresh?: () => void } = {}) {
+  void _props;
   const t = useTranslations('admin');
   const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
