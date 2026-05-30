@@ -27,10 +27,11 @@ import { superAdminApi } from '@/lib/api/superAdmin.service';
 import type { DoctorResponse } from '@/lib/api/types';
 import { useNetworkStatus } from '@/hooks/useNetworkStatus';
 import { OfflineEmptyState } from './OfflineEmptyState';
+import { CreateDoctorDialog } from './CreateDoctorDialog';
 
 const LIST_PAGE_LIMIT = 10000;
 
-export function DoctorTable() {
+export function DoctorTable({ onRefresh }: { onRefresh?: () => void } = {}) {
   const t = useTranslations('admin');
   const { isOnline } = useNetworkStatus();
   const [page, setPage] = useState(1);
@@ -128,6 +129,10 @@ export function DoctorTable() {
 
   return (
     <div className="space-y-4">
+      {/* Register Doctor Button (Desktop and Mobile) */}
+      <div className="flex justify-end">
+        <CreateDoctorDialog />
+      </div>
       {/* Mobile Card View (< md) */}
       <div className="md:hidden space-y-3">
         {doctors.length === 0 ? (

@@ -581,7 +581,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
             </div>
 
             {/* Tabs - Mobile Optimized */}
-            
+
             {/* Clinic Selection for Medical Data */}
 
             <Tabs
@@ -649,7 +649,9 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
               </TabsContent>
 
               <TabsContent value="search" className="space-y-4 mt-4">
-                <SuperAdminPatientSearch onSelectPatient={handleSelectPatient} />
+                <SuperAdminPatientSearch
+                  onSelectPatient={handleSelectPatient}
+                />
               </TabsContent>
 
               <TabsContent value="patient-profile" className="space-y-4 mt-4">
@@ -664,7 +666,7 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
               </TabsContent>
 
               <TabsContent value="doctors" className="space-y-4 mt-4">
-                <DoctorTable />
+                <DoctorTable onRefresh={refetchDoctors} />
               </TabsContent>
 
               <TabsContent value="patients" className="space-y-4 mt-4">
