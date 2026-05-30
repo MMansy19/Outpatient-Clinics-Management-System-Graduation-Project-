@@ -442,7 +442,7 @@ export function SuperAdminPatientProfile({
                           <TableCell className="font-medium">{med.name}</TableCell>
                           <TableCell>{med.dosage}</TableCell>
                           <TableCell>{med.period}</TableCell>
-                          <TableCell>Dr. {med.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{med.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>
                             {med.comments || '-'}
                             {med.commentsAudioUrl && (
@@ -508,7 +508,7 @@ export function SuperAdminPatientProfile({
                         <TableRow key={lab.doctor?.id ?? lab.createdAt}>
                           <TableCell>{formatDate(lab.createdAt)}</TableCell>
                           <TableCell className="font-medium">{lab.name}</TableCell>
-                          <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell> {lab.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>
                             {lab.photoUrl && (
                               <a
@@ -588,7 +588,7 @@ export function SuperAdminPatientProfile({
                           <TableCell>{formatDate(scan.createdAt)}</TableCell>
                           <TableCell className="font-medium">{scan.name}</TableCell>
                           <TableCell>{getScanTypeLabel(scan.type)}</TableCell>
-                          <TableCell>Dr. {scan.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{scan.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>
                             {scan.photoUrl && (
                               <a

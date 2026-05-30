@@ -565,7 +565,7 @@ export function PatientProfile({
                         <TableRow key={index}>
                           <TableCell>{formatDate(visit.createdAt)}</TableCell>
                           <TableCell>
-                            Dr. {visit.doctor?.name || 'N/A'}
+                            {visit.doctor?.name || 'N/A'}
                           </TableCell>
                           <TableCell>
                             {visit.doctor?.speciality || 'N/A'}
@@ -648,7 +648,7 @@ export function PatientProfile({
                           <TableCell>{medication.dosage}</TableCell>
                           <TableCell>{medication.period} days</TableCell>
                           <TableCell>
-                            Dr. {medication.doctor?.name || 'N/A'}
+                            {medication.doctor?.name || 'N/A'}
                           </TableCell>
                           <TableCell>{medication.comments || '-'}</TableCell>
                           <TableCell>
@@ -725,7 +725,7 @@ export function PatientProfile({
                           <TableCell className="font-medium">
                             {lab.name}
                           </TableCell>
-                          <TableCell>Dr. {lab.doctor?.name || 'N/A'}</TableCell>
+                          <TableCell>{lab.doctor?.name || 'N/A'}</TableCell>
                           <TableCell>{lab.comments || '-'}</TableCell>
                           <TableCell>
                             {lab.commentsAudioUrl && (
@@ -813,7 +813,7 @@ export function PatientProfile({
                           </TableCell>
                           <TableCell>{getScanTypeLabel(scan.type)}</TableCell>
                           <TableCell>
-                            Dr. {scan.doctor?.name || 'N/A'}
+                            {scan.doctor?.name || 'N/A'}
                           </TableCell>
                           <TableCell>{scan.comments || '-'}</TableCell>
                           <TableCell>
@@ -893,7 +893,7 @@ export function PatientProfile({
                                     <span className="font-medium">
                                       {tTable('doctor')}:
                                     </span>{' '}
-                                    Dr.{' '}
+                                    {' '}
                                     {visit.doctor?.name || tCommon('unknown')}
                                   </p>
                                   <p className="text-sm text-muted-foreground">
@@ -987,7 +987,7 @@ export function PatientProfile({
                                       <span className="font-medium">
                                         {tTable('doctor')}:
                                       </span>{' '}
-                                      Dr.{' '}
+                                      {' '}
                                       {medication.doctor?.name ||
                                         tCommon('unknown')}
                                     </p>
@@ -1068,7 +1068,7 @@ export function PatientProfile({
                                     <span className="font-medium">
                                       {tTable('doctor')}:
                                     </span>{' '}
-                                    Dr. {lab.doctor?.name || tCommon('unknown')}
+                                     {lab.doctor?.name || tCommon('unknown')}
                                   </p>
                                   {lab.comments && (
                                     <p className="text-sm text-muted-foreground">
@@ -1164,7 +1164,7 @@ export function PatientProfile({
                                     <span className="font-medium">
                                       {tTable('doctor')}:
                                     </span>{' '}
-                                    Dr.{' '}
+                                    {' '}
                                     {scan.doctor?.name || tCommon('unknown')}
                                   </p>
                                   {scan.comments && (
