@@ -36,6 +36,36 @@ function extractUpstreamMessage(data: unknown): string | null {
   return null;
 }
 
+/** Backend constraints — keep in sync with apps/api-gateway/src/ocr/ocr.controller.ts */
+const OCR_MAX_BYTES = 5 * 1024 * 1024;
+const OCR_ALLOWED_MIME = /^(image\/jpeg|image\/jpg|image\/png|application\/pdf)$/;
+
+/**
+ * Validate an image client-side against the same rules the backend enforces,
+ * so we never round-trip a guaranteed 400.
+ */
+function assertOcrUploadable(image: Blob | File): void {
+  if (!image || !(image instanceof Blob)) {
+    throw new OCRProcessingError('File is required. Please upload a valid image.');
+  }
+  if (image.size === 0) {
+    throw new OCRProcessingError('Selected file is empty. Please choose another image.');
+  }
+  if (image.size > OCR_MAX_BYTES) {
+    throw new OCRProcessingError(
+      `Image is too large (${(image.size / 1024 / 1024).toFixed(2)} MB). Maximum is 5 MB.`
+    );
+  }
+  // Compressed blobs always have a type; original Files usually do too. If the
+  // browser couldn't determine a type, allow it through and let the backend's
+  // magic-byte check decide.
+  if (image.type && !OCR_ALLOWED_MIME.test(image.type)) {
+    throw new OCRProcessingError(
+      `Unsupported file type "${image.type}". Please upload JPEG, PNG, or PDF.`
+    );
+  }
+}
+
 /**
  * Scan National ID card using backend AI model
  *
@@ -49,6 +79,8 @@ function extractUpstreamMessage(data: unknown): string | null {
 export async function scanNationalId(
   image: Blob | File
 ): Promise<ScanNationalIdResponse> {
+  assertOcrUploadable(image);
+
   try {
     // Call backend OCR service via doctorApi
     const response = await doctorApi.processNationalId(image);
@@ -69,30 +101,49 @@ export async function scanNationalId(
 
     // Handle different error types
     if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
       const upstream = extractUpstreamMessage(error.response?.data);
       console.error('❌ OCR upstream response:', {
-        status: error.response?.status,
+        status,
         data: error.response?.data,
+        sentSize: image.size,
+        sentType: image.type,
       });
 
-      if (error.response?.status === 400) {
+      // Suffix the HTTP status so the toast is diagnosable even when the
+      // backend body is empty or non-JSON.
+      const withStatus = (msg: string) => (status ? `${msg} (HTTP ${status})` : msg);
+
+      if (status === 400) {
         throw new OCRProcessingError(
-          upstream || 'Invalid image format. Please try again.'
+          upstream || withStatus('Invalid image format. Please try again.')
         );
       }
-      if (error.response?.status === 422) {
+      if (status === 401 || status === 403) {
+        throw new OCRProcessingError(
+          upstream || withStatus('You are not authorized to use the OCR service.')
+        );
+      }
+      if (status === 413) {
+        throw new OCRProcessingError(
+          upstream || withStatus('Image is too large. Maximum is 5 MB.')
+        );
+      }
+      if (status === 422) {
         throw new OCRProcessingError(
           upstream ||
-            'Could not extract data from image. Please ensure the ID card is clearly visible and try again.'
+            withStatus(
+              'Could not extract data from image. Please ensure the ID card is clearly visible and try again.'
+            )
         );
       }
-      if (error.response?.status === 500) {
+      if (status === 500 || status === 502 || status === 503 || status === 504) {
         throw new OCRProcessingError(
-          upstream || 'AI model processing failed. Please try again.'
+          upstream || withStatus('AI model processing failed. Please try again.')
         );
       }
       throw new OCRProcessingError(
-        upstream || 'Network error. Please check your connection and try again.'
+        upstream || withStatus('Network error. Please check your connection and try again.')
       );
     }
 
@@ -130,9 +181,7 @@ async function blobToDataUrl(blob: Blob): Promise<string | undefined> {
 export async function scanAndEnrichNationalId(
   image: Blob | File
 ): Promise<EnrichedScanData> {
-  if (!image || !(image instanceof Blob)) {
-    throw new OCRProcessingError('File is required. Please upload a valid image.');
-  }
+  assertOcrUploadable(image);
 
   // Get OCR data from backend
   const scanResult = await scanNationalId(image);
