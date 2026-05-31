@@ -19,9 +19,27 @@ import {
 } from '@/lib/utils/nationalIdParser';
 
 /**
+ * Extract a human-readable message from an axios error response body.
+ * Backend (NestJS) typically returns `{ message: string | string[], ... }`.
+ */
+function extractUpstreamMessage(data: unknown): string | null {
+  if (!data) return null;
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    const obj = data as { message?: unknown; error?: unknown };
+    const msg = obj.message ?? obj.error;
+    if (typeof msg === 'string') return msg;
+    if (Array.isArray(msg) && msg.every((m) => typeof m === 'string')) {
+      return msg.join(', ');
+    }
+  }
+  return null;
+}
+
+/**
  * Scan National ID card using backend AI model
  *
- * @param imageBase64 - Base64 encoded image of National ID card
+ * @param image - The National ID image as a Blob or File
  * @returns Extracted data: FirstName, LastName, Location, socialSecurityNumber
  * @throws OCRProcessingError if scan fails
  *
@@ -29,11 +47,11 @@ import {
  * the API call to POST /api/v1/ocr/process-id
  */
 export async function scanNationalId(
-  imageBase64: string
+  image: Blob | File
 ): Promise<ScanNationalIdResponse> {
   try {
     // Call backend OCR service via doctorApi
-    const response = await doctorApi.processNationalId(imageBase64);
+    const response = await doctorApi.processNationalId(image);
 
     console.log('✅ National ID scanned successfully:', {
       firstName: response.firstName,
@@ -51,18 +69,31 @@ export async function scanNationalId(
 
     // Handle different error types
     if (axios.isAxiosError(error)) {
+      const upstream = extractUpstreamMessage(error.response?.data);
+      console.error('❌ OCR upstream response:', {
+        status: error.response?.status,
+        data: error.response?.data,
+      });
+
       if (error.response?.status === 400) {
-        throw new OCRProcessingError('Invalid image format. Please try again.');
+        throw new OCRProcessingError(
+          upstream || 'Invalid image format. Please try again.'
+        );
       }
       if (error.response?.status === 422) {
         throw new OCRProcessingError(
-          'Could not extract data from image. Please ensure the ID card is clearly visible and try again.'
+          upstream ||
+            'Could not extract data from image. Please ensure the ID card is clearly visible and try again.'
         );
       }
       if (error.response?.status === 500) {
-        throw new OCRProcessingError('AI model processing failed. Please try again.');
+        throw new OCRProcessingError(
+          upstream || 'AI model processing failed. Please try again.'
+        );
       }
-      throw new OCRProcessingError('Network error. Please check your connection and try again.');
+      throw new OCRProcessingError(
+        upstream || 'Network error. Please check your connection and try again.'
+      );
     }
 
     throw new OCRProcessingError('Failed to scan National ID. Please try again.');
@@ -70,24 +101,41 @@ export async function scanNationalId(
 }
 
 /**
+ * Read a Blob as a base64 data URL (used only to populate `rawImage` for the
+ * preview shown in the patient registration sheet). Errors are non-fatal.
+ */
+async function blobToDataUrl(blob: Blob): Promise<string | undefined> {
+  return new Promise((resolve) => {
+    try {
+      const reader = new FileReader();
+      reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : undefined);
+      reader.onerror = () => resolve(undefined);
+      reader.readAsDataURL(blob);
+    } catch {
+      resolve(undefined);
+    }
+  });
+}
+
+/**
  * Scan National ID and enrich with derived data (gender, birthdate)
- * 
+ *
  * This is the primary function to use in components.
  * It calls the backend OCR service and adds frontend-derived data.
- * 
- * @param imageBase64 - Base64 encoded image of National ID card
+ *
+ * @param image - The National ID image as a Blob or File
  * @returns Complete scan data including derived gender and birthdate
  * @throws OCRProcessingError if scan fails or National ID is invalid
  */
 export async function scanAndEnrichNationalId(
-  imageBase64: string
+  image: Blob | File
 ): Promise<EnrichedScanData> {
-  if (!imageBase64) {
+  if (!image || !(image instanceof Blob)) {
     throw new OCRProcessingError('File is required. Please upload a valid image.');
   }
 
-  // Get OCR data from backend (or mock)
-  const scanResult = await scanNationalId(imageBase64);
+  // Get OCR data from backend
+  const scanResult = await scanNationalId(image);
 
   // Validate National ID format using socialSecurityNumber
   const nationalIdNumber = scanResult.socialSecurityNumber;
@@ -113,6 +161,9 @@ export async function scanAndEnrichNationalId(
       fullName = (scanResult as { fullName?: string }).fullName;
     }
 
+  // Read the image as a data URL for preview (best-effort).
+  const rawImageDataUrl = await blobToDataUrl(image);
+
   // Return enriched data
   const enrichedData: EnrichedScanData = {
     ...scanResult,
@@ -123,8 +174,8 @@ export async function scanAndEnrichNationalId(
     birthdate: birthdate || new Date(), // Default to current date if not available
     dateOfBirth: birthdate || new Date(), // Alias for birthdate
     confidence: 0.95, // Default confidence for real scans
-    rawImage: imageBase64, // Keep original image for preview
-    imageBase64, // Alias for rawImage
+    rawImage: rawImageDataUrl, // Keep original image for preview
+    imageBase64: rawImageDataUrl, // Alias for rawImage
     isMockData: false,
   };
 
@@ -207,6 +258,66 @@ export async function compressImage(
     
     img.src = imageData;
   });
+}
+
+/**
+ * Compress and re-encode an image Blob/File as a JPEG Blob.
+ * Mirrors `compressImage` but returns a Blob instead of base64, so it can be
+ * posted directly via FormData with the correct MIME type.
+ */
+export async function compressImageToJpegBlob(
+  source: Blob | File,
+  maxWidth: number = 1920,
+  maxHeight: number = 1080,
+  quality: number = 0.9
+): Promise<Blob> {
+  const objectUrl = URL.createObjectURL(source);
+  try {
+    const blob: Blob = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = width * ratio;
+          height = height * ratio;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Failed to create canvas context'));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+
+        canvas.toBlob(
+          (out) => {
+            if (!out) {
+              reject(new Error('Failed to encode compressed image'));
+              return;
+            }
+            console.log('🗃️ Image compressed:', {
+              original: `${(source.size / 1024).toFixed(2)} KB`,
+              compressed: `${(out.size / 1024).toFixed(2)} KB`,
+              dimensions: `${width}x${height}`,
+            });
+            resolve(out);
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+      img.onerror = () => reject(new Error('Failed to load image for compression'));
+      img.src = objectUrl;
+    });
+    return blob;
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 export type {

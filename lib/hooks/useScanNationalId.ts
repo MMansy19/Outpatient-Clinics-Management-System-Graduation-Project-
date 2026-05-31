@@ -10,13 +10,13 @@
 import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
 import {
   scanAndEnrichNationalId,
-  compressImage,
+  compressImageToJpegBlob,
 } from '@/lib/api/nationalId.service';
 import { EnrichedScanData, OCRProcessingError } from '@/types/ocr';
 
 export interface ScanNationalIdVariables {
-  /** Base64 encoded image of National ID card */
-  imageBase64: string;
+  /** The National ID image as a Blob or File */
+  file: Blob | File;
   /** Whether to compress image before sending (default: true) */
   compress?: boolean;
 }
@@ -71,14 +71,17 @@ export function useScanNationalId(
   const mutation = useMutation<EnrichedScanData, Error, ScanNationalIdVariables>({
     mutationKey: ['scanNationalId'],
     
-    mutationFn: async ({ imageBase64, compress = true }): Promise<EnrichedScanData> => {
-      console.log('🔍 Starting National ID scan...');
+    mutationFn: async ({ file, compress = true }): Promise<EnrichedScanData> => {
+      console.log('🔍 Starting National ID scan...', {
+        size: `${(file.size / 1024).toFixed(2)} KB`,
+        type: file.type,
+      });
 
       // Compress image if requested (default: true)
-      let processedImage = imageBase64;
+      let processedImage: Blob = file;
       if (compress) {
         try {
-          processedImage = await compressImage(imageBase64, 1920, 1080, 0.9);
+          processedImage = await compressImageToJpegBlob(file, 1920, 1080, 0.9);
           console.log('✅ Image compressed successfully');
         } catch (compressionError) {
           console.warn('⚠️ Image compression failed, using original:', compressionError);

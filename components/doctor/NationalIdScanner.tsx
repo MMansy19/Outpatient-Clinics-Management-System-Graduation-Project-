@@ -124,19 +124,28 @@ export function NationalIdScanner({
 
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0);
-    
-    // Convert to base64
-    const base64String = canvas.toDataURL('image/jpeg', 0.9).split(',')[1];
-    
-    // Stop video stream
-    videoStream.getTracks().forEach(track => track.stop());
-    setVideoStream(null);
-    setIsWebCameraActive(false);
 
-    console.log('📸 Image captured from web camera, processing...');
-    
-    // Send to OCR service
-    scanId({ imageBase64: base64String, compress: true });
+    // Convert to JPEG Blob
+    canvas.toBlob(
+      (blob) => {
+        // Stop video stream regardless of outcome
+        videoStream.getTracks().forEach((track) => track.stop());
+        setVideoStream(null);
+        setIsWebCameraActive(false);
+
+        if (!blob) {
+          setError(t('captureFailed'));
+          setIsCapturing(false);
+          return;
+        }
+
+        console.log('📸 Image captured from web camera, processing...');
+        // Send to OCR service
+        scanId({ file: blob, compress: true });
+      },
+      'image/jpeg',
+      0.9
+    );
   };
 
   const handleCapture = async () => {
@@ -169,9 +178,11 @@ export function NationalIdScanner({
       }
 
       console.log('📸 Image captured, processing...');
-      
-      // Send to OCR service
-      scanId({ imageBase64: result.base64String, compress: true });
+
+      // Capacitor returns base64; convert to a Blob and send to OCR service
+      const dataUrl = `data:image/jpeg;base64,${result.base64String}`;
+      const blob = await fetch(dataUrl).then((r) => r.blob());
+      scanId({ file: blob, compress: true });
       
     } catch (err) {
       console.error('❌ Capture error:', err);
@@ -212,14 +223,14 @@ export function NationalIdScanner({
       setIsCapturing(true);
       setError(null);
 
-      // Convert file to base64
-      const base64String = await fileToBase64(selectedFile);
-      
-      console.log('📤 Image uploaded, processing...');
-      
-      // Send to OCR service
-      scanId({ imageBase64: base64String, compress: true });
-      
+      console.log('📤 Image uploaded, processing...', {
+        name: selectedFile.name,
+        type: selectedFile.type,
+        size: `${(selectedFile.size / 1024).toFixed(2)} KB`,
+      });
+
+      // Send original File directly to OCR service (matches scans/labs pattern)
+      scanId({ file: selectedFile, compress: true });
     } catch (err) {
       console.error('❌ Upload error:', err);
       setError(err instanceof Error ? err.message : t('uploadFailed'));
@@ -237,20 +248,6 @@ export function NationalIdScanner({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  };
-
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const base64 = reader.result as string;
-        // Remove data URL prefix (data:image/jpeg;base64,)
-        const base64String = base64.split(',')[1];
-        resolve(base64String);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleClose = (forceClose = false) => {

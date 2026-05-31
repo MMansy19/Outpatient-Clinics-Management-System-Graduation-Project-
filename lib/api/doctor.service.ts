@@ -44,33 +44,25 @@ export const doctorApi = {
    * Process National ID Card
    *
    * Uploads an image of a National ID card to the AI/OCR service for data extraction.
+   * Mirrors the working multipart pattern used by scans/labs: the original
+   * `Blob`/`File` is posted directly so the browser sets the correct
+   * `Content-Type: multipart/form-data; boundary=...` and the upstream sees
+   * the real MIME type.
    *
    * **Authentication Required:** Yes (DOCTOR role)
    * **Endpoint:** POST /api/v1/ocr/process-id
    *
-   * @param {string} imageBase64 - Base64 encoded image of National ID card
-   * @returns {Promise<ScanNationalIdResponse>} Extracted data: FirstName, LastName, Location, socialSecurityNumber
-   * @throws {AxiosError} When request fails (400, 422, 500)
-   *
-   * @example
-   * ```typescript
-   * const result = await doctorApi.processNationalId(imageBase64);
-   * console.log(result.FirstName, result.LastName, result.socialSecurityNumber);
-   * ```
+   * @param {Blob | File} image - The National ID image. The `type` and (for
+   *   File) `name` are preserved.
+   * @returns {Promise<ScanNationalIdResponse>} Extracted data
    */
-  processNationalId: async (imageBase64: string): Promise<ScanNationalIdResponse> => {
-    // Convert base64 to Blob for file upload
-    const byteCharacters = atob(imageBase64);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const imageBlob = new Blob([byteArray], { type: 'image/jpeg' });
-
-    // Create FormData for multipart file upload
+  processNationalId: async (image: Blob | File): Promise<ScanNationalIdResponse> => {
     const formData = new FormData();
-    formData.append('image', imageBlob, 'national-id.jpg');
+    const filename =
+      image instanceof File && image.name
+        ? image.name
+        : `national-id.${(image.type || 'image/jpeg').split('/')[1] || 'jpg'}`;
+    formData.append('image', image, filename);
 
     const response = await apiClient.post<ScanNationalIdResponse>(
       '/ocr/process-id',
