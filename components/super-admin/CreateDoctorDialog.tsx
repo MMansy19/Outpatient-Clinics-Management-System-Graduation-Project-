@@ -117,7 +117,7 @@ export function CreateDoctorDialog({ trigger }: CreateDoctorDialogProps) {
 
   const onSubmit = (data: CreateDoctorFormData) => {
     createDoctor(data, {
-      onSuccess: (response) => {
+      onSuccess: () => {
         const fullName = `${form.getValues('firstName')} ${form.getValues('lastName')}`;
         toast.success(
           toastMessages.doctor.createSuccess,

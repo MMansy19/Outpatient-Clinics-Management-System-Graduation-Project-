@@ -3,9 +3,19 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  
+
+  // Strip console.* from production bundles (keep error/warn for diagnostics)
+  compiler: {
+    removeConsole: isProd ? { exclude: ['error', 'warn'] } : false,
+  },
+
+  // Do not ship browser source maps to production (HIPAA / IP protection)
+  productionBrowserSourceMaps: false,
+
   // Image optimization for medical scans/photos
   images: {
     remotePatterns: [

@@ -99,8 +99,12 @@ export async function scanAndEnrichNationalId(
     try {
       gender = extractGenderFromNationalId(nationalIdNumber);
       birthdate = extractBirthdateFromNationalId(nationalIdNumber);
-    } catch (error) {
-  
+    } catch {
+      // Parsing failed despite passing validateNationalId; fall back to defaults
+      // applied below (gender = 'male', birthdate = now). Safe to ignore here
+      // because the upstream UI already prompts the user to confirm details.
+      gender = null;
+      birthdate = null;
     }
   }
 

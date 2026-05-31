@@ -6,7 +6,7 @@ import type { Scan } from '@/types/entities/Scan';
 import type { Medication } from '@/types/entities/Medication';
 import { mockMedicalHistoryAPI } from '@/lib/api/mockData';
 
-const USE_MOCK_DATA = true;
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 const HISTORY_KEY = ['medical-history'];
 
 export const useGetPatientLabs = (socialSecurityNumber: string): UseQueryResult<Lab[], Error> => {

@@ -177,15 +177,16 @@ export const getUserFriendlyMessage = (error: unknown): string => {
 };
 
 /**
+/**
  * Log Error for Debugging
  *
- * Logs error details in development mode.
- * In production, this would send to error tracking service (Sentry, LogRocket, etc.)
+ * No-op in production. In development, hook this up to your error tracking
+ * service (Sentry, LogRocket, etc.) when needed.
  *
- * @param {unknown} error - Error to log
- * @param {string} [context] - Additional context (e.g., "Create Visit")
+ * @param {unknown} _error - Error to log
+ * @param {string} [_context] - Additional context (e.g., "Create Visit")
  */
-export const logError = (error: unknown, context?: string): void => {
+export const logError = (_error: unknown, _context?: string): void => {
 };
 
 /**

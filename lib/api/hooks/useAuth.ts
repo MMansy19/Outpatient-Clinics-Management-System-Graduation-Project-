@@ -54,7 +54,7 @@ export function useLogin() {
       // Invalidate queries that depend on auth state
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
-    onError: (error: unknown) => {
+    onError: () => {
       // Clear any stale auth state
       useAuthStore.getState().logout();
     },

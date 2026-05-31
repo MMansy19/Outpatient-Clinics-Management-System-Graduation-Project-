@@ -1,32 +1,13 @@
 import { useMutation, UseMutationResult } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api/client';
 import { useAuthStore } from '@/stores/authStore';
-import type { LoginRequest, RegisterRequest, AuthResponse } from '@/types/api';
+import type { RegisterRequest, AuthResponse } from '@/types/api';
 import { mockAuthAPI } from '@/lib/api/mockData';
 
 // Re-export new hooks for backward compatibility
 export * from '../hooks/useAuth';
 
-// Set to true to use mock data (no backend required)
-const USE_MOCK_DATA = false;  // Changed to false - using real backend now
-
-// Legacy useLogin for components that haven't been migrated
-export const useLoginOld = (): UseMutationResult<
-  AuthResponse,
-  Error,
-  LoginRequest
-> => {
-  return useMutation({
-    mutationFn: async (data: LoginRequest) => {
-      if (USE_MOCK_DATA) {
-        return await mockAuthAPI.login(data.email, data.password);
-      }
-      const response = await apiClient.post<AuthResponse>('/auth/login', data);
-      return response.data;
-    },
-    // TODO: This is legacy mock-based hook. Use useLogin from hooks/useAuth.ts instead
-  });
-};
+const USE_MOCK_DATA = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
 
 export const useRegister = (): UseMutationResult<
   AuthResponse,
@@ -41,7 +22,6 @@ export const useRegister = (): UseMutationResult<
       const response = await apiClient.post<AuthResponse>('/auth/register', data);
       return response.data;
     },
-    // TODO: This is legacy mock-based hook. Registration should go through admin panel
   });
 };
 

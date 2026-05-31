@@ -253,16 +253,6 @@ async function proxyRequest(
       errorName === 'TimeoutError' || errorName === 'AbortError';
     const status = isTimeout ? 504 : 502;
     const statusText = isTimeout ? 'Gateway Timeout' : 'Bad Gateway';
-    const rawCause = (error as { cause?: unknown } | undefined)?.cause;
-    const cause =
-      rawCause && typeof rawCause === 'object'
-        ? {
-            code: (rawCause as { code?: string }).code,
-            errno: (rawCause as { errno?: string | number }).errno,
-            address: (rawCause as { address?: string }).address,
-            port: (rawCause as { port?: number }).port,
-          }
-        : undefined;
 
     return new Response(statusText, {
       status,

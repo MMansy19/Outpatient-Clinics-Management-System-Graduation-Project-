@@ -34,10 +34,6 @@ import {
 } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
-import {
-  extractGenderFromNationalId,
-  extractBirthdateFromNationalId,
-} from '@/lib/schemas/auth.schemas';
 import { EnrichedScanData } from '@/types/ocr';
 
 interface AddPatientDialogProps {
@@ -109,8 +105,8 @@ export function AddPatientDialog({
   // Note: Backend extracts these from National ID, no need to send separately
   useEffect(() => {
     if (nationalId && nationalId.length === 14) {
-      const gender = extractGenderFromNationalId(nationalId);
-      const birthdate = extractBirthdateFromNationalId(nationalId);
+      // Extraction is handled server-side; keep this hook as a placeholder for
+      // future client-side previews of the derived values.
     }
   }, [nationalId]);
 

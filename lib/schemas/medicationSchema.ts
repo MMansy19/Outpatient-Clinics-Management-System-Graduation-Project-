@@ -222,12 +222,12 @@ export const COMMON_DOSAGES = [
  * This is a basic safety check - NOT a substitute for medical knowledge!
  *
  * @param {number} dosage - Dosage amount
- * @param {string} medicationName - Name of medication (optional)
+ * @param {string} _medicationName - Name of medication (optional, reserved for future per-drug rules)
  * @returns {boolean} True if dosage seems reasonable
  */
 export const isSafeDosage = (
   dosage: number,
-  medicationName?: string
+  _medicationName?: string
 ): boolean => {
   // Basic safety check
   if (dosage > 10) {
