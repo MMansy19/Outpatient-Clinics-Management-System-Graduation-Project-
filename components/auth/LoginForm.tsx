@@ -45,13 +45,6 @@ export function LoginForm({ locale }: LoginFormProps) {
   const onSubmit = (data: LoginFormData) => {
     login(data, {
       onSuccess: (response) => {
-        console.log('✅ Login Response:', response);
-        console.log('📋 User Details:', {
-          name: response.name,
-          role: response.role,
-          language: response.language
-        });
-        
         toast.success(
           toastMessages.auth.loginSuccess,
           `${toastMessages.auth.loginSuccessDescription} Welcome, ${response.name}!`
@@ -86,10 +79,8 @@ export function LoginForm({ locale }: LoginFormProps) {
           allowedPrefixes.some((prefix) => redirectParam.includes(prefix))
         ) {
           redirectPath = redirectParam;
-          console.log('🔄 Redirecting to (from param):', redirectPath);
         } else {
           redirectPath = defaultRedirect;
-          console.log('🔄 Redirecting to (role default):', redirectPath);
         }
         
         // Use hard navigation to ensure the browser fully processes the
@@ -98,7 +89,6 @@ export function LoginForm({ locale }: LoginFormProps) {
         window.location.href = redirectPath;
       },
       onError: (error: unknown) => {
-        console.error('❌ Login Error:', error);
         const message = (error && typeof error === 'object' && 'response' in error && error.response && typeof error.response === 'object' && 'data' in error.response && error.response.data && typeof error.response.data === 'object' && 'message' in error.response.data && typeof error.response.data.message === 'string') ? error.response.data.message : toastMessages.auth.loginErrorDescription;
         toast.error(
           toastMessages.auth.loginError,

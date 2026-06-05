@@ -41,7 +41,6 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
 
     // If session validation failed, redirect to login
     if (!isSessionValid) {
-      console.log('[AuthGuard] Session validation failed, redirecting to login');
       router.push(`/${locale}/login?redirect=${encodeURIComponent(pathname)}`);
       return;
     }
@@ -49,9 +48,7 @@ export function AuthGuard({ children, allowedRoles, locale }: AuthGuardProps) {
     // Check role authorization
     const normalized = normalizeRole(userRole);
     if (allowedRoles && allowedRoles.length > 0) {
-      console.log(`[AuthGuard] Role check — raw: ${userRole} (${typeof userRole}), normalized: ${normalized}, allowed: [${allowedRoles}]`);
       if (normalized !== undefined && !allowedRoles.includes(normalized)) {
-        console.log(`[AuthGuard] User role ${normalized} not authorized. Required: ${allowedRoles.join(', ')}`);
         router.push(`/${locale}/unauthorized`);
       }
     }

@@ -77,7 +77,6 @@ export function MedicationForm({
   });
 
   const onSubmit = (data: CreateMedicationDto) => {
-    console.log('🔵 Creating medication:', data);
 
     let submitData: CreateMedicationDto | FormData;
     if (audioFile) {
@@ -95,7 +94,6 @@ export function MedicationForm({
     
     createMedication(submitData, {
       onSuccess: (response) => {
-        console.log('✅ Medication created:', response);
         const isOfflineQueued =
           response && typeof response === 'object' && (response as { offline?: boolean }).offline === true;
         const dosageUnit = data.dosage === '1' ? 'tablet' : 'tablets';
@@ -116,7 +114,6 @@ export function MedicationForm({
         onSuccess?.(newId);
       },
       onError: (error) => {
-        console.error('❌ Medication creation failed:', error);
         toast.error(t('medicationCreateError'), {
           description: error instanceof Error ? error.message : 'Unknown error',
         });

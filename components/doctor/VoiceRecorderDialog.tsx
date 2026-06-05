@@ -117,7 +117,6 @@ export function VoiceRecorderDialog({
       setIsRecording(true);
       setRecordingTime(0);
     } catch (err) {
-      console.error('Error accessing microphone:', err);
       setError(t('microphoneAccessDenied'));
       toast.error(t('microphoneError'));
     }
@@ -205,7 +204,6 @@ export function VoiceRecorderDialog({
       onAudioCaptured?.(file);
       handleClose();
     } catch (err) {
-      console.error('Error converting audio:', err);
       toast.error(t('conversionError'));
     } finally {
       setIsConverting(false);

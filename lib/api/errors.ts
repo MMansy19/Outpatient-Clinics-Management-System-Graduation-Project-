@@ -185,24 +185,8 @@ export const getUserFriendlyMessage = (error: unknown): string => {
  * @param {unknown} error - Error to log
  * @param {string} [context] - Additional context (e.g., "Create Visit")
  */
-export const logError = (error: unknown, context?: string): void => {
-  const apiError = parseApiError(error);
-
-  if (process.env.NODE_ENV === 'development') {
-    console.group(`🔴 API Error${context ? ` - ${context}` : ''}`);
-    console.error('Message:', apiError.message);
-    console.error('Status Code:', apiError.statusCode);
-    console.error('Error Code:', apiError.errorCode);
-    console.error('Category:', getErrorCategory(apiError.statusCode));
-    if (apiError.originalError) {
-      console.error('Original Error:', apiError.originalError);
-    }
-    console.groupEnd();
-  } else {
-    // In production, send to error tracking service
-    // Example: Sentry.captureException(apiError);
-    console.error(`API Error${context ? ` - ${context}` : ''}:`, apiError.message);
-  }
+export const logError = (_error: unknown, _context?: string): void => {
+  // Reserved for future error-tracking integration (e.g. Sentry)
 };
 
 /**

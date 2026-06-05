@@ -112,7 +112,6 @@ export function CreateDoctorDialog({ trigger, onSuccess }: CreateDoctorDialogPro
       const data = await superAdminApi.getClinics();
       setClinics(data);
     } catch (error) {
-      console.error('Failed to load clinics:', error);
       toast.error(t('failedToLoadClinicsTitle'), t('failedToLoadClinicsDescription'));
     } finally {
       setLoadingClinics(false);
@@ -142,7 +141,6 @@ export function CreateDoctorDialog({ trigger, onSuccess }: CreateDoctorDialogPro
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        console.error('❌ Create doctor error:', error);
 
         // Restore the dialog with the values the user submitted so they
         // can correct the error and retry. We've already closed the

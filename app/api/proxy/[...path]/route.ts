@@ -151,14 +151,6 @@ function getForwardHeaders(request: NextRequest): Headers {
   if (!headers.get('authorization')) {
     const cookieHeader = request.headers.get('cookie');
     const jwt = extractJwtFromCookieHeader(cookieHeader);
-    // 🔍 DEBUG: Log auth chain for 401 diagnosis (remove after debugging)
-    console.log('[PROXY AUTH]', {
-      path: request.nextUrl.pathname,
-      hasCookie: !!cookieHeader,
-      cookieNames: cookieHeader?.split(';').map(c => c.trim().split('=')[0]).join(', ') || 'none',
-      jwtExtracted: !!jwt,
-      jwtPreview: jwt ? `${jwt.substring(0, 20)}...` : 'null',
-    });
     if (jwt) {
       headers.set('authorization', `Bearer ${jwt}`);
     }
@@ -253,24 +245,6 @@ async function proxyRequest(request: NextRequest, context: ProxyRouteContext): P
     const isTimeout = errorName === 'TimeoutError' || errorName === 'AbortError';
     const status = isTimeout ? 504 : 502;
     const statusText = isTimeout ? 'Gateway Timeout' : 'Bad Gateway';
-    const rawCause = (error as { cause?: unknown } | undefined)?.cause;
-    const cause =
-      rawCause && typeof rawCause === 'object'
-        ? {
-            code: (rawCause as { code?: string }).code,
-            errno: (rawCause as { errno?: string | number }).errno,
-            address: (rawCause as { address?: string }).address,
-            port: (rawCause as { port?: number }).port,
-          }
-        : undefined;
-
-    console.error('[API Proxy Error]', {
-      candidateBaseUrls,
-      path,
-      method,
-      message: error instanceof Error ? error.message : 'Unknown proxy error',
-      cause,
-    });
 
     return new Response(statusText, {
       status,

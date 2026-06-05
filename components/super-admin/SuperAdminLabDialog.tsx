@@ -96,8 +96,7 @@ export function SuperAdminLabDialog({
           await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-labs', patientId] });
           onSuccess?.();
         },
-        onError: (error) => {
-          console.error('Failed to create lab:', error);
+        onError: () => {
           toast.error(t('labCreateError'));
         },
         onSettled: () => setIsPending(false),

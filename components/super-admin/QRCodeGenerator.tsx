@@ -62,7 +62,6 @@ export function QRCodeGenerator({ open, onOpenChange }: QRCodeGeneratorProps) {
 
       setQrCodeUrl(qrDataUrl);
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
     }
   };
 

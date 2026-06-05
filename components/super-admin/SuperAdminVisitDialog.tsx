@@ -92,8 +92,7 @@ export function SuperAdminVisitDialog({
           onOpenChange(false);
           onSuccess?.();
         },
-        onError: (error) => {
-          console.error('Failed to create visit:', error);
+        onError: () => {
           toast.error(tVisit('visitCreateError'));
         },
         onSettled: () => setIsPending(false),

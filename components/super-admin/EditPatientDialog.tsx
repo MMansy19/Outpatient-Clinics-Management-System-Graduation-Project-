@@ -77,8 +77,7 @@ export function EditPatientDialog({
           onSuccess();
           onOpenChange(false);
         },
-        onError: (error) => {
-          console.error('Failed to update patient:', error);
+        onError: () => {
           toast.error(t('patientUpdateFailed'));
         },
         onSettled: () => setLoading(false),

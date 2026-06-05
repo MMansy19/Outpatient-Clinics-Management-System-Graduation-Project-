@@ -106,15 +106,6 @@ export async function mockScanNationalId(
       const randomIndex = Math.floor(Math.random() * MOCK_DATA_POOL.length);
       const mockData = MOCK_DATA_POOL[randomIndex];
       
-      // Log for development visibility
-      console.log('🔧 Mock National ID Scan:', {
-        firstName: mockData.firstName,
-        lastName: mockData.lastName,
-        location: mockData.location,
-        socialSecurityNumber: mockData.socialSecurityNumber,
-        processingTime: `${delay.toFixed(0)}ms`,
-      });
-      
       resolve(mockData);
     }, delay);
   });
@@ -158,7 +149,6 @@ export async function mockScanNationalIdError(
  */
 export function getMockDataByIndex(index: number): ScanNationalIdResponse {
   if (index < 0 || index >= MOCK_DATA_POOL.length) {
-    console.warn(`Mock data index ${index} out of range. Using index 0.`);
     return MOCK_DATA_POOL[0];
   }
   return MOCK_DATA_POOL[index];

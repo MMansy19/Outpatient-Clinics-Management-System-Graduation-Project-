@@ -56,7 +56,7 @@ export const useGetPatientVisits = (patientId: string): UseQueryResult<VisitWith
       try {
         await upsertVisits(response.data, patientId);
       } catch (e) {
-        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -80,7 +80,7 @@ export const useGetVisit = (id: number): UseQueryResult<VisitWithRelations, Erro
       try {
         await upsertVisits(response.data);
       } catch (e) {
-        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -197,7 +197,7 @@ export const useGetRecentVisits = (limit: number = 10): UseQueryResult<VisitWith
       try {
         await upsertVisits(response.data);
       } catch (e) {
-        console.warn('[useVisits] upsertVisits failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },

@@ -146,7 +146,7 @@ export async function prefetchSuperAdminData(
       await upsertDoctors(doctorsResp.items);
     }
   } catch (e) {
-    console.warn('[prefetchSuperAdmin] Dexie write-through failed (non-fatal):', e);
+    // non-fatal write-through failure
   }
 
   // ── Per-patient nested data (top N by createdAt desc) ────────────────────

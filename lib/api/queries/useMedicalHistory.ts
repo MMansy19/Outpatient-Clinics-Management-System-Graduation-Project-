@@ -33,7 +33,7 @@ export const useGetPatientLabs = (socialSecurityNumber: string): UseQueryResult<
       try {
         await upsertLabs(response.data, socialSecurityNumber);
       } catch (e) {
-        console.warn('[useMedicalHistory] upsertLabs failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -62,7 +62,7 @@ export const useGetPatientScans = (socialSecurityNumber: string): UseQueryResult
       try {
         await upsertScans(response.data, socialSecurityNumber);
       } catch (e) {
-        console.warn('[useMedicalHistory] upsertScans failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -91,7 +91,7 @@ export const useGetPatientMedications = (socialSecurityNumber: string): UseQuery
       try {
         await upsertMedications(response.data, socialSecurityNumber);
       } catch (e) {
-        console.warn('[useMedicalHistory] upsertMedications failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -156,7 +156,7 @@ export const useGetMedicalHistoryTimeline = (socialSecurityNumber: string): UseQ
           upsertMedications(response.data?.medications?.map((x) => x.data) ?? [], socialSecurityNumber),
         ]);
       } catch (e) {
-        console.warn('[useMedicalHistory] timeline write-through failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },

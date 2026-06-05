@@ -102,8 +102,7 @@ export function SuperAdminMedicationDialog({
           onOpenChange(false);
           onSuccess?.();
         },
-        onError: (error) => {
-          console.error('Failed to create medication:', error);
+        onError: () => {
           toast.error(t('medicationCreateError'));
         },
         onSettled: () => setIsPending(false),

@@ -184,7 +184,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     id: number;
     socialSecurityNumber: string;
   }) => {
-    console.log('🔍 handleNewPatientCreated - data:', data);
     setSelectedPatient({
       id: data.id,
       socialSecurityNumber: data.socialSecurityNumber,
@@ -217,9 +216,6 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
     toast.success('Transcription copied to clipboard!');
     // Copy to clipboard
     navigator.clipboard.writeText(transcription);
-
-    // You can also show a modal or use the transcription in a form
-    console.log('Transcription:', transcription);
   };
 
   // Logout Handler
@@ -236,14 +232,12 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
 
       window.location.replace(`/${locale}/login`);
     } catch (error) {
-      console.error('Logout error:', error);
       window.location.replace(`/${locale}/login`);
     }
   };
 
   // Force refetch on mount
   React.useEffect(() => {
-    console.log('🔄 Dashboard mounted, refetching data...');
     refetchPatients();
     refetchVisits();
   }, [refetchPatients, refetchVisits]);

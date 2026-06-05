@@ -131,7 +131,6 @@ export function SuperAdminPatientSearch({
           });
         }
       } catch (err) {
-        console.error('Offline patient search error:', err);
         setError(t('searchError'));
       } finally {
         setIsLoading(false);
@@ -144,7 +143,7 @@ export function SuperAdminPatientSearch({
       try {
         await upsertPatients(patient);
       } catch (e) {
-        console.warn('[SuperAdminPatientSearch] upsertPatients failed:', e);
+        // non-fatal write-through failure
       }
       setResultSource('online');
       onSelectPatient({
@@ -157,7 +156,6 @@ export function SuperAdminPatientSearch({
         job: patient.job,
       });
     } catch (err: any) {
-      console.error('Patient search error:', err);
       if (err.response?.status === 404) {
         setError(t('patientNotFound'));
       } else {
@@ -414,7 +412,6 @@ function RegisterPatientDialog({ open, onOpenChange, prefillData, onRegistered }
         });
       },
       onError: (error: unknown) => {
-        console.error('Create patient error:', error);
         form.reset();
         const err = error as { response?: { status?: number } };
         if (err.response?.status === 400) {

@@ -87,7 +87,7 @@ export const useGetPatientScans = (
       try {
         await upsertScans(data, patientId);
       } catch (e) {
-        console.warn('[useScans] upsertScans failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -127,7 +127,7 @@ export const useGetScan = (
       try {
         await upsertScans(data);
       } catch (e) {
-        console.warn('[useScans] upsertScans failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -296,8 +296,7 @@ export const useDeleteScan = (): UseMutationResult<
         queryKey: ['patients'],
       });
     },
-    onError: (error) => {
-      console.error('[useDeleteScan] Error:', error);
+    onError: () => {
     },
   });
 };

@@ -110,9 +110,7 @@ export function CreatePatientDialog({ trigger, onSuccess, prefillData }: CreateP
     if (data.lastName) form.setValue('lastName', data.lastName, { shouldValidate: true });
     if (data.address || data.location) form.setValue('address', data.address || data.location || '', { shouldValidate: false });
     if (ssn.length === 14) {
-      const gender = extractGenderFromNationalId(ssn);
-      const birthdate = extractBirthdateFromNationalId(ssn);
-      console.log('📋 Scanned National ID:', ssn, 'Extracted gender:', gender, 'birthdate:', birthdate);
+      // Gender and birthdate are extracted server-side from the National ID
     }
     setIsScannerOpen(false);
     setOpen(true);
@@ -161,8 +159,6 @@ export function CreatePatientDialog({ trigger, onSuccess, prefillData }: CreateP
         onSuccess?.();
       },
       onError: (error: unknown) => {
-        console.error('Create patient error:', error);
-
         // Re-open dialog with the user's values so they can correct & retry.
         form.reset(submittedValues);
         setOpen(true);

@@ -231,13 +231,10 @@ export const COMMON_DOSAGES = [
  */
 export const isSafeDosage = (
   dosage: number,
-  medicationName?: string
+  _medicationName?: string
 ): boolean => {
   // Basic safety check
   if (dosage > 10) {
-    console.warn(
-      `High dosage detected: ${dosage} for ${medicationName || 'medication'}`
-    );
     return false;
   }
   return true;
@@ -252,7 +249,6 @@ export const isSafeDosage = (
 export const isReasonablePeriod = (period: number): boolean => {
   // Warn for very short or very long periods
   if (period < 1 || period > 90) {
-    console.warn(`Unusual period detected: ${period} days`);
     return false;
   }
   return true;

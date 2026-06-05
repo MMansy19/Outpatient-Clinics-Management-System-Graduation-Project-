@@ -55,15 +55,10 @@ class ApiClient {
           delete config.headers['Content-Type'];
         }
 
-        // Log requests in development
-        if (process.env.NODE_ENV === 'development') {
-          console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
-        }
         // Note: No Authorization header - backend reads JWT from HTTP-only cookie
         return config;
       },
       (error: AxiosError) => {
-        console.error('[API Request Error]', error);
         return Promise.reject(error);
       }
     );
@@ -71,19 +66,11 @@ class ApiClient {
     // Response Interceptor
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // Log successful responses in development with performance metrics
-        if (process.env.NODE_ENV === 'development') {
-          const config = response.config as ExtendedAxiosRequestConfig;
-          const startTime = config.metadata?.startTime;
-          const duration = startTime ? Date.now() - startTime : 0;
-          console.log(`[API Response] ${response.status} ${response.config.url} (${duration}ms)`);
-        }
         return response;
       },
       async (error: AxiosError) => {
         // Handle 401 Unauthorized (token expired or invalid)
         if (error.response?.status === 401) {
-          console.error('[API Error] 401 Unauthorized - Token expired or invalid');
 
           // Only redirect if we're not already on the login page and not
           // within a grace period after login (prevents redirect loops when
@@ -95,9 +82,9 @@ class ApiClient {
             const isRecentLogin = loginTimestamp && (Date.now() - Number(loginTimestamp)) < 5000;
 
             if (isRecentLogin) {
-              console.warn('[API Client] Skipping 401 redirect — recent login (cookie may still be processing)');
+              // skip redirect — cookie may still be processing
             } else if (isRedirecting401) {
-              console.warn('[API Client] 401 redirect already in progress, skipping duplicate');
+              // skip — redirect already in progress
             } else if (!isLoginPage) {
               isRedirecting401 = true;
 
@@ -120,26 +107,17 @@ class ApiClient {
         // The AuthGuard already handles page-level role checks; a 403 from a single
         // API call should not forcibly navigate the user away from the page.
         if (error.response?.status === 403) {
-          console.warn('[API Error] 403 Forbidden - Insufficient permissions', error.config?.url);
+          // 403 is logged by React Query; let it propagate to the caller.
         }
 
         // Handle network errors
         if (!error.response) {
-          console.warn('[API Error] Network error or server unreachable');
+          // Network error — offline or server unreachable; caller handles
         }
 
         // Log error details in development
         if (process.env.NODE_ENV === 'development') {
-          const config = error.config as ExtendedAxiosRequestConfig | undefined;
-          const startTime = config?.metadata?.startTime;
-          const duration = startTime ? Date.now() - startTime : 0;
-          console.warn('[API Error Details]', {
-            url: error.config?.url,
-            method: error.config?.method,
-            status: error.response?.status,
-            data: error.response?.data,
-            duration: `${duration}ms`,
-          });
+          // placeholder for future dev tooling
         }
 
         return Promise.reject(error);

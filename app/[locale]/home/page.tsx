@@ -103,7 +103,6 @@ export default function HomePage({ params }: HomePageProps) {
         }));
         setDoctors(topDoctors);
       } catch (error) {
-        console.error('Failed to load data:', error);
         setClinics([]);
         setDoctors([]);
       }

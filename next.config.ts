@@ -10,9 +10,19 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === 'development',
 });
 
+const isProd = process.env.NODE_ENV === 'production';
+
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  
+
+  // Strip all console.* from production bundles (defense-in-depth)
+  compiler: {
+    removeConsole: isProd ? true : false,
+  },
+
+  // No browser source maps in production (HIPAA / IP protection)
+  productionBrowserSourceMaps: false,
+
   // Image optimization for medical scans/photos
   images: {
     remotePatterns: [
@@ -65,17 +75,6 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Redirect api-test page to home in production
-  async redirects() {
-    if (process.env.NODE_ENV !== 'production') return [];
-    return [
-      {
-        source: '/:locale/api-test',
-        destination: '/:locale',
-        permanent: false,
-      },
-    ];
-  },
 };
 
 export default withSerwist(withNextIntl(nextConfig));

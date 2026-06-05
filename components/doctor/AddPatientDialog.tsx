@@ -35,10 +35,6 @@ import {
 } from '@/lib/schemas/auth.schemas';
 import { Language } from '@/lib/api/types';
 import { NationalIdInfo } from '@/components/shared/NationalIdInfo';
-import {
-  extractGenderFromNationalId,
-  extractBirthdateFromNationalId,
-} from '@/lib/schemas/auth.schemas';
 import { EnrichedScanData } from '@/types/ocr';
 
 interface AddPatientDialogProps {
@@ -111,16 +107,7 @@ export function AddPatientDialog({
   // Note: Backend extracts these from National ID, no need to send separately
   useEffect(() => {
     if (nationalId && nationalId.length === 14) {
-      const gender = extractGenderFromNationalId(nationalId);
-      const birthdate = extractBirthdateFromNationalId(nationalId);
-
-      // Just for validation and display - backend extracts from National ID
-      if (gender && birthdate) {
-        console.log('📋 Extracted from National ID:', {
-          gender,
-          birthdate: birthdate.toLocaleDateString(),
-        });
-      }
+      // Extraction handled server-side from National ID
     }
   }, [nationalId]);
 
@@ -164,8 +151,6 @@ export function AddPatientDialog({
           toastMessages.patient.createSuccessDescription(fullName)
         );
         const patientId = 'id' in response ? response.id : undefined;
-        console.log('🔍 Patient created - ID:', patientId, 'National ID:', socialSecurityNumber);
-        console.log('🔍 Scanned data sent:', submitData);
         form.reset();
         onOpenChange(false);
         const numericId = patientId ? parseInt(patientId) || 0 : 0;

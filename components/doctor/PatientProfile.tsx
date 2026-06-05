@@ -105,18 +105,6 @@ export function PatientProfile({
   const patientId =
     patientAny?.global_id || patientAny?.user?.id || patientAny?.id || null;
 
-  // Debug logging
-  console.log(
-    '🔍 PatientProfile - socialSecurityNumber:',
-    socialSecurityNumber
-  );
-  console.log('🔍 PatientProfile - patientId (UUID):', patientId);
-  console.log('🔍 PatientProfile - Fetched patient:', patient);
-  console.log('🔍 PatientProfile - Loading:', loadingPatient);
-  console.log('🔍 PatientProfile - IsFetching:', isRefetchingPatient);
-  console.log('🔍 PatientProfile - Error:', patientError);
-  console.log('🔍 PatientProfile - Scanned Data:', scannedData);
-
   // Combine API patient data with scanned data (scanned data serves as fallback)
   // Handle both admin (nested user) and doctor (flat) patient structures
   const patientUser = patientAny?.user || patientAny;
@@ -150,13 +138,6 @@ export function PatientProfile({
   const { data: visitsResponse, isLoading: loadingVisits } =
     useGetPatientVisits(patientId || '');
 
-  // Debug logging
-  console.log('🔍 PatientProfile - Visits Query:', {
-    socialSecurityNumber,
-    visitsResponse,
-    isLoading: loadingVisits,
-  });
-
   // Extract visits from the wrapped response structure
   const visits =
     (visitsResponse as any)?.clinics?.flatMap(
@@ -179,16 +160,6 @@ export function PatientProfile({
   const { data: scans, isLoading: loadingScans } = useGetPatientScans(
     patientId || ''
   );
-
-  // Debug logging
-  console.log('🔍 PatientProfile - Other Queries:', {
-    medications,
-    labs,
-    scans,
-    loadingMedications,
-    loadingLabs,
-    loadingScans,
-  });
 
   // Extract data from wrapped response structures
   const medicationsList = (medications as any)?.medications || [];

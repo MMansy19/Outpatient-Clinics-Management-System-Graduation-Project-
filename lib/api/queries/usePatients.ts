@@ -69,7 +69,7 @@ export const useSearchPatients = (filters: SearchFilters): UseQueryResult<Patien
       try {
         await upsertPatients(response.data?.patients ?? []);
       } catch (e) {
-        console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return { ...response.data, source: 'online' as const };
     },
@@ -89,7 +89,7 @@ export const useGetPatient = (id: number): UseQueryResult<Patient, Error> => {
       try {
         await upsertPatients(response.data);
       } catch (e) {
-        console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return response.data;
     },
@@ -115,7 +115,7 @@ export const useGetPatientByNationalId = (socialSecurityNumber: string): UseQuer
         try {
           await upsertPatients(response.data);
         } catch (e) {
-          console.warn('[usePatients] upsertPatients failed (non-fatal):', e);
+          // non-fatal write-through failure
         }
         return response.data;
       } catch (error) {

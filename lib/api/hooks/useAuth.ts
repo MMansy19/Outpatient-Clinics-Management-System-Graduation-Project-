@@ -40,7 +40,6 @@ export function useLogin() {
       // Update Zustand store with user data
       // Note: JWT token is in HTTP-only cookie, not returned in data
       const loginData = data as unknown as Record<string, unknown>;
-      console.log('🔍 Login response data:', JSON.stringify(loginData));
       const clinicId = data.clinicId
         || (loginData.clinic_id as string)
         || (loginData.clinicid as string)
@@ -55,9 +54,7 @@ export function useLogin() {
       // Invalidate queries that depend on auth state
       queryClient.invalidateQueries({ queryKey: ['auth'] });
     },
-    onError: (error: unknown) => {
-      console.error('[Login Error]', error);
-      
+    onError: () => {
       // Clear any stale auth state
       useAuthStore.getState().logout();
     },

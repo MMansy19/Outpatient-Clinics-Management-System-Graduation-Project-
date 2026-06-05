@@ -76,10 +76,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
   const checkPermissions = useCallback(async (): Promise<boolean> => {
     try {
       const permissions = await Camera.checkPermissions();
-      console.log('📸 Camera permissions:', permissions);
       return permissions.camera === 'granted';
     } catch (err) {
-      console.error('Error checking camera permissions:', err);
       setError(new CameraPermissionError('Failed to check camera permissions'));
       return false;
     }
@@ -90,7 +88,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
    */
   const requestPermissions = useCallback(async (): Promise<boolean> => {
     try {
-      console.log('🔐 Requesting camera permissions...');
       const permissions = await Camera.requestPermissions();
       const granted = permissions.camera === 'granted';
       
@@ -99,15 +96,12 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
           'Camera access denied. Please enable camera permissions in Settings.'
         );
         setError(permissionError);
-        console.error('❌ Camera permission denied');
         return false;
       }
 
-      console.log('✅ Camera permission granted');
       setError(null);
       return true;
     } catch (err) {
-      console.error('Error requesting camera permissions:', err);
       setError(new CameraPermissionError('Failed to request camera permissions'));
       return false;
     }
@@ -132,8 +126,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
         }
       }
 
-      console.log('📷 Opening camera...');
-
       // Capture photo using Capacitor Camera API
       const photo: Photo = await Camera.getPhoto({
         quality,
@@ -150,11 +142,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
         throw new Error('Failed to capture image: No image data received');
       }
 
-      console.log('✅ Photo captured successfully', {
-        format: photo.format,
-        size: `${(photo.base64String.length / 1024).toFixed(2)} KB`,
-      });
-
       const result: CameraCaptureResult = {
         base64String: photo.base64String,
         format: photo.format,
@@ -163,7 +150,6 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
 
       return result;
     } catch (err) {
-      console.error('❌ Camera error:', err);
 
       // Handle specific error types
       if (err instanceof CameraPermissionError) {

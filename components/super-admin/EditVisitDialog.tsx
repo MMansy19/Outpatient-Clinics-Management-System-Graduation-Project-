@@ -59,8 +59,7 @@ export function EditVisitDialog({
           onSuccess();
           onOpenChange(false);
         },
-        onError: (error) => {
-          console.error('Failed to update visit:', error);
+        onError: () => {
           toast.error(tAdmin('visitUpdateFailed') ?? 'Failed to update visit');
         },
         onSettled: () => setLoading(false),

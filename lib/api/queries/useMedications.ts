@@ -90,7 +90,7 @@ export const useGetPatientMedications = (
       try {
         await upsertMedications(data, patientId);
       } catch (e) {
-        console.warn('[useMedications] upsertMedications failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -130,7 +130,7 @@ export const useGetMedication = (
       try {
         await upsertMedications(data);
       } catch (e) {
-        console.warn('[useMedications] upsertMedications failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -289,8 +289,7 @@ export const useDeleteMedication = (): UseMutationResult<
         queryKey: ['patients'],
       });
     },
-    onError: (error) => {
-      console.error('[useDeleteMedication] Error:', error);
+    onError: () => {
     },
   });
 };
@@ -340,9 +339,8 @@ export const useCreateMedicationOptimistic = (): UseMutationResult<
     },
 
     // On error, rollback to snapshot
-    onError: (err) => {
+    onError: () => {
       // Rollback logic would go here if we had stored previous data
-      console.error('[useCreateMedicationOptimistic] Error:', err);
     },
 
     // On success, invalidate all queries

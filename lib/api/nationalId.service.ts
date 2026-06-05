@@ -85,15 +85,8 @@ export async function scanNationalId(
     // Call backend OCR service via doctorApi
     const response = await doctorApi.processNationalId(image);
 
-    console.log('✅ National ID scanned successfully:', {
-      firstName: response.firstName,
-      lastName: response.lastName,
-      socialSecurityNumber: response.socialSecurityNumber?.length || 0,
-    });
-
     return response;
   } catch (error) {
-    console.error('❌ National ID scan failed:', error);
 
     if (error instanceof OCRProcessingError) {
       throw error;
@@ -103,17 +96,6 @@ export async function scanNationalId(
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       const upstream = extractUpstreamMessage(error.response?.data);
-      console.error('❌ OCR upstream response:', {
-        status,
-        data: error.response?.data,
-        sentSize: image.size,
-        sentType: image.type,
-      });
-
-      // Suffix the HTTP status so the toast is diagnosable even when the
-      // backend body is empty or non-JSON.
-      const withStatus = (msg: string) => (status ? `${msg} (HTTP ${status})` : msg);
-
       if (status === 400) {
         throw new OCRProcessingError(
           upstream || withStatus('Invalid image format. Please try again.')
@@ -197,8 +179,8 @@ export async function scanAndEnrichNationalId(
     try {
       gender = extractGenderFromNationalId(nationalIdNumber);
       birthdate = extractBirthdateFromNationalId(nationalIdNumber);
-    } catch (error) {
-      console.warn('⚠️ Failed to extract gender/birthdate from National ID:', error);
+    } catch {
+      // Parsing failed despite passing validateNationalId; fall back to defaults below
     }
   }
 
@@ -227,14 +209,6 @@ export async function scanAndEnrichNationalId(
     imageBase64: rawImageDataUrl, // Alias for rawImage
     isMockData: false,
   };
-
-  console.log('📋 Enriched scan data:', {
-    firstName: enrichedData.firstName,
-    lastName: enrichedData.lastName,
-    socialSecurityNumber: enrichedData.socialSecurityNumber,
-    gender: enrichedData.gender,
-    birthdate: enrichedData.birthdate?.toLocaleDateString() || 'N/A',
-  });
 
   return enrichedData;
 }
@@ -287,11 +261,6 @@ export async function compressImage(
       // Remove data URL prefix to get just the base64 data
       const base64Data = compressedBase64.split(',')[1];
       
-      console.log('🗜️ Image compressed:', {
-        original: `${(base64Image.length / 1024).toFixed(2)} KB`,
-        compressed: `${(base64Data.length / 1024).toFixed(2)} KB`,
-        dimensions: `${width}x${height}`,
-      });
 
       resolve(base64Data);
     };
@@ -349,11 +318,6 @@ export async function compressImageToJpegBlob(
               reject(new Error('Failed to encode compressed image'));
               return;
             }
-            console.log('🗃️ Image compressed:', {
-              original: `${(source.size / 1024).toFixed(2)} KB`,
-              compressed: `${(out.size / 1024).toFixed(2)} KB`,
-              dimensions: `${width}x${height}`,
-            });
             resolve(out);
           },
           'image/jpeg',

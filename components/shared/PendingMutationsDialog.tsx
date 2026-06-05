@@ -49,7 +49,7 @@ export function PendingMutationsDialog({
       const rows = await getPendingMutations();
       setItems(rows);
     } catch (err) {
-      console.error('Failed to load pending mutations:', err);
+      setItems([]);
     }
   }, []);
 
@@ -74,7 +74,6 @@ export function PendingMutationsDialog({
       await processSyncQueue();
       await refresh();
     } catch (err) {
-      console.error('Sync failed:', err);
       toast.error('Sync failed', {
         description: err instanceof Error ? err.message : 'Unknown error',
       });

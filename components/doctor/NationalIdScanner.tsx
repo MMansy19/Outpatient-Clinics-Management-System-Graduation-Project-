@@ -104,7 +104,6 @@ export function NationalIdScanner({
       await track.applyConstraints({
         advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet],
       });
-      console.log('📷 Continuous autofocus applied');
     } catch {
       // Focus not supported on this device — silently ignore
     }
@@ -126,12 +125,10 @@ export function NationalIdScanner({
   const { takePicture, checkPermissions } = useCamera();
   const { mutate: scanId, isPending: isScanning } = useScanNationalId({
     onSuccess: (data) => {
-      console.log('✅ Scan successful:', data);
       onScanComplete(data);
       onClose();
     },
     onError: (err) => {
-      console.error('❌ Scan failed:', err);
       setError(err.message || t('scanFailed'));
       setIsCapturing(false);
     },
@@ -153,7 +150,6 @@ export function NationalIdScanner({
         await applyFocusSettings(track);
       }
     } catch (err) {
-      console.error('❌ Web camera error:', err);
       setError('Camera access denied. Please allow camera permissions in your browser.');
       setIsCapturing(false);
     }
@@ -190,7 +186,6 @@ export function NationalIdScanner({
           return;
         }
 
-        console.log('📸 Image captured from web camera, processing...');
         // Send to OCR service
         scanId({ file: blob, compress: true });
       },
@@ -228,15 +223,12 @@ export function NationalIdScanner({
         return;
       }
 
-      console.log('📸 Image captured, processing...');
-
       // Capacitor returns base64; convert to a Blob and send to OCR service
       const dataUrl = `data:image/jpeg;base64,${result.base64String}`;
       const blob = await fetch(dataUrl).then((r) => r.blob());
       scanId({ file: blob, compress: true });
       
     } catch (err) {
-      console.error('❌ Capture error:', err);
       setError(err instanceof Error ? err.message : t('captureFailed'));
       setIsCapturing(false);
     }
@@ -274,16 +266,9 @@ export function NationalIdScanner({
       setIsCapturing(true);
       setError(null);
 
-      console.log('📤 Image uploaded, processing...', {
-        name: selectedFile.name,
-        type: selectedFile.type,
-        size: `${(selectedFile.size / 1024).toFixed(2)} KB`,
-      });
-
       // Send original File directly to OCR service (matches scans/labs pattern)
       scanId({ file: selectedFile, compress: true });
     } catch (err) {
-      console.error('❌ Upload error:', err);
       setError(err instanceof Error ? err.message : t('uploadFailed'));
       setIsCapturing(false);
     }

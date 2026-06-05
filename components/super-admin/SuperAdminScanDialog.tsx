@@ -115,8 +115,7 @@ export function SuperAdminScanDialog({
           await queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
           onSuccess?.();
         },
-        onError: (error) => {
-          console.error('Failed to create scan:', error);
+        onError: () => {
           toast.error(t('scanCreateError'));
         },
         onSettled: () => setIsPending(false),

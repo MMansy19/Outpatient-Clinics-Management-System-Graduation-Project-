@@ -72,19 +72,13 @@ export function useScanNationalId(
     mutationKey: ['scanNationalId'],
     
     mutationFn: async ({ file, compress = true }): Promise<EnrichedScanData> => {
-      console.log('🔍 Starting National ID scan...', {
-        size: `${(file.size / 1024).toFixed(2)} KB`,
-        type: file.type,
-      });
 
       // Compress image if requested (default: true)
       let processedImage: Blob = file;
       if (compress) {
         try {
           processedImage = await compressImageToJpegBlob(file, 1920, 1080, 0.9);
-          console.log('✅ Image compressed successfully');
         } catch (compressionError) {
-          console.warn('⚠️ Image compression failed, using original:', compressionError);
           // Continue with original image if compression fails
         }
       }
@@ -92,24 +86,13 @@ export function useScanNationalId(
       // Send to backend OCR service
       try {
         const enrichedData = await scanAndEnrichNationalId(processedImage);
-        console.log('✅ National ID scan completed successfully');
         return enrichedData;
       } catch (error) {
-        console.error('❌ National ID scan failed:', error);
         throw error;
       }
     },
 
     onSuccess: (data) => {
-      console.log('📋 Scan result:', {
-        firstName: data.firstName,
-        lastName: data.lastName,
-        socialSecurityNumber: data.socialSecurityNumber,
-        location: data.location,
-        gender: data.gender,
-        birthdate: data.birthdate.toISOString(),
-      });
-
       // Call custom success handler
       if (onScanSuccess) {
         onScanSuccess(data);
@@ -117,7 +100,6 @@ export function useScanNationalId(
     },
 
     onError: (error) => {
-      console.error('❌ Scan error:', error);
 
       // Provide user-friendly error messages
       let userMessage = 'Failed to scan National ID. Please try again.';

@@ -59,7 +59,6 @@ export function VoiceFormField<T extends FieldValues>({
         field.onChange(field.value ? `${field.value} ${result.transcription}` : result.transcription);
         onTranscriptionComplete?.(result.transcription);
       } catch (error) {
-        console.error('Transcription failed:', error);
         toast.error('Failed to transcribe audio');
       } finally {
         setIsTranscribing(false);

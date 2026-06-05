@@ -391,7 +391,6 @@ export default function SuperAdminDashboard({ params }: SuperAdminDashboardProps
 
       window.location.replace(`/${locale}/login`);
     } catch (error) {
-      console.error('Logout error:', error);
       window.location.replace(`/${locale}/login`);
     }
   };

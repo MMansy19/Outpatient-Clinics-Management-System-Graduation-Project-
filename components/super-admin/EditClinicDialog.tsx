@@ -86,7 +86,6 @@ export function EditClinicDialog({
           onSuccess?.();
         },
         onError: (error) => {
-          console.error('Failed to update clinic:', error);
           const err = error as { response?: { data?: { message?: string } } };
           toast.error(
             err?.response?.data?.message ||

@@ -58,8 +58,7 @@ export function extractBirthdateFromNationalId(nationalId: string): Date | null 
     }
 
     return birthdate;
-  } catch (error) {
-    console.error('Error extracting birthdate from National ID:', error);
+  } catch {
     return null;
   }
 }
@@ -84,8 +83,7 @@ export function extractGenderFromNationalId(nationalId: string): 'male' | 'femal
 
     // Odd = Male, Even = Female
     return sequentialNumber % 2 === 0 ? 'female' : 'male';
-  } catch (error) {
-    console.error('Error extracting gender from National ID:', error);
+  } catch {
     return null;
   }
 }
@@ -110,8 +108,7 @@ export function extractGovernorateCode(nationalId: string): string | null {
     }
 
     return governorateCode;
-  } catch (error) {
-    console.error('Error extracting governorate code:', error);
+  } catch {
     return null;
   }
 }

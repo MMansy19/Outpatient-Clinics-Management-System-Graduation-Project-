@@ -183,7 +183,6 @@ export async function processSyncQueue(): Promise<{ synced: number; failed: numb
 
     emit({ type: 'complete', total: pending.length, processed: synced + failed, failed });
   } catch (error) {
-    console.error('[SyncEngine] Unexpected error:', error);
     emit({ type: 'error', total: 0, processed: 0, failed: 0 });
   } finally {
     // Final safety net: any row still flagged 'syncing' here was orphaned

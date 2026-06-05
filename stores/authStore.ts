@@ -57,7 +57,7 @@ export const useAuthStore = create<AuthState>()(
         });
         
         // Clear all offline cached data (IndexedDB + React Query persist)
-        cleanupOnLogout().catch(console.error);
+        cleanupOnLogout().catch(() => {});
         
         // Note: The HTTP-only cookie will be cleared by:
         // 1. Browser on expiration

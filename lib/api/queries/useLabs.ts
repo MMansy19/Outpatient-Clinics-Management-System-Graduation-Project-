@@ -87,7 +87,7 @@ export const useGetPatientLabs = (
       try {
         await upsertLabs(data, patientId);
       } catch (e) {
-        console.warn('[useLabs] upsertLabs failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -127,7 +127,7 @@ export const useGetLab = (
       try {
         await upsertLabs(data);
       } catch (e) {
-        console.warn('[useLabs] upsertLabs failed (non-fatal):', e);
+        // non-fatal write-through failure
       }
       return data;
     },
@@ -296,8 +296,7 @@ export const useDeleteLab = (): UseMutationResult<
         queryKey: ['patients'],
       });
     },
-    onError: (error) => {
-      console.error('[useDeleteLab] Error:', error);
+    onError: () => {
     },
   });
 };

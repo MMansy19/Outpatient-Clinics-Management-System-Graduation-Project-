@@ -133,7 +133,6 @@ export function SuperAdminImageUploadField({
           updateValue(file);
         }
       } catch (err) {
-        console.error('Camera error:', err);
       } finally {
         setIsCapturing(false);
       }
