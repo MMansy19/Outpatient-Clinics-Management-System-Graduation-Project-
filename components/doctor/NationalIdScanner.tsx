@@ -66,15 +66,6 @@ export function NationalIdScanner({
     // eslint-disable-next-line
   }, [open]);
 
-  // Auto-start the camera as soon as the dialog opens — no button click needed
-  useEffect(() => {
-    if (!open || autoStartedRef.current) return;
-    if (activeTab !== 'camera' || isWebCameraActive || isCapturing || isScanning) return;
-    autoStartedRef.current = true;
-    handleCapture();
-    // eslint-disable-next-line
-  }, [open, activeTab, isWebCameraActive, isCapturing, isScanning]);
-
   const t = useTranslations('scan');
   const tCommon = useTranslations('common');
   
@@ -244,6 +235,15 @@ export function NationalIdScanner({
       setIsCapturing(false);
     }
   };
+
+  // Auto-start the camera as soon as the dialog opens — no button click needed
+  useEffect(() => {
+    if (!open || autoStartedRef.current) return;
+    if (activeTab !== 'camera' || isWebCameraActive || isCapturing || isScanning) return;
+    autoStartedRef.current = true;
+    handleCapture();
+    // eslint-disable-next-line
+  }, [open]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
