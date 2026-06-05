@@ -1128,6 +1128,7 @@
     "selectFile": "Select File",
     "processImage": "Process Image",
     "takePhoto": "Take Photo",
+    "tapToFocus": "Tap to focus",
     "invalidFileType": "Invalid file type. Please upload JPEG or PNG image.",
     "fileTooLarge": "File too large. Maximum size is 10MB.",
     "uploadFailed": "Failed to upload image. Please try again.",

@@ -47,7 +47,13 @@ export function NationalIdScanner({
     if (videoStream) {
       videoStream.getTracks().forEach((track) => track.stop());
       setVideoStream(null);
+      videoTrackRef.current = null;
     }
+    if (focusTimeoutRef.current) {
+      clearTimeout(focusTimeoutRef.current);
+      focusTimeoutRef.current = null;
+    }
+    setFocusPoint(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -69,8 +75,11 @@ export function NationalIdScanner({
   const [isWebCameraActive, setIsWebCameraActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [focusPoint, setFocusPoint] = useState<{ x: number; y: number } | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoTrackRef = useRef<MediaStreamTrack | null>(null);
+  const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Update video srcObject when stream changes
   useEffect(() => {
@@ -78,6 +87,41 @@ export function NationalIdScanner({
       videoRef.current.srcObject = videoStream;
     }
   }, [videoStream]);
+
+  // Cleanup focus timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    };
+  }, []);
+
+  const applyFocusSettings = async (track: MediaStreamTrack): Promise<void> => {
+    try {
+      const supported = navigator.mediaDevices.getSupportedConstraints() as Record<string, boolean>;
+      if (!supported['focusMode']) return;
+      const capabilities = track.getCapabilities() as MediaTrackCapabilities & { focusMode?: string[] };
+      if (!capabilities.focusMode) return;
+      await track.applyConstraints({
+        advanced: [{ focusMode: 'continuous' } as MediaTrackConstraintSet],
+      });
+      console.log('📷 Continuous autofocus applied');
+    } catch {
+      // Focus not supported on this device — silently ignore
+    }
+  };
+
+  const handleVideoTap = async (e: React.MouseEvent<HTMLVideoElement>): Promise<void> => {
+    if (!isWebCameraActive) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setFocusPoint({ x, y });
+    if (focusTimeoutRef.current) clearTimeout(focusTimeoutRef.current);
+    focusTimeoutRef.current = setTimeout(() => setFocusPoint(null), 1500);
+    if (videoTrackRef.current) {
+      await applyFocusSettings(videoTrackRef.current);
+    }
+  };
   
   const { takePicture, checkPermissions } = useCamera();
   const { mutate: scanId, isPending: isScanning } = useScanNationalId({
@@ -102,6 +146,12 @@ export function NationalIdScanner({
       setVideoStream(stream);
       setIsWebCameraActive(true);
       setError(null);
+      // Apply continuous autofocus on the rear camera track
+      const track = stream.getVideoTracks()[0];
+      if (track) {
+        videoTrackRef.current = track;
+        await applyFocusSettings(track);
+      }
     } catch (err) {
       console.error('❌ Web camera error:', err);
       setError('Camera access denied. Please allow camera permissions in your browser.');
@@ -132,6 +182,7 @@ export function NationalIdScanner({
         videoStream.getTracks().forEach((track) => track.stop());
         setVideoStream(null);
         setIsWebCameraActive(false);
+        videoTrackRef.current = null;
 
         if (!blob) {
           setError(t('captureFailed'));
@@ -313,6 +364,8 @@ export function NationalIdScanner({
                 ref={videoRef}
                 autoPlay
                 playsInline
+                onClick={handleVideoTap}
+                style={{ cursor: 'crosshair' }}
                 className="absolute inset-0 relative aspect-[3/2] w-full object-cover rounded-lg"
               />
             ) : isProcessing ? (
@@ -336,6 +389,29 @@ export function NationalIdScanner({
                     {t('captureHint')}
                   </p>
                 </div>
+              </div>
+            )}
+
+            {/* Tap-to-focus ring */}
+            {isWebCameraActive && focusPoint && (
+              <div
+                className="pointer-events-none absolute z-20 h-12 w-12 -translate-x-1/2 -translate-y-1/2 rounded border-2 border-white animate-ping"
+                style={{ left: `${focusPoint.x}%`, top: `${focusPoint.y}%` }}
+              />
+            )}
+
+            {/* Card alignment guide overlay */}
+            {isWebCameraActive && (
+              <div className="pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center">
+                <div className="relative h-[58%] w-[84%] rounded border border-white/60">
+                  <span className="absolute -left-0.5 -top-0.5 h-4 w-4 border-l-[3px] border-t-[3px] border-white rounded-tl" />
+                  <span className="absolute -right-0.5 -top-0.5 h-4 w-4 border-r-[3px] border-t-[3px] border-white rounded-tr" />
+                  <span className="absolute -bottom-0.5 -left-0.5 h-4 w-4 border-b-[3px] border-l-[3px] border-white rounded-bl" />
+                  <span className="absolute -bottom-0.5 -right-0.5 h-4 w-4 border-b-[3px] border-r-[3px] border-white rounded-br" />
+                </div>
+                <p className="mt-2 text-xs font-medium text-white drop-shadow-md">
+                  {t('alignCard')}
+                </p>
               </div>
             )}
               </div>
