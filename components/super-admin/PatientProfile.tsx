@@ -219,6 +219,25 @@ export function SuperAdminPatientProfile({
     );
   }
 
+  // Still loading patient — show a thin progress bar above the back button
+  // with a minimal placeholder so the layout doesn't jump.
+  if (!patient) {
+    return (
+      <div className="relative space-y-4">
+        <InlineProgressBar active={true} />
+        <Button variant="outline" onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          {t('backToPatients')}
+        </Button>
+        <Card>
+          <CardContent className="py-8 text-center">
+            <div className="h-32 w-full rounded bg-muted animate-pulse" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="relative space-y-3 sm:space-y-4">
       <InlineProgressBar active={loadingVisits || loadingMedications || loadingLabs || loadingScans} />
