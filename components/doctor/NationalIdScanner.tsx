@@ -61,9 +61,19 @@ export function NationalIdScanner({
   useEffect(() => {
     if (open) {
       resetState();
+      autoStartedRef.current = false;
     }
     // eslint-disable-next-line
   }, [open]);
+
+  // Auto-start the camera as soon as the dialog opens — no button click needed
+  useEffect(() => {
+    if (!open || autoStartedRef.current) return;
+    if (activeTab !== 'camera' || isWebCameraActive || isCapturing || isScanning) return;
+    autoStartedRef.current = true;
+    handleCapture();
+    // eslint-disable-next-line
+  }, [open, activeTab, isWebCameraActive, isCapturing, isScanning]);
 
   const t = useTranslations('scan');
   const tCommon = useTranslations('common');
@@ -80,6 +90,8 @@ export function NationalIdScanner({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoTrackRef = useRef<MediaStreamTrack | null>(null);
   const focusTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks whether we've already auto-started the camera for this open
+  const autoStartedRef = useRef(false);
 
   // Update video srcObject when stream changes
   useEffect(() => {
