@@ -27,7 +27,7 @@ interface NationalIdScannerProps {
  * 
  * Features:
  * - Native camera integration via Capacitor
- * - Automatic image compression
+ * - Direct image capture/upload
  * - OCR processing with loading states
  * - Error handling and retry logic
  */
@@ -122,7 +122,7 @@ export function NationalIdScanner({
     }
   };
   
-  const { takePicture, checkPermissions } = useCamera();
+  const { takePicture, checkPermissions } = useCamera({ quality: 100 });
   const { mutate: scanId, isPending: isScanning } = useScanNationalId({
     onSuccess: (data) => {
       onScanComplete(data);
@@ -171,7 +171,7 @@ export function NationalIdScanner({
     // Draw video frame to canvas
     ctx.drawImage(video, 0, 0);
 
-    // Convert to JPEG Blob
+    // Convert to PNG Blob (lossless)
     canvas.toBlob(
       (blob) => {
         // Stop video stream regardless of outcome
@@ -187,10 +187,9 @@ export function NationalIdScanner({
         }
 
         // Send to OCR service
-        scanId({ file: blob, compress: true });
+        scanId({ file: blob });
       },
-      'image/jpeg',
-      0.9
+      'image/png'
     );
   };
 
@@ -226,7 +225,7 @@ export function NationalIdScanner({
       // Capacitor returns base64; convert to a Blob and send to OCR service
       const dataUrl = `data:image/jpeg;base64,${result.base64String}`;
       const blob = await fetch(dataUrl).then((r) => r.blob());
-      scanId({ file: blob, compress: true });
+      scanId({ file: blob });
       
     } catch (err) {
       setError(err instanceof Error ? err.message : t('captureFailed'));
@@ -267,7 +266,7 @@ export function NationalIdScanner({
       setError(null);
 
       // Send original File directly to OCR service (matches scans/labs pattern)
-      scanId({ file: selectedFile, compress: true });
+      scanId({ file: selectedFile });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('uploadFailed'));
       setIsCapturing(false);

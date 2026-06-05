@@ -96,6 +96,11 @@ export async function scanNationalId(
     if (axios.isAxiosError(error)) {
       const status = error.response?.status;
       const upstream = extractUpstreamMessage(error.response?.data);
+
+      // Suffix the HTTP status so the toast is diagnosable even when the
+      // backend body is empty or non-JSON.
+      const withStatus = (msg: string) => (status ? `${msg} (HTTP ${status})` : msg);
+
       if (status === 400) {
         throw new OCRProcessingError(
           upstream || withStatus('Invalid image format. Please try again.')

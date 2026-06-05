@@ -12,11 +12,11 @@ import { Camera, CameraResultType, CameraSource, Photo } from '@capacitor/camera
 import { CameraPermissionError, CameraCaptureResult } from '@/types/ocr';
 
 export interface UseCameraOptions {
-  /** Quality of captured image (0-100), default: 90 */
+  /** Quality of captured image (0-100), default: 100 */
   quality?: number;
-  /** Maximum width of captured image, default: 1920 */
+  /** Maximum width of captured image (optional) */
   width?: number;
-  /** Maximum height of captured image, default: 1080 */
+  /** Maximum height of captured image (optional) */
   height?: number;
   /** Allow image editing after capture, default: false */
   allowEditing?: boolean;
@@ -61,9 +61,9 @@ export interface UseCameraReturn {
  */
 export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
   const {
-    quality = 90,
-    width = 1920,
-    height = 1080,
+    quality = 100,
+    width,
+    height,
     allowEditing = false,
   } = options;
 
@@ -132,8 +132,8 @@ export function useCamera(options: UseCameraOptions = {}): UseCameraReturn {
         allowEditing,
         resultType: CameraResultType.Base64,
         source: CameraSource.Camera,
-        width,
-        height,
+        ...(width !== undefined ? { width } : {}),
+        ...(height !== undefined ? { height } : {}),
         saveToGallery: false, // Don't save to gallery (privacy)
         correctOrientation: true, // Auto-rotate to correct orientation
       });

@@ -12,6 +12,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { AudioPlayer } from '@/components/shared/AudioPlayer';
+import { InlineProgressBar } from '@/components/shared/InlineProgressBar';
 import { AuthGuard } from '@/components/shared/AuthGuard';
 import { Role } from '@/lib/api/types';
 import { Button } from '@/components/ui/button';
@@ -487,14 +488,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <CardTitle>{t('allVisits')}</CardTitle>
               <CardDescription>{t('allVisitsDescription')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              {loadingAllVisits ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : allVisits && allVisits.items && allVisits.items.length > 0 ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingAllVisits} />
+              {allVisits && allVisits.items && allVisits.items.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -566,14 +562,9 @@ export default function DoctorDashboard({ params }: DoctorDashboardProps) {
               <CardTitle>{t('allPatients')}</CardTitle>
               <CardDescription>{t('allPatientsDescription')}</CardDescription>
             </CardHeader>
-            <CardContent>
-              {loadingAllPatients ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : allPatients ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingAllPatients} />
+              {allPatients ? (
                 (() => {
                   const patientsList = Array.isArray(allPatients)
                     ? allPatients

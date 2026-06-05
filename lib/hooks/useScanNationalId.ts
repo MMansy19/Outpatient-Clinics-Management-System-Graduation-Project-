@@ -8,17 +8,12 @@
 'use client';
 
 import { useMutation, UseMutationOptions, UseMutationResult } from '@tanstack/react-query';
-import {
-  scanAndEnrichNationalId,
-  compressImageToJpegBlob,
-} from '@/lib/api/nationalId.service';
+import { scanAndEnrichNationalId } from '@/lib/api/nationalId.service';
 import { EnrichedScanData, OCRProcessingError } from '@/types/ocr';
 
 export interface ScanNationalIdVariables {
   /** The National ID image as a Blob or File */
   file: Blob | File;
-  /** Whether to compress image before sending (default: true) */
-  compress?: boolean;
 }
 
 export interface UseScanNationalIdOptions
@@ -36,7 +31,7 @@ export interface UseScanNationalIdOptions
  * Hook for scanning National ID cards with React Query
  * 
  * Features:
- * - Automatic image compression
+ * - Direct image upload (no client-side compression)
  * - Backend OCR processing (or mock data in dev)
  * - Frontend data enrichment (gender, birthdate)
  * - Error handling and retry logic
@@ -71,21 +66,11 @@ export function useScanNationalId(
   const mutation = useMutation<EnrichedScanData, Error, ScanNationalIdVariables>({
     mutationKey: ['scanNationalId'],
     
-    mutationFn: async ({ file, compress = true }): Promise<EnrichedScanData> => {
-
-      // Compress image if requested (default: true)
-      let processedImage: Blob = file;
-      if (compress) {
-        try {
-          processedImage = await compressImageToJpegBlob(file, 1920, 1080, 0.9);
-        } catch (compressionError) {
-          // Continue with original image if compression fails
-        }
-      }
+    mutationFn: async ({ file }): Promise<EnrichedScanData> => {
 
       // Send to backend OCR service
       try {
-        const enrichedData = await scanAndEnrichNationalId(processedImage);
+        const enrichedData = await scanAndEnrichNationalId(file);
         return enrichedData;
       } catch (error) {
         throw error;

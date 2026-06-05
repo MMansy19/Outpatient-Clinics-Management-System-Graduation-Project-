@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { InlineProgressBar } from '@/components/shared/InlineProgressBar';
 import { Gender } from '@/lib/api/types';
 import {
   Card,
@@ -201,20 +202,7 @@ export function SuperAdminPatientProfile({
     queryClient.invalidateQueries({ queryKey: ['super-admin-patient-scans', patientId] });
   };
 
-  if (loadingVisits) {
-    return (
-      <div className="space-y-4">
-        <Button variant="outline" onClick={onBack}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          {t('backToPatients')}
-        </Button>
-        <div className="skeleton h-32 w-full" />
-        <div className="skeleton h-48 w-full" />
-      </div>
-    );
-  }
-
-  if (!patient) {
+  if (!patient && !loadingVisits) {
     return (
       <div className="space-y-4">
         <Button variant="outline" onClick={onBack}>
@@ -232,7 +220,8 @@ export function SuperAdminPatientProfile({
   }
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="relative space-y-3 sm:space-y-4">
+      <InlineProgressBar active={loadingVisits || loadingMedications || loadingLabs || loadingScans} />
       <Button variant="outline" onClick={onBack} className="text-sm sm:text-base">
         <ArrowLeft className="h-4 w-4 mr-2" />
         {t('backToPatients')}
@@ -345,13 +334,9 @@ export function SuperAdminPatientProfile({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              {loadingVisits ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : visits.length > 0 ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingVisits} />
+              {visits.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -416,13 +401,9 @@ export function SuperAdminPatientProfile({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              {loadingMedications ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : medications.length > 0 ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingMedications} />
+              {medications.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -485,13 +466,9 @@ export function SuperAdminPatientProfile({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              {loadingLabs ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : labs.length > 0 ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingLabs} />
+              {labs.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -563,13 +540,9 @@ export function SuperAdminPatientProfile({
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              {loadingScans ? (
-                <div className="space-y-2">
-                  <div className="skeleton h-16 w-full" />
-                  <div className="skeleton h-16 w-full" />
-                </div>
-              ) : scans.length > 0 ? (
+            <CardContent className="relative">
+              <InlineProgressBar active={loadingScans} />
+              {scans.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>

@@ -50,7 +50,7 @@ export function SuperAdminImageUploadField({
   const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const { takePicture } = useCamera();
+  const { takePicture } = useCamera({ quality: 100 });
 
   useEffect(() => {
     if (videoRef.current && videoStream) {
@@ -161,11 +161,11 @@ export function SuperAdminImageUploadField({
     if (!ctx) return;
 
     ctx.drawImage(video, 0, 0);
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    const dataUrl = canvas.toDataURL('image/png');
 
     stopVideoStream();
 
-    base64ToFile(dataUrl).then((file) => {
+    base64ToFile(dataUrl, 'image/png').then((file) => {
       const maxBytes = maxSizeMB * 1024 * 1024;
       if (file.size > maxBytes) {
         toast.error(t('fileTooLarge'));
