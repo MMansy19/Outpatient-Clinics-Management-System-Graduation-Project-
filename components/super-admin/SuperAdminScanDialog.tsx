@@ -50,9 +50,20 @@ const scanSchema = z.object({
   name: z.string().min(1, 'Scan name is required'),
   type: z.string().min(1, 'Scan type is required'),
   comments: z.string().optional(),
-  image: z.instanceof(File, { message: 'Scan image is required' }).refine((f) => f.size > 0, { message: 'Scan image is required' }),
+ image: z
+    .instanceof(File, { message: 'File is required' })
+    .refine((f) => f.size > 0, {
+      message: 'File is required',
+    })
+    .refine(
+      (f) =>
+        f.type.startsWith('image/') ||
+        f.type === 'application/pdf',
+      {
+        message: 'Only images or PDF files are allowed',
+      },
+    ),
 });
-
 type ScanFormData = z.infer<typeof scanSchema>;
 
 const SCAN_TYPES = [

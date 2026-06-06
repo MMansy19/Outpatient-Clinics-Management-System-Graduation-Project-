@@ -42,9 +42,20 @@ interface SuperAdminLabDialogProps {
 const labSchema = z.object({
   name: z.string().min(1, 'Lab name is required'),
   comments: z.string().optional(),
-  image: z.instanceof(File, { message: 'Lab image is required' }).refine((f) => f.size > 0, { message: 'Lab image is required' }),
+  image: z
+    .instanceof(File, { message: 'File is required' })
+    .refine((f) => f.size > 0, {
+      message: 'File is required',
+    })
+    .refine(
+      (f) =>
+        f.type.startsWith('image/') ||
+        f.type === 'application/pdf',
+      {
+        message: 'Only images or PDF files are allowed',
+      },
+    ),
 });
-
 type LabFormData = z.infer<typeof labSchema>;
 
 export function SuperAdminLabDialog({

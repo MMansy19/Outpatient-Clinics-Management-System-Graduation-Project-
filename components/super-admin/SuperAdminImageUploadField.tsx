@@ -259,7 +259,7 @@ export function SuperAdminImageUploadField({
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/*,.pdf,application/pdf"
             className="hidden"
             onChange={handleFileChange}
           />
