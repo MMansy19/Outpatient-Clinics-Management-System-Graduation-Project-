@@ -189,6 +189,14 @@ export const getLocalizedDosageOptions = (t: (key: string) => string) => {
     { label: t('dosages.fourTablets'), value: '4' },
     { label: t('dosages.fiveTablets'), value: '5' },
     { label: t('dosages.sixTablets'), value: '6' },
+    { label: t('dosages.sixTablets'), value: '6' },
+    { label: "10mg", value: '9' },
+    { label: "15mg", value: '8' },
+    { label: "20mg", value: '7' },
+    { label: "25mg", value: '10' },
+    { label: "50mg", value: '11' },
+    { label: "100mg", value: '12' },
+    { label: "250mg", value: '13' },
   ];
 };
 
@@ -215,6 +223,7 @@ export const COMMON_DOSAGES = [
   { label: '3 tablets', value: 3 },
   { label: '4 tablets', value: 4 },
   { label: 'Custom', value: 0 },
+
 ] as const;
 
 /**

@@ -157,6 +157,10 @@ export function SuperAdminMedicationDialog({
                       <SelectItem value="4">50mg</SelectItem>
                       <SelectItem value="5">25mg</SelectItem>
                       <SelectItem value="6">125mg</SelectItem>
+                      <SelectItem value="7">5mg</SelectItem>
+                      <SelectItem value="8">10mg</SelectItem>
+                      <SelectItem value="9">15mg</SelectItem>
+                      <SelectItem value="10">20mg</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
