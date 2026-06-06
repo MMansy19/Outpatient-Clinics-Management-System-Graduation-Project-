@@ -94,22 +94,29 @@ export function SuperAdminImageUploadField({
     setIsCameraActive(false);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const f = e.target.files?.[0];
-    e.target.value = '';
-    if (!f) return;
-    const maxBytes = maxSizeMB * 1024 * 1024;
-    if (f.size > maxBytes) {
-      toast.error(t('fileTooLarge'));
-      return;
-    }
-    if (!f.type.startsWith('image/')) {
-      toast.error(t('invalidFileType'));
-      return;
-    }
-    updateValue(f);
-  };
+const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const f = e.target.files?.[0];
+  e.target.value = '';
 
+  if (!f) return;
+
+  const maxBytes = maxSizeMB * 1024 * 1024;
+
+  if (f.size > maxBytes) {
+    toast.error(t('fileTooLarge'));
+    return;
+  }
+
+  const isImage = f.type.startsWith('image/');
+  const isPdf = f.type === 'application/pdf';
+
+  if (!isImage && !isPdf) {
+    toast.error(t('invalidFileType'));
+    return;
+  }
+
+  updateValue(f);
+};
   const handleRemove = () => {
     setPreview(null);
     updateValue(null);
