@@ -51,7 +51,7 @@ interface TimelineItem {
 
 export function PatientHistory() {
   const t = useTranslations('patient.history');
-  const [activeTab, setActiveTab] = useState<HistoryFilterType>('all');
+  const [activeTab, setActiveTab] = useState<HistoryFilterType>('visits');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const { isLoading: loadingHistory } = useGetMedicalHistory();
@@ -141,9 +141,9 @@ export function PatientHistory() {
         return allItems.filter((item) => item.type === 'lab');
       case 'scans':
         return allItems.filter((item) => item.type === 'scan');
-      default:
-        return allItems;
     }
+
+    return [];
   };
 
   const getTypeIcon = (type: RecordType) => {
@@ -228,8 +228,7 @@ export function PatientHistory() {
             onValueChange={(v) => setActiveTab(v as HistoryFilterType)}
             className="w-full"
           >
-            <TabsList className="grid w-full grid-cols-5 mb-6">
-              <TabsTrigger value="all">{t('all')}</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="visits" className="flex items-center gap-1">
                 <Calendar className="h-3 w-3" />
                 <span className="hidden sm:inline">{t('visits')}</span>

@@ -80,7 +80,7 @@ export interface PatientAppointment {
   status: 'scheduled' | 'completed' | 'cancelled';
 }
 
-export type HistoryFilterType = 'all' | 'visits' | 'medications' | 'labs' | 'scans';
+export type HistoryFilterType = 'visits' | 'medications' | 'labs' | 'scans';
 
 export interface HistoryFilter {
   type: HistoryFilterType;
