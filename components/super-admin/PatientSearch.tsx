@@ -222,6 +222,9 @@ export function SuperAdminPatientSearch({
                   </Button>
                 </div>
               )}
+              {error === t('patientNotFound') && !scannedData && (
+                <p className="text-sm text-destructive mt-1">{error}</p>
+              )}
               {error && error !== t('patientNotFound') && (
                 <p className="text-sm text-destructive mt-1">{error}</p>
               )}
