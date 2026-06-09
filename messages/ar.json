@@ -18,7 +18,8 @@
     "viewImage": "عرض الصورة",
     "unknown": "غير معروف",
     "other": "آخر",
-    "totalPatients": "إجمالي المرضى"
+    "totalPatients": "إجمالي المرضى",
+    "years": "سنوات"
   },
   "nav": {
     "home": "الرئيسية",
@@ -385,6 +386,7 @@
       "timeline": "الجدول الزمني",
       "chronological": "ترتيب زمني",
       "lastVisit": "آخر زيارة",
+      "audioRecording": "تسجيل صوتي",
       "noVisits": "لا توجد زيارات مسجلة",
       "noMedications": "لم يتم وصف أدوية",
       "noLabs": "لا توجد نتائج مختبر",

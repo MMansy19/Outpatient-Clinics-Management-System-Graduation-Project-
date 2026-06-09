@@ -1,8 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { format } from 'date-fns';
 import {
   Card,
   CardContent,
@@ -10,17 +9,22 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
-  useGetMedicalHistory,
   useGetPatientVisits,
   useGetPatientMedications,
   useGetPatientLabs,
   useGetPatientScans,
 } from '@/lib/api/hooks/usePatient';
-import type { HistoryFilterType } from '@/lib/api/patient.types';
 import {
   Calendar,
   Pill,
@@ -29,161 +33,105 @@ import {
   User,
   Stethoscope,
   FileText,
-  Image as ImageIcon,
+  ClipboardList,
+  ChevronLeft,
   ChevronRight,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { ImageDialog } from '@/components/shared/ImageDialog';
+import { AudioPlayer } from '@/components/shared/AudioPlayer';
+import { format } from 'date-fns';
 
-type RecordType = 'visit' | 'medication' | 'lab' | 'scan';
+const PAGE_SIZE = 10;
 
-interface TimelineItem {
-  id: string;
-  type: RecordType;
-  date: string;
-  title: string;
-  subtitle?: string;
-  description?: string;
-  doctor?: string;
-  speciality?: string;
-  imageUrl?: string;
-  details?: Record<string, string>;
+function Pagination({
+  page,
+  totalPages,
+  totalItems,
+  onPrevious,
+  onNext,
+  label,
+}: {
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  label: string;
+}) {
+  const t = useTranslations('admin');
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-4">
+      <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
+        {t('page')} {page} {t('of')} {totalPages} &bull; {totalItems} {label}
+      </p>
+      <div className="flex items-center gap-2 justify-center sm:justify-end">
+        <Button
+          onClick={onPrevious}
+          disabled={page === 1}
+          variant="outline"
+          size="sm"
+          className="h-9"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="hidden sm:inline ml-1">{t('previous')}</span>
+        </Button>
+        <div className="px-3 py-1.5 text-sm font-medium bg-gray-100 dark:bg-gray-800 rounded-md">
+          {page} / {totalPages}
+        </div>
+        <Button
+          onClick={onNext}
+          disabled={page === totalPages}
+          variant="outline"
+          size="sm"
+          className="h-9"
+        >
+          <span className="hidden sm:inline mr-1">{t('next')}</span>
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function usePagination<T>(items: T[] | undefined) {
+  const [page, setPage] = useState(1);
+  const totalPages = Math.max(1, Math.ceil((items?.length || 0) / PAGE_SIZE));
+  const paginatedItems = items?.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE) || [];
+  const totalItems = items?.length || 0;
+
+  const handlePrevious = () => setPage((p) => Math.max(1, p - 1));
+  const handleNext = () => setPage((p) => Math.min(totalPages, p + 1));
+
+  return { page, totalPages, totalItems, paginatedItems, handlePrevious, handleNext, setPage };
 }
 
 export function PatientHistory() {
   const t = useTranslations('patient.history');
-  const [activeTab, setActiveTab] = useState<HistoryFilterType>('visits');
+  const [activeTab, setActiveTab] = useState('visits');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const { isLoading: loadingHistory } = useGetMedicalHistory();
   const { data: visits, isLoading: loadingVisits } = useGetPatientVisits();
   const { data: medications, isLoading: loadingMedications } = useGetPatientMedications();
   const { data: labs, isLoading: loadingLabs } = useGetPatientLabs();
   const { data: scans, isLoading: loadingScans } = useGetPatientScans();
 
-  const isLoading =
-    loadingHistory ||
-    loadingVisits ||
-    loadingMedications ||
-    loadingLabs ||
-    loadingScans;
+  const isLoading = loadingVisits || loadingMedications || loadingLabs || loadingScans;
 
-  const getAllTimelineItems = (): TimelineItem[] => {
-    const items: TimelineItem[] = [];
+  const visitsPagination = usePagination(visits);
+  const medsPagination = usePagination(medications);
+  const labsPagination = usePagination(labs);
+  const scansPagination = usePagination(scans);
 
-    visits?.forEach((visit) => {
-      items.push({
-        id: visit.id,
-        type: 'visit',
-        date: visit.createdAt,
-        title: visit.diagnoses || t('noRecords'),
-        doctor: visit.doctorName,
-        speciality: visit.doctorSpeciality,
-        details: {
-          clinic: visit.clinicName,
-        },
-      });
-    });
-
-    medications?.forEach((med) => {
-      items.push({
-        id: med.id,
-        type: 'medication',
-        date: med.createdAt,
-        title: med.name,
-        subtitle: `${med.dosage} - ${med.period}`,
-        description: med.comments || undefined,
-        doctor: med.doctorName,
-        speciality: med.doctorSpeciality,
-      });
-    });
-
-    labs?.forEach((lab) => {
-      items.push({
-        id: lab.id,
-        type: 'lab',
-        date: lab.createdAt,
-        title: lab.name,
-        description: lab.comments || undefined,
-        doctor: lab.doctorName,
-        speciality: lab.doctorSpeciality,
-        imageUrl: lab.photoUrl,
-      });
-    });
-
-    scans?.forEach((scan) => {
-      items.push({
-        id: scan.id,
-        type: 'scan',
-        date: scan.createdAt,
-        title: scan.name,
-        subtitle: scan.type,
-        description: scan.comments || undefined,
-        doctor: scan.doctorName,
-        speciality: scan.doctorSpeciality,
-        imageUrl: scan.photoUrl,
-      });
-    });
-
-    return items.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-  };
-
-  const getFilteredItems = (): TimelineItem[] => {
-    const allItems = getAllTimelineItems();
-
+  const activePagination = useMemo(() => {
     switch (activeTab) {
-      case 'visits':
-        return allItems.filter((item) => item.type === 'visit');
-      case 'medications':
-        return allItems.filter((item) => item.type === 'medication');
-      case 'labs':
-        return allItems.filter((item) => item.type === 'lab');
-      case 'scans':
-        return allItems.filter((item) => item.type === 'scan');
+      case 'visits': return visitsPagination;
+      case 'medications': return medsPagination;
+      case 'labs': return labsPagination;
+      case 'scans': return scansPagination;
+      default: return visitsPagination;
     }
-
-    return [];
-  };
-
-  const getTypeIcon = (type: RecordType) => {
-    switch (type) {
-      case 'visit':
-        return Calendar;
-      case 'medication':
-        return Pill;
-      case 'lab':
-        return FlaskConical;
-      case 'scan':
-        return Scan;
-    }
-  };
-
-  const getTypeColor = (type: RecordType) => {
-    switch (type) {
-      case 'visit':
-        return 'bg-blue-500/10 text-blue-500 border-blue-500/30';
-      case 'medication':
-        return 'bg-purple-500/10 text-purple-500 border-purple-500/30';
-      case 'lab':
-        return 'bg-green-500/10 text-green-500 border-green-500/30';
-      case 'scan':
-        return 'bg-orange-500/10 text-orange-500 border-orange-500/30';
-    }
-  };
-
-  const getTypeLabel = (type: RecordType) => {
-    switch (type) {
-      case 'visit':
-        return t('visits');
-      case 'medication':
-        return t('medications');
-      case 'lab':
-        return t('labs');
-      case 'scan':
-        return t('scans');
-    }
-  };
+  }, [activeTab, visitsPagination, medsPagination, labsPagination, scansPagination]);
 
   if (isLoading) {
     return (
@@ -193,176 +141,681 @@ export function PatientHistory() {
           <CardDescription>{t('subtitle')}</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {[...Array(5)].map((_, i) => (
-              <div key={i} className="flex gap-4 animate-pulse">
-                <div className="h-12 w-12 bg-muted rounded-full" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 w-3/4 bg-muted rounded" />
-                  <div className="h-3 w-1/2 bg-muted rounded" />
-                </div>
-              </div>
-            ))}
+          <div className="flex items-center justify-center py-8">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-medical-primary mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">{t('noRecords')}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
     );
   }
 
-  const filteredItems = getFilteredItems();
-
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>{t('title')}</CardTitle>
-              <CardDescription>{t('subtitle')}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => setActiveTab(v as HistoryFilterType)}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-4 mb-6">
-              <TabsTrigger value="visits" className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                <span className="hidden sm:inline">{t('visits')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="medications" className="flex items-center gap-1">
-                <Pill className="h-3 w-3" />
-                <span className="hidden sm:inline">{t('medications')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="labs" className="flex items-center gap-1">
-                <FlaskConical className="h-3 w-3" />
-                <span className="hidden sm:inline">{t('labs')}</span>
-              </TabsTrigger>
-              <TabsTrigger value="scans" className="flex items-center gap-1">
-                <Scan className="h-3 w-3" />
-                <span className="hidden sm:inline">{t('scans')}</span>
-              </TabsTrigger>
-            </TabsList>
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('title')}</CardTitle>
+        <CardDescription>{t('subtitle')}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsTrigger value="visits" className="flex items-center gap-1">
+              <Calendar className="h-3 w-3" />
+              <span className="hidden sm:inline">{t('visits')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="medications" className="flex items-center gap-1">
+              <Pill className="h-3 w-3" />
+              <span className="hidden sm:inline">{t('medications')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="labs" className="flex items-center gap-1">
+              <FlaskConical className="h-3 w-3" />
+              <span className="hidden sm:inline">{t('labs')}</span>
+            </TabsTrigger>
+            <TabsTrigger value="scans" className="flex items-center gap-1">
+              <Scan className="h-3 w-3" />
+              <span className="hidden sm:inline">{t('scans')}</span>
+            </TabsTrigger>
+          </TabsList>
 
-            <TabsContent value={activeTab} className="mt-0">
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileText className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                  <p className="mt-4 text-muted-foreground">{t('noRecords')}</p>
-                </div>
-              ) : (
-                <div className="relative space-y-4">
-                  <div className="absolute left-6 top-0 bottom-0 w-px bg-border" />
-                  <div className="space-y-6">
-                    {filteredItems.map((item, index) => {
-                      const Icon = getTypeIcon(item.type);
-                      return (
-                        <div
-                          key={item.id}
-                          className="relative pl-14 animate-in fade-in slide-in-from-bottom-2 duration-300"
-                          style={{ animationDelay: `${index * 50}ms` }}
-                        >
-                          <div
-                            className={`absolute left-3 top-1 w-6 h-6 rounded-full flex items-center justify-center border ${getTypeColor(
-                              item.type
-                            )}`}
-                          >
-                            <Icon className="h-3 w-3" />
-                          </div>
+          {/* Visits Tab */}
+          <TabsContent value="visits" className="mt-0">
+            <VisitsTable
+              items={visitsPagination.paginatedItems}
+              page={visitsPagination.page}
+              totalPages={visitsPagination.totalPages}
+              totalItems={visitsPagination.totalItems}
+              onPrevious={visitsPagination.handlePrevious}
+              onNext={visitsPagination.handleNext}
+            />
+          </TabsContent>
 
-                          <div className="bg-muted/30 rounded-lg p-4 hover:bg-muted/50 transition-colors">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <h4 className="font-medium truncate">
-                                    {item.title}
-                                  </h4>
-                                  <Badge
-                                    variant="outline"
-                                    className={`text-xs ${getTypeColor(item.type)}`}
-                                  >
-                                    {getTypeLabel(item.type)}
-                                  </Badge>
-                                </div>
+          {/* Medications Tab */}
+          <TabsContent value="medications" className="mt-0">
+            <MedicationsTable
+              items={medsPagination.paginatedItems}
+              page={medsPagination.page}
+              totalPages={medsPagination.totalPages}
+              totalItems={medsPagination.totalItems}
+              onPrevious={medsPagination.handlePrevious}
+              onNext={medsPagination.handleNext}
+            />
+          </TabsContent>
 
-                                {item.subtitle && (
-                                  <p className="text-sm text-muted-foreground mt-1">
-                                    {item.subtitle}
-                                  </p>
-                                )}
+          {/* Labs Tab */}
+          <TabsContent value="labs" className="mt-0">
+            <LabsTable
+              items={labsPagination.paginatedItems}
+              page={labsPagination.page}
+              totalPages={labsPagination.totalPages}
+              totalItems={labsPagination.totalItems}
+              onPrevious={labsPagination.handlePrevious}
+              onNext={labsPagination.handleNext}
+              onViewImage={setSelectedImage}
+            />
+          </TabsContent>
 
-                                {item.description && (
-                                  <p className="text-sm mt-2">{item.description}</p>
-                                )}
-
-                                {item.doctor && (
-                                  <div className="flex items-center gap-4 mt-3 text-xs text-muted-foreground">
-                                    <span className="flex items-center gap-1">
-                                      <User className="h-3 w-3" />
-                                      {item.doctor}
-                                    </span>
-                                    {item.speciality && (
-                                      <span className="flex items-center gap-1">
-                                        <Stethoscope className="h-3 w-3" />
-                                        {item.speciality}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-
-                                {item.details &&
-                                  Object.entries(item.details).map(
-                                    ([key, value]) => (
-                                      <p
-                                        key={key}
-                                        className="text-sm text-muted-foreground mt-1"
-                                      >
-                                        <span className="font-medium capitalize">
-                                          {key}:
-                                        </span>{' '}
-                                        {value}
-                                      </p>
-                                    )
-                                  )}
-
-                                {item.imageUrl && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="mt-2"
-                                    onClick={() => setSelectedImage(item.imageUrl!)}
-                                  >
-                                    <ImageIcon className="h-4 w-4 mr-1" />
-                                    {t('viewImage')}
-                                    <ChevronRight className="h-4 w-4 ml-1" />
-                                  </Button>
-                                )}
-                              </div>
-
-                              <div className="text-xs text-muted-foreground whitespace-nowrap">
-                                {format(new Date(item.date), 'MMM d, yyyy')}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+          {/* Scans Tab */}
+          <TabsContent value="scans" className="mt-0">
+            <ScansTable
+              items={scansPagination.paginatedItems}
+              page={scansPagination.page}
+              totalPages={scansPagination.totalPages}
+              totalItems={scansPagination.totalItems}
+              onPrevious={scansPagination.handlePrevious}
+              onNext={scansPagination.handleNext}
+              onViewImage={setSelectedImage}
+            />
+          </TabsContent>
+        </Tabs>
+      </CardContent>
 
       <ImageDialog
         src={selectedImage}
         open={!!selectedImage}
         onOpenChange={() => setSelectedImage(null)}
       />
-    </>
+    </Card>
+  );
+}
+
+function VisitsTable({
+  items,
+  page,
+  totalPages,
+  totalItems,
+  onPrevious,
+  onNext,
+}: {
+  items: any[];
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  const t = useTranslations('patient.history');
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+        <p className="text-muted-foreground">{t('noVisits')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="md:hidden space-y-3">
+        {items.map((visit, index) => (
+          <div
+            key={visit.id}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                <Calendar className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {format(new Date(visit.createdAt), 'MMM d, yyyy')}
+                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                  {visit.clinicName}
+                </h3>
+              </div>
+            </div>
+
+            {visit.diagnoses && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <div className="flex items-start gap-2">
+                  <FileText className="h-4 w-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                      {t('diagnosis')}
+                    </p>
+                    <p className="text-sm text-gray-900 dark:text-gray-100 line-clamp-3">
+                      {visit.diagnoses}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {visit.diagnosesAudioUrl && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 text-sm">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <User className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('doctor')}
+                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {visit.doctorName}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">{t('date')}</TableHead>
+                <TableHead className="font-semibold">{t('doctor')}</TableHead>
+                <TableHead className="font-semibold">{t('speciality')}</TableHead>
+                <TableHead className="font-semibold">{t('diagnosis')}</TableHead>
+                <TableHead className="font-semibold">{t('audioRecording')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((visit) => (
+                <TableRow key={visit.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {format(new Date(visit.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>{visit.doctorName}</TableCell>
+                  <TableCell>{visit.doctorSpeciality}</TableCell>
+                  <TableCell className="max-w-md">
+                    <div className="truncate" title={visit.diagnoses}>
+                      {visit.diagnoses}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {visit.diagnosesAudioUrl ? (
+                      <AudioPlayer src={visit.diagnosesAudioUrl} compact />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        label="visits"
+      />
+    </div>
+  );
+}
+
+function MedicationsTable({
+  items,
+  page,
+  totalPages,
+  totalItems,
+  onPrevious,
+  onNext,
+}: {
+  items: any[];
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPrevious: () => void;
+  onNext: () => void;
+}) {
+  const t = useTranslations('patient.history');
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+        <p className="text-muted-foreground">{t('noMedications')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="md:hidden space-y-3">
+        {items.map((med, index) => (
+          <div
+            key={med.id}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                <Pill className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {format(new Date(med.createdAt), 'MMM d, yyyy')}
+                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                  {med.name}
+                </h3>
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t('dosage')}:</span>
+                <span className="font-medium">{med.dosage}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">{t('period')}:</span>
+                <span className="font-medium">{med.period}</span>
+              </div>
+            </div>
+
+            {med.comments && (
+              <p className="text-sm mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                {med.comments}
+              </p>
+            )}
+
+            {med.commentsAudioUrl && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <AudioPlayer src={med.commentsAudioUrl} compact />
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 text-sm">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                <Stethoscope className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t('doctor')}</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {med.doctorName}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">{t('date')}</TableHead>
+                <TableHead className="font-semibold">{t('doctor')}</TableHead>
+                <TableHead className="font-semibold">{t('dosage')}</TableHead>
+                <TableHead className="font-semibold">{t('period')}</TableHead>
+                <TableHead className="font-semibold">{t('comments')}</TableHead>
+                <TableHead className="font-semibold">{t('audioRecording')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((med) => (
+                <TableRow key={med.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {format(new Date(med.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>{med.doctorName}</TableCell>
+                  <TableCell>{med.dosage}</TableCell>
+                  <TableCell>{med.period}</TableCell>
+                  <TableCell className="max-w-md">
+                    <div className="truncate" title={med.comments || ''}>
+                      {med.comments || '-'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {med.commentsAudioUrl ? (
+                      <AudioPlayer src={med.commentsAudioUrl} compact />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        label="medications"
+      />
+    </div>
+  );
+}
+
+function LabsTable({
+  items,
+  page,
+  totalPages,
+  totalItems,
+  onPrevious,
+  onNext,
+  onViewImage,
+}: {
+  items: any[];
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  onViewImage: (url: string) => void;
+}) {
+  const t = useTranslations('patient.history');
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+        <p className="text-muted-foreground">{t('noLabs')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="md:hidden space-y-3">
+        {items.map((lab, index) => (
+          <div
+            key={lab.id}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
+                <FlaskConical className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {format(new Date(lab.createdAt), 'MMM d, yyyy')}
+                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                  {lab.name}
+                </h3>
+              </div>
+            </div>
+
+            {lab.comments && (
+              <p className="text-sm mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                {lab.comments}
+              </p>
+            )}
+
+            {lab.commentsAudioUrl && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <AudioPlayer src={lab.commentsAudioUrl} compact />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                  <Stethoscope className="h-4 w-4 text-green-600 dark:text-green-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('doctor')}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {lab.doctorName}
+                  </p>
+                </div>
+              </div>
+              {lab.photoUrl && (
+                <Button variant="ghost" size="sm" onClick={() => onViewImage(lab.photoUrl)}>
+                  <ImageIcon className="h-4 w-4 mr-1" />
+                  {t('viewImage')}
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">{t('date')}</TableHead>
+                <TableHead className="font-semibold">{t('doctor')}</TableHead>
+                <TableHead className="font-semibold">{t('comments')}</TableHead>
+                <TableHead className="font-semibold">{t('image')}</TableHead>
+                <TableHead className="font-semibold">{t('audioRecording')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((lab) => (
+                <TableRow key={lab.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {format(new Date(lab.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>{lab.doctorName}</TableCell>
+                  <TableCell className="max-w-md">
+                    <div className="truncate" title={lab.comments || ''}>
+                      {lab.comments || '-'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {lab.photoUrl ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewImage(lab.photoUrl)}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-1" />
+                        {t('viewImage')}
+                      </Button>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {lab.commentsAudioUrl ? (
+                      <AudioPlayer src={lab.commentsAudioUrl} compact />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        label="labs"
+      />
+    </div>
+  );
+}
+
+function ScansTable({
+  items,
+  page,
+  totalPages,
+  totalItems,
+  onPrevious,
+  onNext,
+  onViewImage,
+}: {
+  items: any[];
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  onPrevious: () => void;
+  onNext: () => void;
+  onViewImage: (url: string) => void;
+}) {
+  const t = useTranslations('patient.history');
+
+  if (items.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <ClipboardList className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+        <p className="text-muted-foreground">{t('noScans')}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="md:hidden space-y-3">
+        {items.map((scan, index) => (
+          <div
+            key={scan.id}
+            className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-100 dark:border-gray-700 hover:shadow-md transition-all duration-200"
+            style={{ animation: `fadeInUp 0.3s ease-out ${index * 0.05}s both` }}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                <Scan className="h-5 w-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {format(new Date(scan.createdAt), 'MMM d, yyyy')}
+                </div>
+                <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-sm">
+                  {scan.name}
+                </h3>
+                <span className="text-xs text-orange-500 font-medium">{scan.type}</span>
+              </div>
+            </div>
+
+            {scan.comments && (
+              <p className="text-sm mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                {scan.comments}
+              </p>
+            )}
+
+            {scan.commentsAudioUrl && (
+              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+                <AudioPlayer src={scan.commentsAudioUrl} compact />
+              </div>
+            )}
+
+            <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-sm">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+                  <Stethoscope className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{t('doctor')}</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {scan.doctorName}
+                  </p>
+                </div>
+              </div>
+              {scan.photoUrl && (
+                <Button variant="ghost" size="sm" onClick={() => onViewImage(scan.photoUrl)}>
+                  <ImageIcon className="h-4 w-4 mr-1" />
+                  {t('viewImage')}
+                </Button>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="hidden md:block rounded-lg border overflow-hidden bg-white dark:bg-gray-800">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-gray-50 dark:bg-gray-900/50">
+                <TableHead className="font-semibold">{t('date')}</TableHead>
+                <TableHead className="font-semibold">{t('doctor')}</TableHead>
+                <TableHead className="font-semibold">{t('comments')}</TableHead>
+                <TableHead className="font-semibold">{t('image')}</TableHead>
+                <TableHead className="font-semibold">{t('audioRecording')}</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((scan) => (
+                <TableRow key={scan.id} className="hover:bg-gray-50 dark:hover:bg-gray-900/30">
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {format(new Date(scan.createdAt), 'MMM d, yyyy')}
+                  </TableCell>
+                  <TableCell>{scan.doctorName}</TableCell>
+                  <TableCell className="max-w-md">
+                    <div className="truncate" title={scan.comments || ''}>
+                      {scan.comments || '-'}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {scan.photoUrl ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onViewImage(scan.photoUrl)}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-1" />
+                        {t('viewImage')}
+                      </Button>
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {scan.commentsAudioUrl ? (
+                      <AudioPlayer src={scan.commentsAudioUrl} compact />
+                    ) : (
+                      '-'
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <Pagination
+        page={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        onPrevious={onPrevious}
+        onNext={onNext}
+        label="scans"
+      />
+    </div>
   );
 }
