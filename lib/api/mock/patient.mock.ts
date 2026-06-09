@@ -15,7 +15,7 @@ export const mockPatientProfile: PatientByIdResponse = {
   firstName: 'Ahmed',
   lastName: 'Mohamed',
   dateOfBirth: '1990-05-15',
-  createdAt: '2024-01-15T10:00:00Z',
+  createdAt: '2026-01-15T10:00:00Z',
 };
 
 export const mockPatientHistory: PatientMedicalHistory = {
@@ -27,7 +27,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
       clinicName: 'Internal Medicine Clinic',
-      createdAt: '2024-11-20T09:30:00Z',
+      createdAt: '2026-11-20T09:30:00Z',
     },
     {
       id: 'visit-002',
@@ -36,7 +36,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       doctorName: 'Dr. Omar Hassan',
       doctorSpeciality: 'Cardiology',
       clinicName: 'Cardiology Clinic',
-      createdAt: '2024-10-15T14:00:00Z',
+      createdAt: '2026-10-15T14:00:00Z',
     },
     {
       id: 'visit-003',
@@ -45,7 +45,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
       clinicName: 'Internal Medicine Clinic',
-      createdAt: '2024-09-10T11:00:00Z',
+      createdAt: '2026-09-10T11:00:00Z',
     },
     {
       id: 'visit-004',
@@ -54,7 +54,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       doctorName: 'Dr. Fatma Ali',
       doctorSpeciality: 'Endocrinology',
       clinicName: 'Endocrinology Clinic',
-      createdAt: '2024-07-22T16:30:00Z',
+      createdAt: '2026-07-22T16:30:00Z',
     },
     {
       id: 'visit-005',
@@ -63,7 +63,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       doctorName: 'Dr. Mohamed Ibrahim',
       doctorSpeciality: 'General Practice',
       clinicName: 'General Practice Clinic',
-      createdAt: '2024-01-20T10:00:00Z',
+      createdAt: '2026-01-20T10:00:00Z',
     },
   ],
   medications: [
@@ -76,7 +76,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Fatma Ali',
       doctorSpeciality: 'Endocrinology',
-      createdAt: '2024-07-22T16:30:00Z',
+      createdAt: '2026-07-22T16:30:00Z',
     },
     {
       id: 'med-002',
@@ -87,7 +87,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
-      createdAt: '2024-09-10T11:00:00Z',
+      createdAt: '2026-09-10T11:00:00Z',
     },
     {
       id: 'med-003',
@@ -98,7 +98,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
-      createdAt: '2024-11-20T09:30:00Z',
+      createdAt: '2026-11-20T09:30:00Z',
     },
   ],
   labs: [
@@ -110,7 +110,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
-      createdAt: '2024-10-15T14:00:00Z',
+      createdAt: '2026-10-15T14:00:00Z',
     },
     {
       id: 'lab-002',
@@ -120,7 +120,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Omar Hassan',
       doctorSpeciality: 'Cardiology',
-      createdAt: '2024-10-15T14:30:00Z',
+      createdAt: '2026-10-15T14:30:00Z',
     },
     {
       id: 'lab-003',
@@ -130,7 +130,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Fatma Ali',
       doctorSpeciality: 'Endocrinology',
-      createdAt: '2024-07-22T17:00:00Z',
+      createdAt: '2026-07-22T17:00:00Z',
     },
     {
       id: 'lab-004',
@@ -140,7 +140,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Fatma Ali',
       doctorSpeciality: 'Endocrinology',
-      createdAt: '2024-07-22T17:15:00Z',
+      createdAt: '2026-07-22T17:15:00Z',
     },
   ],
   scans: [
@@ -153,7 +153,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Omar Hassan',
       doctorSpeciality: 'Cardiology',
-      createdAt: '2024-10-15T15:00:00Z',
+      createdAt: '2026-10-15T15:00:00Z',
     },
     {
       id: 'scan-002',
@@ -164,7 +164,7 @@ export const mockPatientHistory: PatientMedicalHistory = {
       commentsAudioUrl: null,
       doctorName: 'Dr. Sarah Ahmed',
       doctorSpeciality: 'Internal Medicine',
-      createdAt: '2024-09-10T12:00:00Z',
+      createdAt: '2026-09-10T12:00:00Z',
     },
   ],
 };
@@ -174,14 +174,14 @@ export const mockPatientStats: PatientStats = {
   totalMedications: 3,
   totalLabs: 4,
   totalScans: 2,
-  lastVisitDate: '2024-11-20T09:30:00Z',
+  lastVisitDate: '2026-11-20T09:30:00Z',
   lastVisitDoctor: 'Dr. Sarah Ahmed',
 };
 
 export const mockPatientAppointments: PatientAppointment[] = [
   {
     id: 'apt-001',
-    date: '2024-12-15',
+    date: '2026-12-15',
     time: '10:00',
     doctorName: 'Dr. Sarah Ahmed',
     doctorSpeciality: 'Internal Medicine',
