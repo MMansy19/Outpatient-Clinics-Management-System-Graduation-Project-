@@ -1,184 +1,204 @@
-## MediStream (OCMS)
-
 <div align="center">
 
-![Next.js](https://img.shields.io/badge/Next.js-14%2B-black?style=for-the-badge&logo=next.js)
-![Node.js](https://img.shields.io/badge/Node.js-20.x-brightgreen?style=for-the-badge&logo=node.js)
-![MongoDB](https://img.shields.io/badge/MongoDB-7.x-green?style=for-the-badge&logo=mongodb)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-007ACC?style=for-the-badge&logo=typescript)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.17-38B2AC?style=for-the-badge&logo=tailwind-css)
-![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+# MediStream OCMS
 
-Outpatient Clinics Management System for Kasr Al Ainy Hospital.
-*A Spring 2026 Graduation Project by Cairo University - Faculty of Engineering, BDE Department*
+### Outpatient Clinics Management System
 
-[🌐 Live Demo](https://medistream-ocms.vercel.app) • [📖 SOW](link-to-sow.pdf) • [🐛 Issues](https://github.com/your-org/medistream-ocms/issues)
+![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4-06B6D4?style=flat-square&logo=tailwind-css)
+![PWA](https://img.shields.io/badge/PWA-Offline--First-5A0FC8?style=flat-square)
+
+A bilingual (EN/AR) offline-first Progressive Web Application for **Kasr Al Ainy Hospital, Cairo University** — streamlining patient data management across 50+ outpatient clinics.
+
+**Spring 2026 Graduation Project** · Faculty of Engineering, BDE Department
+
+[Live Demo](https://medistream-ocms.vercel.app) · [API Docs](./Docs/API/auth.json)
 
 </div>
 
 ---
 
-## 📋 Table of Contents
+## Overview
 
-- [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🛠️ Tech Stack](#️-technology-stack)
-- [🚀 Getting Started](#-getting-started)
-- [📁 Project Structure](#-project-structure)
-- [🌍 Non-Functional Requirements](#-non-functional-requirements)
-- [📦 Deliverables](#-deliverables)
-- [👥 Team](#-team)
-- [📜 License](#-license)
+MediStream OCMS is a mobile/web application designed to replace manual patient data management at Kasr Al Ainy Hospital's 50+ outpatient clinics. Built as a modular monolith with a React/Next.js frontend, it supports role-based dashboards for **Super Admin** and **Doctor** personas with comprehensive CRUD operations, offline-first architecture, and AI-powered features.
+
+**Key Goals:**
+- Reduce medical registration errors by 70%
+- Enable uninterrupted clinical operations via offline-first architecture
+- Ensure data privacy aligned with GDPR/HIPAA standards
+- Scale for high-volume Egyptian public health infrastructure
 
 ---
 
-## 🎯 Overview
+## Features
 
-MediStream OCMS is a mobile/web application designed to streamline patient data management for Kasr Al Ainy Hospital's 50+ outpatient clinics. It addresses manual inefficiencies in registration, tracking, and care delivery using modern tech for secure, scalable access. Built as a modular monolith (expanding to microservices), it supports Android/iOS/web with bilingual (English/Arabic) UI and AI enhancements. MVP focuses on Admin/Doctor portals; full rollout includes patient self-service and ML-driven features per SOW.
+### Super Admin Dashboard
+- **Clinic Management** — Full CRUD for clinics with soft-delete and restore
+- **Doctor Management** — Create, edit, approve, and manage doctor accounts
+- **Patient Management** — View and manage patient records across all clinics
+- **Visit Management** — System-wide visit listing with pagination
+- **Patient Search** — Search by National ID (SSN) with full 4-tab medical history
+- **System Statistics** — 8 animated KPI cards (clinics, doctors, patients, visits)
+- **QR Code Generation** — Patient cards linked to National ID for quick access
 
-**Goals**: Reduce errors by 70%, enable offline access, ensure data privacy (GDPR/HIPAA-like), and scale for high-volume Egyptian public health.
+### Doctor Dashboard
+- **Patient Registration** — Manual entry or National ID OCR scanning via camera
+- **National ID Scanner** — AI-powered OCR to auto-fill patient data (name, SSN, gender, birthdate)
+- **Patient Profile (4-tab view)**:
+  - **Visits** — View/create visit records with diagnoses and audio notes
+  - **Medications** — Full CRUD with dosage and period tracking
+  - **Labs** — Lab records with image upload support
+  - **Scans** — Medical scans (X-Ray, MRI, CT) with image upload
+- **Voice Recording** — Speech-to-text transcription for medical notes
+- **Audio Playback** — Record and play back audio diagnoses
 
----
-
-## ✨ Features
-
-### Core Modules (Per SOW)
-
-#### Admin (Super User)
-- Add/delete clinics (profiles: name, location, doctors)
-- Manage users: Add/remove doctors/patients
-- Doctor oversight: View/update/approve/delete
-- View patients (read-only)
-- System monitoring: Analytics dashboard
-- QR code generation: Patient cards linked to National ID (offline history; Kasr Al Ainy doctors only)
-
-#### Doctor
-- Register/login with clinic selection
-- Patient search/filter (by National ID/Name/other)
-- Add/delete patients
-- Profile management: View/update demographics (DOB, gender, National ID, name)
-- History access/updates: Labs (e.g., blood tests), diagnoses (e.g., hypertension), treatments (e.g., meds), notes, visit dates, status (stable/improving)
-
-#### Patient
-- Profile: Past visits/results (meds, diagnoses, costs), upcoming appointments, EMR
-- Booking/scheduling: Select clinic/doctors
-- Medication notifications (email/push)
-- Online/offline payments (secure gateway integration)
-
-#### GenAI Chatbot
-- Replaces FAQs for customer relations (e.g., service queries via NLP)
-
-#### AI Enhanced EHR
-- Automated summarization: Concise history/labs/issues prep
-- Diagnostic aid: Analyze images (X-rays/CT/MRIs) for abnormalities (tumors/fractures); symptom/lab suggestions
-- Medication safety: Drug-drug/gene interaction checks/alerts
-
-#### Data Entry
-- Speech-to-text: Dictate Arabic/English (editable, e.g., "dyspnea")
-- OCR: Scan ID cards for auto-fill
-- Bilingual support: Mixed-language handling
-- Validation/editing: Review before save
-- Integration: Feeds to patient history
-
-### MVP Scope (Deadline: Thu, Nov 6, 2025)
-- Admin: Add/delete clinics (list), view/update/approve/delete doctors, view patients
-- Doctor: Register/choose clinic, search/filter/add/delete patients, view/update profile/history
+### Cross-Cutting Features
+- **Bilingual i18n** — Full English/Arabic support with RTL layout
+- **Offline-First PWA** — Service worker with intelligent caching strategies
+- **Dark/Light Theme** — Toggle with persistence
+- **Role-Based Access** — SUPER_ADMIN, DOCTOR, PATIENT roles with JWT auth
+- **Responsive Design** — Mobile-first with tablet/desktop breakpoints
 
 ---
 
-## 🛠️ Technology Stack
+## Tech Stack
 
-### Frontend
-| Tech | Version | Purpose |
-|------|---------|---------|
-| Next.js | 14+ (TS) | SSR/SSG, App Router for dashboards |
-| React | 18.2.0 | UI components |
-| Tailwind CSS | 3.4.17 | Responsive, bilingual (RTL) styling |
-| Shadcn UI | 0.8.0 | Accessible tables/forms |
-| React Query | ^4.29 | Data fetching/caching |
-| Zustand | ^4.4 | State management |
-
-### Backend
-| Tech | Version | Purpose |
-|------|---------|---------|
-| Node.js/Express | TS | REST APIs, auth |
-| MongoDB | Mongoose | Schemas (User, Clinic, Patient, History) |
-| JWT/Bcrypt | Latest | Secure auth/RBAC |
-
-### Other
-- **AI/ML**: OpenAI/Groq (Chatbot), TensorFlow.js (EHR analysis), Azure Speech/OCR (Data Entry)
-- **DevOps**: Docker/K8s (containerization), GitHub Actions (CI/CD), AWS (deployment)
-- **i18n**: Middleware for /en/*, /ar/*; JSON locales
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Framework** | Next.js 15 (App Router) | SSR, SSG, API routes |
+| **UI Library** | React 18 | Component rendering |
+| **Language** | TypeScript 5 | Type-safe development |
+| **Styling** | Tailwind CSS 3.4 | Utility-first CSS |
+| **UI Primitives** | Radix UI | Accessible headless components |
+| **State Management** | Zustand + TanStack Query | Client state + server cache |
+| **Forms** | React Hook Form + Zod | Validation and form state |
+| **Offline Storage** | Dexie (IndexedDB) | Client-side data persistence |
+| **PWA** | Serwist | Service worker + caching |
+| **Mobile** | Capacitor | Native camera access |
+| **Animations** | GSAP | Scroll and transition animations |
+| **Charts** | Nivo | Data visualization |
+| **HTTP Client** | Axios | Cookie-based API requests |
+| **i18n** | next-intl | Bilingual routing and translations |
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- Node.js 20.x+, MongoDB, Git
+- Node.js 18+
+- npm or pnpm
+- Backend API server (see API documentation)
 
-### Setup
-1. Clone: `git clone https://github.com/your-org/medistream-ocms.git && cd medistream-ocms`
-2. Backend: `cd backend && npm i && cp .env.example .env && npm run dev` (Mongo URI in .env)
-3. Frontend: `cd frontend && npm i && cp .env.example .env && npm run dev` (API_URL=http://localhost:3001)
-4. Seed data: `npm run seed` (mocks for clinics/patients)
+### Installation
 
-Access: [http://localhost:3000/en](http://localhost:3000/en) (switch to /ar for Arabic).
-
-### Build/Deploy
 ```bash
-npm run build  # Both FE/BE
-npm start      # Prod server
-# Deploy: Vercel (FE), Render (BE)
+# Clone the repository
+git clone https://github.com/MahmoudMansy/GP-Frontend.git
+cd GP-Frontend
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API URL
+```
+
+### Development
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000/en](http://localhost:3000/en) (or `/ar` for Arabic).
+
+### Production Build
+
+```bash
+npm run build
+npm start
 ```
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
-medistream-ocms/
-├── backend/                 # Express APIs, Mongo schemas
-│   ├── models/              # ERD: User, Clinic, Patient, History
-│   ├── routes/              # Auth, admin, doctor endpoints
-│   ├── middleware/          # RBAC, encryption stubs
-│   └── tests/               # Jest suites
-├── frontend/                # Next.js app
-│   ├── app/[locale]/        # i18n routes: admin/, doctor/
-│   ├── components/          # Shadcn UI, dashboards
-│   ├── lib/                 # Utils, API client
-│   ├── store/               # Zustand: auth, theme
-│   └── locales/             # en.json, ar.json
-├── docs/                    # SOW, ERD, architecture diagrams
-├── docker/                  # Containerization
-└── README.md                # This file
+GP-Frontend/
+├── app/                          # Next.js App Router
+│   ├── [locale]/                  # i18n locale routes (en/ar)
+│   │   ├── doctor/dashboard/      # Doctor portal
+│   │   ├── super-admin/dashboard/ # Admin portal
+│   │   ├── login/                 # Authentication
+│   │   ├── register/              # Registration
+│   │   └── home/                  # Landing page
+│   ├── api/proxy/[...path]/       # API proxy (dev)
+│   └── ~offline/page.tsx          # PWA offline fallback
+│
+├── components/                    # React components
+│   ├── doctor/                    # Doctor portal (19 components)
+│   ├── super-admin/               # Admin portal (21 components)
+│   ├── shared/                    # Reusable components (22 files)
+│   ├── landing/                   # Landing page
+│   └── ui/                        # Shadcn UI primitives
+│
+├── lib/                           # Business logic
+│   ├── api/                       # API layer + React Query hooks
+│   ├── hooks/                     # Custom React hooks
+│   ├── schemas/                   # Zod validation schemas
+│   ├── utils/                     # Utility functions
+│   └── offline/                   # Offline-first architecture
+│       ├── db.ts                  # IndexedDB schema
+│       ├── syncEngine.ts          # Background sync
+│       ├── mutationQueue.ts       # Offline mutation queue
+│       └── queryPersister.ts      # React Query persistence
+│
+├── stores/                        # Zustand stores
+├── hooks/                         # Top-level hooks
+├── types/                         # TypeScript definitions
+├── messages/                      # i18n translations (en/ar)
+└── public/                        # Static assets
 ```
 
 ---
 
-## 🌍 Non-Functional Requirements
+## Architecture Highlights
 
-- **Offline Access**: Local storage for history/schedules
-- **Scalability**: Up to 50 clinics; future sharding
-- **Cloud-Native**: Microservices, Docker, CI/CD (GitHub Actions), DevOps/MLOps
-- **Security**: AES-256 encryption, global privacy standards
+### Offline-First Design
+The application implements a comprehensive offline-first architecture:
+- **Dexie (IndexedDB)** stores patients, doctors, visits, medications, labs, and scans locally
+- **Mutation Queue** buffers all write operations and syncs when connectivity returns
+- **Sync Engine** drains the queue with retries, deduplication, and pre-flight uniqueness checks
+- **React Query Persistence** caches server state to IndexedDB with 7-day max age
+- **Serwist Service Worker** handles network-first for API, cache-first for assets
+
+### Security
+- JWT tokens stored in HTTP-only signed cookies (XSS protection)
+- HIPAA-aligned security headers (X-Frame-Options DENY, strict CSP)
+- Role-based access control with granular permissions
+- Camera/microphone restricted to self-origin
+
+### National ID OCR
+Doctors can scan Egyptian National ID cards via camera, which are processed by a backend AI model to auto-fill patient data including name, SSN, location, gender, and birthdate.
 
 ---
 
-## 📦 Deliverables
+## Non-Functional Requirements
 
-- **Prototype**: Full web/mobile app
-- **Docs**: User manual, architecture diagrams, GitHub repo
-- **Demo**: Live key features presentation
-- **Source Code**: Clean/commented with setup
-- **Testing Reports**: Bug logs/resolutions
+- **Offline Access** — Full functionality without network connectivity
+- **Scalability** — Supports 50+ concurrent clinics
+- **Security** — AES-256 encryption, GDPR/HIPAA-aligned privacy
+- **Performance** — Optimized builds with code splitting and lazy loading
+- **Accessibility** — WCAG-compliant with Radix UI primitives
 
 ---
 
-## 👥 Team
+## Team
 
-| Student Name | Student ID |
-|--------------|------------|
+| Name | ID |
+|------|-----|
 | Mahmoud Mohamed Abdelfattah Elsayed | 4220142 |
 | Mohamed Ayman | 1200245 |
 | Zeyad Khaled Badri | 1210100 |
@@ -186,23 +206,20 @@ medistream-ocms/
 | AbdelRahman Hesham Zakaria | 1210148 |
 | Seif Allah Alaa Mohamed El Shaer | 1200324 |
 
-**Advisor**: Cairo University BDE Department  
-**Spring 2026 Graduation Project**
+**Advisor**: Cairo University BDE Department
 
 ---
 
-## 📜 License
+## License
 
-MIT License - See [LICENSE](LICENSE) for details.
+MIT License
 
 ---
 
 <div align="center">
 
-**Transforming Healthcare at Kasr Al Ainy – Built with ❤️ for Egypt's Public Health**
+**Transforming Healthcare at Kasr Al Ainy**
 
-⭐ [Star on GitHub](https://github.com/your-org/medistream-ocms)  
-
-[![Deploy](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/your-org/medistream-ocms)
+[Built with ❤️ for Egypt's Public Health](https://medistream-ocms.vercel.app)
 
 </div>
