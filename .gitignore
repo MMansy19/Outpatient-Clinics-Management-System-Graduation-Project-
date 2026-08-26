@@ -9,8 +9,6 @@ build/
 dist/
 docs/
 # Environment
-.env
-.env.local
 .env.*.local
 
 # Debug
@@ -20,7 +18,6 @@ yarn-error.log*
 pnpm-debug.log*
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo
@@ -41,3 +38,4 @@ next-env.d.ts
 # Serwist (generated service worker)
 public/sw*
 public/swe-worker*
+config.bat
